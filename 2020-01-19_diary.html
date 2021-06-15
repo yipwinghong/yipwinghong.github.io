@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Kylo Yip">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Kylo Yip">
+    
+    <meta name="keywords" content="Kylo's Notebook,Kylo Yip">
+    
+    <meta name="description" content="">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>2020 的约定 · Kylo&#39;s Notebook</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Kylo's Notebook" type="application/atom+xml">
+</head>
+
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <a class="home-link" href=/>Kylo's Notebook</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+">
+    
+    <!-- 主页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="Oh, this is an invalid password. Check and try again, please." data-whm="OOPS, these decrypted content may changed, but you can still have a look.">
+  <script id="hbeData" type="hbeData" data-hmacdigest="8b2248439a6dd1d340919915d9f3a9ec78f546a00529bf9c42fbf5d95ce6a7e7">330b3a3b789906859bdd3115ce9d9aa045c7832cf3572d77366a5095e1824b867243049b4200df4b53280673ea0b6b61888d2bb7c5373d6d8fd8c9617df25c40936b93cdc56013f6fb481df768048e67a69043c356213bcb1d4a3cdd65374b8dce0158a1932b545509760346e99b1c724c5a1df4ca279fdd963c3080d660db16f49d869ec92047905791e043b99a190d85420df8f58f242a23dc78ee05586675e29b4820f283c007cfd866648f48672b6a0941fc717442d156d9a49ecfda960f66e5799f4b87303e5a15e0af6fd3e1759f618b8b384370e84a9c9a727f5c02efc3eda59f7ea772217174856d6955158b4679424ab123e44889a016eecd8385bdbc74bdf0c65abdc244d95eab21ec6e4c2b73e7a8eb72d104ddf5fa7265101786f24b7eebb584adb29689035cb1a0a690a4092435e81f5370319328e2d2f89c53518919d01b159e3ff80f4af286de1f5af3203b91b3d52a112f9c66594407bb94e75045906d81acb08704f7f255c1e48088898c0a9acf9249efe84b5d8dfd24c74d7de417f54899162fca3fdd467fca5380619ee8c926626353921f85270af51022265ab46aaa91d6444f253d290c2cc75b89b526c88a70768cdad4b637004aca71534c543231b8e82b7a4f676e12a69b42e5c89cfff95874dc9eb7567d880a0dabd8c3fd101682bbf4258caf760d135f4292d1f2a5af3e1629c979c3e5fcba59793364bcdaab51bf85a80ec981c12c9e136834e1e11362464bbe3b68a0e0e284f290536282ac7638be61cad43c2f5171335005ab69f2ddd3f76a7a6a7f373da19f7b1cad3353d2c3a013ea1e23037b1918a573e82ea0cd6053d7353d408561c04054640d5b410147c0e6e4d571fc4a35099d905c6db1c32f0c30aa1608de479d9092dd23068812aefcaa86b3b3c696a85290afd43005cbf74ad91242db5161afaaff7bb47d23792c4ec191d77fad78fb73fbe712fd7451420b6fb4aa5dc8850e786f749cea15358192aa4318514cf9134e97539f280d01f8cb22bb7e9c47e27458fa62164fad70fb71f7ae94d596b1f5e14c98a90853602b1f2fcc6c105bcd50aa0fe5da90cb77f7d2f3a70fb7475b9a30551d026b81c1247f27ab828a9a40b35e9ec4b81c01873e38428ff917000fca08ada9dee03423057b6d672ab2fa162d9b7fa1ac780218be8879a0c93af66ec0ad9c188d02f03cf13b4ff504e5b4e5312dee4f84fdebd9e9c16987aca9f4d7822efa6cd4fbbd0d250230cb4e2fc1939a28f224c99143a966b763e84bfa57abf6268d2ad6b981c1cf40fd054c13ff261c1b30a6772bbeeb35c731b8016a34944568ac0e67a7d105967666a94f36b7466f7745a3cd99ba8a55f7e19d92a8728b93de59153cefc3d4e2c39055e43bb2852cfa4da973e8c9b653e3db28335cd88d9a3f1c40d56762d1ed50712ca1f032b5f6a16f9ca81923d3b1ef794dcd840207c70f6e884ff262d097d40f272235274f5e3513edc9358e1ca2ba2c2e0717e808c632f5988ef041c59f3ee55e561deaf50b436af260aa764a91ff3e3db9425acd4e3457c98d1ad0e8f0b8d63c1e3d0bb8317fac1544d07e9dfc43773d0c4929af50f35a66f9841542f161a38f291542dbbd7c46d1cd3d21bd39ec949c7fc69ed5d4e24cd4c3d5e9646b84189d1be66407619c91997c38db7d1a3cb9e01e7d7d4182ee25f3b4a8e7a3447b1f8463efa2e7678c468ff8796977360a800e75c1b60a14391bdc54e1f28685a8735ee2f442024cb4bc8f95cad1029111534a283687b905a6003d1606051dd012041e94c59e2559d9b20a88481034e18e8337b6d2f6c6ea47495317abf1ff6bfe7d4a82ebc3fa3d8bb1f3507db8be4e067a6886b15a4ee75b1494ea03fea3b4b6dab04eada4389c880efce5eb91ea9673a49c1f85a8b5fa25eff7d44146fb2ac3621d5ffcce00d4333e2b1df3d72ae6f20dc20fb8936e865633ad93f9d34382c0b83c5b53736063504b99ee1799f3c7a5b527c0135bff4d6db4ac01ee017e3c491373719dd9ad58849b749e297b8c89c2b1042801a9079d995015151e8afa8a755e2cbeaf656f1e2e610046e7f3d5b9b7ff1126c68108cfea27e1bffa9919ff2a912afd3159dd608ec1e689293dad48ddcbcc54b0ecfab6c71b62a847331f705d03018a8c7e5f26e91b74e102b7d1ad4ca198dd2cbd338a6c1fe730d376d66e3d2085bd610531cef8331c365d9be5943d73435dfde70cf04ceeeb9958f5b470dc8c4575ce8b8545853435c244eb10cf1b0c1ec9169736136e5c382b74d6694a9c2d8599aece1c086bf9f5a98b74f370d578ba93d9ccd5c784a352fbaf845f77dfb7f12f7b11829d7c4419ad6ca618b6153ed2f522817f62105e7958bc723ab8ff7f5c7d939eeb11f7dbdcbead0ac96b373506e1ac2d1332082e6851a85f8d01415e07a574fc2b8346a25ab893d00ae1ca8e9ec16f53b7802774a079a7431c7df7f44d96d2e74b3413c8227d7cfe230a2d485943d2a11d5a09a12cbca13e088269a625146324e50ad86c8d175166c469267887f8a3dbcb535f093e06fb8cf24789a63ad737ab726a9e317a458328d45036af187d81f1e4a72ff9141a38d36001be2d1a95e39076ea00acb9ffdd3e7f3e1d7434579f981421b773e885e4c33229e2a8c007b8ca6868294615b2d62ccb3ddea0f55dde24fba8ce2a232f1fac8611e0c3ed359a27bf3db88a9c5077e47ef8dbef804618b1013952349548c5d711d767a2b3a0c051445a4bcdb6ea4afbd91bd6afb76bc2ad972813a7ecaaea0798562534649ed35216fa30516ba8c3f685bff796189ae585a3ea85a438f2f69f2f040e5c530577ff0654771d83a9b717816dd91f406dac5007e18d508e0e020f978f0f70699c96f4457ebb5d0caf42bb928d03a4b617070a29e5f8728bde785e76827980af8a52c3fb52db45cf3bfd11f4c93999a6c4a9dd7611ca5121e26c49502b034ce22fa2a39ea5f03dc35462f8323145377e005644fdf6f66c7fbfe26c41c2dc8460f573b96bff5962d83da45d4e83c225286875b7c27656046372a548749eef91a496625bd4ac4693bc4cfd87354210a4180a35c3c9d26bedb244820e5fa9a26c8746b4fe430fa739a2f373999389e375d6531cf1699fc6546b8bf3dc247a39a5035ab268403ead36724ca73f6660fcc3ae8d5adf763c72f731a3e6562b41827044ce35be34b7d8cc201863c776ae4cace652254943c28953df1c63bedf0aa271b288d0f926045de723814a03355cf4b4367a946563c9dd9ab0a4a2dc20496692fbdf81166de71eac8adbcae39787fa46d702b1b664f6d68ea097fdc684c44a6707305b6b1bf534db364d89bb87f3f4ec6fcc74603ecdb1c244c8803c59d240c8ae8f734580315871e8ddd7753a4e9a34c663f90cfe5f635f9d03e2c448cae16f006fe66b1c7a696cbf5ce42f414182590c7a8fb6e692a499c04840fc42abeea4608cbde19b1a0f63b56096086ccd831795a8813c9436fdcbe6ea193b0c289b0717281481164503b27ac0734a570172b4e9db67683eda73d1ad7d8f39945fee0d1372bc3c8516853c4df92f644b27c15c32b8ecfd2c4a721a5f24b9ebf68e0b9b6c71e1ab0e1419c01d1f7012ce89b1e806f26068771e80affb0591bb5f1272be0db36a53ad5f3ed853197d10b9d3722dd2579c4344faf1ffbd35e67d7b84dc7d2e608b626a4938a195d09489d12f98a068e849aec3d703a7dff7da059cd35c710fab9b2c2724442712cc2ee772a25268289366bc9b6c193cd11fc55aa140a51f9e42bd3565842d859c7c886de011b3a8a479cf698cf19fc4cf9bda46f6b7aa56782a25be9ae057bf72620dffb905da081798d7567e727603f731cbb11d932f22d7a6d58e08ca678fd55c6a69385e3f5433b93f0fac057be0d4432385d2d1d98728666f6c47c7742b7b78c54b38a9d52422e81fae016a9db5629065cd68c106263dcb1f7fb4bcc76110ebd4e0bbc792836330e02e67b571dfcc66066c9407e343cc327f306f94a00e8592b19711a7c5cc8fc32679bc244a27d7b4a751fe7b05e3cc68069ac04ef0956f58daed625110aa7b1679a3ed22a00b4e83c278c2b123bb1cce22223f891db0594942c3064b17598fceed306c55be9d26baec33a575e30eba2b8e3c64bda8f54d417bd5e8d97bc959bb48d18124df827ac03f6c402e9b8e756df65d375d8546703a30692dcf10568c8a608d864ce0e61a0ea7127c45c92421f4da75f6d752971c9b0fe348071f7b1094694517d9e430c62ccfc3b90dbefa3530711814be6f5f05adfa28fd958377b9354dabd2c947719e352cf46af8d0e59dc8bdd1477f327e5c02f10732ef25ef60a9e6c6c904abbad5b33b87874a8aebd0e08f36a2ed47955cbb03e79df2215079635f9a5ca351891718862c6789335aa43d6fdeba4eaf8daf8c57341cfe0d0388aa9ae8dbec69f5c3a6817d5c432bfce6b1c1edb0e609a5ef06cf2b518f867e92653d2099391653a548809e4c6e4c0d0c3714cb4c27c16485f14b2217e1cbaeba555372644a672e6844cd49f7d4c3d935b45ae281fb3732b2b8683cab40cdce82f0a04c7ab4ae6feae831aa95b946076b7bbd03bbc8c681037c224397bd3e49610a93af3166029b5883c23976922d59e9625eb16215f73ed19ed33ee70beacd260a603afba0bed8abe127c6880d090f95cf66aa75ff3db0b60fa2e71ec7790fa8e569684a568fa6a5c074b4e84f934d0d36f438fe3fd131c6fbf433a089e6944967c78b515b8a17ac3ca0b92cb239fa779d3b6636c672ba77e74cf15ce5efd4e34940cf18eb76d84a597a0472eeb787c84ddf1b56198a64577f5632cdcf190d76f97f116f95b651a91ef732765f266f5274496fc84618a1a3a5580ff4d54d86cff101093374eb484ba19797027999381f5184fcd8a9fea09b21b85cb69842d4c575c65369b0fb4734e51de91355514c2664e044c35b91ee66dd312f240e596f89a7ed7b60e784dc7a5217e657ce062f9890a7d5f5468b0c8a74c37618387412498be75b4ea9fa9b3ae4f11a032f4ee393843a536062d1274b8038234c2517f7229759c848072e048d4e1a2ed71cacc6de0925ac3e61ac9daf82edccef89c95e54debf4b9b454d269a1b74653a05928f29a3f5da9cda2143bec310e9f9b1d77afb91f884fc87420d1d16a6f6dced33d3007f4602080b8e9c5b5d5379c922d0f125cf653e971c3031f10bbff03e9677489805bcf5c56cf315069f288d07fbcb26374818ba7dabf5986d0388c002a24ca8ffe9fcdc03d43d8789f9ec39af4f7c3af8b49184cd31439531e4d4a1f994030be6e946551ac145debb8dda961fc5c09edf9364dfb0228f1b2096d43c580415ede91ca66d7182a6e71b31e12a9eb952b164734f1171f3b593e5e08553a350a111a5b501700da16fda0e25657b12a20f0e786aae9375a1feea45cb9c7b34cbfa1e99190337fb08cb4ede41dec1af6abf8e4752faa40f440c526bd53566b515d3cb5b8d1acc69f72b1b07ef536af56a5192417f05c401d9f125fc57dc7536c4275459204afa9e6914508863e6c248e3b80ba2cf5022accea878a1ad8f9b4a3d014a5059974992c6bcb413d757b7a606d25a3b92c58d2f4d972d88c686504de8184df7948afaa3fb8ea38c1a0ec854d90493ced8912201d3a4fe3c3cbfc723b075799327e27e760366bb027f479908cecefb178c31049e3a0e7a804d6a1f721024a969af554dde1bcbbdf8495a2f2e5f8de88a80cd292e0d5d967e65957d05517949545a805257d226ae0f4ca0e5584455e9274a0d63ac1b96d7dcda8be6d784f7c6e349a56d3368ae4f4f878373d87cea7aeae08d04e7c3bea4a9f8d034587ba46cd897ce70fc24e32a82abaea5c4cd39aacf2736ef9329cd7da462acf77f173de2c73662defbb8340eead3306128509a7701678cbb1281cc8501df2a26d81cf94df83675d9660ad89b802c9f1f02037ce84b53419d4f03f8c4e6dc9dfd07eb071b08f64683e3f855cb6b0659892f5f87bfcc585bddd58040dadcc5ddd6f6667704e5d0ea7ef548893a16e66d62a24621a849bd0e827854cd884d6868933b9f14183ba06914953c645f5ece7ce9e6a5731c92245b49d9fd98e7068a3726c33ecb2b84dc6d794556fe46945a6fc85ac10920e48341d3830331b6114c3d6a17d0213dde8f8fe48ba146f941d4148c358e06502b18e76f58099d97962880f96fc520654da60370a3bdd98041dd0f0e076c6c06d1507b679adc0bbc565fe862758f85dffc0a5b3a778e58d4347d7376bd9fbe493c72511cb59a19344006706a25df0a07d64fd89267dd8cee3936850894f92085e401f70755b8f871e8f121119d757f2e578d9a1431a3276af7934fd544340a519a9614fab2cc3b4100fc076418c12dc3916d6a8ff09a53712c709b2d38065b8dd48f646b2be744afc796afc563625f1782e101a3cac09aab87521fb9a8c0823a60aa33d6a61e311051f3210706e5ed38ca02330baa65d533b0731170328e5fe776ee885a5e5910e9430e619a06864e2d6789f14623a9568be946f54a77d6ddf0ca5ca6231e4faf42767157ab422d09e36be8589d0a479943d0b9da6034f04c7a85e225347c1c61a18b1f4d27d042bd132b9d34b66f283bad1cdd518b1f9015d814423f49d8c5d4d37bfed27569624bb070e81b6ab66698e1e46c71f6aa2e3c03e608cfa0ca51501b55f05360df61a3d9147199b5b6c449bbdfac2db8982fa1deb85880e1936ffb4a883e6480edc22c5005a78daa527b39984889e86a11fc4935bc84384e9f3fb1998eb225bfad78ad0f58a3c7853ca1ac5dff29380e7aaf432c09b60fb830f3f092dfd3dc91fff308c6cb16bbbe5b36ad6240799c634de8ce6c591931a36b64fe552912f183091baeb29978a3d53a55aefba72ca4b567bee79f9d4c0e61f5e978f563f09d9ca3e29694f02258d37316ae9ed07f2f11cae2448f03e3da2582df68a50b6f49146b029f38800e0386381891529db09579ccb06ce7c874aa8d232e1e714607752387725e96c4759d38603eef8121f7cc752ec84252fa42e0698d258cf0698967319b58a7050c27d443046cf23c5d9e54f3e8d8b17c54d5a25a5f403b8c14ab0d0581668e8e4e757a202acac60ca39cb6b4639d4529b837af99a3d890406066ba0584f9414855779dda26e4967202fdcd4443a8a0a3c654b1e8e37621ca7d2acbff52a9345f69baf393b0398237f885478e0c6477a4ea2dbf90cd70277123612bc3932d21b0c4e941f046870cf734a6d4c4cf099b8443f389ce214c4cf9e6ef3d3334958f084efcc6cec9acf3eaa1689499b1220fb169e47e60584bcb50ede6299aeeccc2871f432cb93c94490ff2aaa30db503b5da45ce86003d901f5cdd98ca46b555c919d8b3e8398b096644c9f54e3cb7de61f58cbe3516f517f189908a707d8b6aba251bfeb62e0d2d43323fae4f5bf8440d5ac511ebad54282f53f8979209e45c008cda1b0d38260f96695031f3596e3f43f4b7e9da29c0844f6af0bf8ed610fed8f384c3c06a2181169c856921e910d73a2eaa333273bd3e2e79e0cce4eed028544cbba8010da6a3f05bfbc7f4523300c4bf086ca52405544def87b388934ce70f0da867081db995c3a9cb13a75afbd0fa90e346b19da3aedeeecafdf9297f3f32cbffa8d2d000f91dccd122026330d398ac006184dc69e433f3123dda96dd3a70e1210bd4ef5dc9f39e5ebeab53cb5c2d22dbee8d46a6ee649e0ff9933a6bbc61e6274da4c8a47adb02d9eefb27715ea776d3431e70b3584f11c4e0eea1b7b222b1e18ce8cd5431edacd5bc871185747c8b106625c0679c95794a74d57ea486c1a11f0746b1e93dec5eeabfc97725f6a73a74130cc403887ba6a61cfe0818a4d95776dc39e837784aa6bed54d8bf99f40d09a924b8ecaba0a94f909835903a83f6485fc82a01804de65ed8aa4f492d1bd519d25e9f58380ac68a57147fcb37692f9462a0a167b507d954c9f522b66f90c9be187d6406c16762d655b71c2be105f6e00d6c4fb0bef2a03cadc6f71e15b11c59778a0119a0bedacf7200ceac44b25754eb0a937a6bc02ed452c93296b9c74f5124b8df408245356b8e59a822f7f9013ff8b96286cc16376cd8a08bf1f4300748d1d6224c011c4b81cbe9be8846e9be6a9b27a61f303d3dec94f5d2756ea08f378a45b3be118f62a96e57f6ca2e93a2ec3d49e38e50a65cb82c0fdaadcfe2dc6fc317153b93753ecca9640a8fc5d574cc936cc9e46638102b08cf951d5e68f2484d18a2ec0df0c054dceb62f605e8f78c689035aad9f5c304ec5d3e27fd60bbc7ec2e72fc72d7e641aebeda635c29256ee855d9fa32c86eb570c77e58a5dc0fa4f607c8fe35726e99e2a79d41b8d77d81d5a7144607684630fc27ccd1b6bf68f54dbe6fa178ca8b7a1f8d1b7e9f4c393c7698e119d48a2345afaffb0eca657e7c5574d63cb1cae05ca366d0eba8af8d82bedf836e9e3bf6d93db66e7c1760ec4c8c206f1bb9adb17b418c5328a131a6a20ecd74386706bb74a80d0bcfa2eec2b52bf68ac97d3f358b0f5a4e161661aa47353effd00c97022f38b85a5efc4f27df9903d030934c4a907b4a9850bde54614ddfdc72e0957b5ade100a4ea3ba5fc25c4e8fd4b56e</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-default">
+      <input class="hbe hbe-input-field hbe-input-field-default" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-default" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-default">Please input the password to read this article.</span>
+      </label>
+    </div>
+  </div>
+</div>
+<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+        </li>
+        <li class="previous">
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODYzMi8yNTEyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:yipwinghong@outlook.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yipwinghong" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/WeChat.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 58
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span><a class="archive-post-title" href= "/2021/06/13/Go_cheat-sheet/" >Go Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/06</span><a class="archive-post-title" href= "/2021/06/06/2021-06-06_diary/" >Weekly Summary (2021-05-31_2021-06-06)</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/31</span><a class="archive-post-title" href= "/2021/05/31/2021-05-31_diary/" >2021 下半年工作学习安排</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/16</span><a class="archive-post-title" href= "/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/" >如何用图论解决 Secret Santa 问题？</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" >把 PostgreSQL 用作数据仓库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/" >SELECT * 对 SQL 性能不利的原因</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2021/02/24/DDIA_note-13/" >《DDIA》阅读笔记（九）：一致性与共识（共识问题）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/21</span><a class="archive-post-title" href= "/2021/02/21/2021-02-21_diary/" >近期工作学习规划</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/19</span><a class="archive-post-title" href= "/2021/02/19/DDIA_note-12/" >《DDIA》阅读笔记（九）：一致性与共识（顺序保证）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/13</span><a class="archive-post-title" href= "/2021/02/13/DDIA_note-11/" >《DDIA》阅读笔记（九）：一致性与共识（可线性化）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/06</span><a class="archive-post-title" href= "/2021/02/06/DDIA_note-10/" >《DDIA》阅读笔记（八）：分布式系统的挑战</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/27</span><a class="archive-post-title" href= "/2021/01/27/DDIA_note-9/" >《DDIA》阅读笔记（七）：事务</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/22</span><a class="archive-post-title" href= "/2021/01/22/DDIA_note-8/" >《DDIA》阅读笔记（六）：数据分区</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span><a class="archive-post-title" href= "/2021/01/21/DDIA_note-7/" >《DDIA》阅读笔记（五）：数据复制（无主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/20</span><a class="archive-post-title" href= "/2021/01/20/DDIA_note-6/" >《DDIA》阅读笔记（五）：数据复制（多主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/09</span><a class="archive-post-title" href= "/2021/01/09/DDIA_note-5/" >《DDIA》阅读笔记（五）：数据复制（单主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/01</span><a class="archive-post-title" href= "/2021/01/01/DB_tree-table-design-summary/" >树形表结构设计总结</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/19</span><a class="archive-post-title" href= "/2020/12/19/DDIA_note-4/" >《DDIA》阅读笔记（四）：数据编码与演化</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/13</span><a class="archive-post-title" href= "/2020/12/13/DDIA_note-3/" >《DDIA》阅读笔记（三）：数据存储与检索</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/04</span><a class="archive-post-title" href= "/2020/12/04/DDIA_note-2/" >《DDIA》阅读笔记（二）：数据模型与查询语言</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/02</span><a class="archive-post-title" href= "/2020/12/02/DDIA_note-1/" >《DDIA》阅读笔记（一）：可靠、可扩展与可维护的应用系统</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span><a class="archive-post-title" href= "/2020/10/08/Maven_external_dependencies_management/" >Maven 打包依赖外置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2020/10/04/JVM_prod-analysis-cmd/" >Java 应用常用调试分析方法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/30</span><a class="archive-post-title" href= "/2020/06/30/JVM_java-memory-area/" >Java 内存区域</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/28</span><a class="archive-post-title" href= "/2020/05/28/DB_data-warehouse-design-basic/" >数据仓库设计基础</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/08</span><a class="archive-post-title" href= "/2020/04/08/2020-04-08_diary/" >关于使用思维导图做笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/28</span><a class="archive-post-title" href= "/2020/03/28/Algorithm_leetcode-high-frequency-problems/" >LeetCode 高频面试题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2020/03/06/InfoSecty_personal-infomation-security-guide/" >個人信息安全保護指南</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/22</span><a class="archive-post-title" href= "/2020/02/22/2020-02-22_diary/" >免费 JetBrains 全家桶</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/16</span><a class="archive-post-title" href= "/2020/02/16/Nginx_cheat-sheet/" >Nginx Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Git_Cheat-Sheet/" >Git Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker&K8S_Cheat-Sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker_cheat-sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/03</span><a class="archive-post-title" href= "/2020/02/03/JVM_jstat-monitor-analysis/" >JVM jstat 监控分析</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/01</span><a class="archive-post-title" href= "/2020/02/01/JVM_GC-log-analysis/" >JVM GC 日志分析</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/01</span><a class="archive-post-title" href= "/2019/11/01/Design_design-patterns/" >设计模式与设计原则</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/30</span><a class="archive-post-title" href= "/2019/10/30/JVM_mindmap/" >Java 虚拟机与并发编程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_offset-reset/" >Kafka 位移重置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_dynamic-config/" >Kafka 动态配置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/20</span><a class="archive-post-title" href= "/2019/05/20/Kafka_common-scripts/" >Kafka 常用脚本</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/06</span><a class="archive-post-title" href= "/2019/05/06/Kafka_basic-conceptions/" >Kafka 基本概念</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2018/10/04/Python_async-programming/" >Python 异步编程总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/19</span><a class="archive-post-title" href= "/2018/09/19/Python_data-structure/" >Python 数据结构应用</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/13</span><a class="archive-post-title" href= "/2018/09/13/Python_decorator-basic-usage/" >Python 装饰器基本用法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/02</span><a class="archive-post-title" href= "/2018/09/02/JavaScript_ES6-grammar/" >ES6 语法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/30</span><a class="archive-post-title" href= "/2018/08/30/Vue_user-guide-4/" >Vue 学习笔记：前端路由、请求发送和状态管理</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/28</span><a class="archive-post-title" href= "/2018/08/28/JavaScript_cheat-sheet/" >JavaScript Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/24</span><a class="archive-post-title" href= "/2018/08/24/Vue_user-guide-3/" >Vue 学习笔记：组件</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/23</span><a class="archive-post-title" href= "/2018/08/23/Vue_user-guide-2/" >Vue 学习笔记（2）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/22</span><a class="archive-post-title" href= "/2018/08/22/Python_OOP-summary/" >Python 类与对象总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/20</span><a class="archive-post-title" href= "/2018/08/20/Vue_user-guide-1/" >Vue 学习笔记（1）</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="杂事"><span class="iconfont-archer">&#xe606;</span>杂事</span>
+    
+        <span class="sidebar-tag-name" data-tags="技术"><span class="iconfont-archer">&#xe606;</span>技术</span>
+    
+        <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
+    
+        <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
+    
+        <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
+    
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
+        <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
+    
+        <span class="sidebar-tag-name" data-tags="Maven"><span class="iconfont-archer">&#xe606;</span>Maven</span>
+    
+        <span class="sidebar-tag-name" data-tags="Nginx"><span class="iconfont-archer">&#xe606;</span>Nginx</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Vue"><span class="iconfont-archer">&#xe606;</span>Vue</span>
+    
+        <span class="sidebar-tag-name" data-tags="前端"><span class="iconfont-archer">&#xe606;</span>前端</span>
+    
+        <span class="sidebar-tag-name" data-tags="Git"><span class="iconfont-archer">&#xe606;</span>Git</span>
+    
+        <span class="sidebar-tag-name" data-tags="JavaScript"><span class="iconfont-archer">&#xe606;</span>JavaScript</span>
+    
+        <span class="sidebar-tag-name" data-tags="Go"><span class="iconfont-archer">&#xe606;</span>Go</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="《数据密集型应用系统设计》阅读笔记"><span class="iconfont-archer">&#xe60a;</span>《数据密集型应用系统设计》阅读笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Kylo Yip"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+     
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"live2d-widget-model-nietzsche"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>
+
+

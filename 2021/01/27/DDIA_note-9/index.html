@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Kylo Yip">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Kylo Yip">
+    
+    <meta name="keywords" content="Kylo's Notebook,Kylo Yip">
+    
+    <meta name="description" content="">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>《DDIA》阅读笔记（七）：事务 · Kylo&#39;s Notebook</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Kylo's Notebook" type="application/atom+xml">
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >Kylo&#39;s Notebook</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">《DDIA》阅读笔记（七）：事务</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>Kylo's Notebook</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:100vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(https://api.ixiaowai.cn/mcapi/mcapi.php)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            《DDIA》阅读笔记（七）：事务
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "技术">技术</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "设计">设计</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">8.2k</span>Reading time: <span class="post-count reading-time">27 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2021/01/27</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <p>本章结构如下：</p>
+<blockquote class="pullquote mindmap mindmap-md"><ul>
+<li>事务<ul>
+<li>事务原理<ul>
+<li>ACID 的含义</li>
+<li>单对象与多对象事务操作</li>
+</ul>
+</li>
+<li>弱隔离级别<ul>
+<li>读写竞争<ul>
+<li>脏写 -&gt; 读-未提交</li>
+<li>脏读 -&gt; 读-提交<ul>
+<li>防止脏读</li>
+<li>防止脏写</li>
+<li>存在问题</li>
+</ul>
+</li>
+<li>不可重复读 -&gt; 可重复读<ul>
+<li>实现快照级别隔离</li>
+<li>一致性快照的可见性规则</li>
+<li>索引与快照级别隔离</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>写写竞争<ul>
+<li>原子写操作</li>
+<li>显式加锁</li>
+<li>自动检测更新丢失</li>
+<li>原子比较和设置</li>
+<li>冲突解决与复制</li>
+</ul>
+</li>
+<li>多对象冲突<ul>
+<li>写倾斜</li>
+<li>幻读</li>
+<li>实体化冲突</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>强隔离级别<ul>
+<li>悲观并发控制<ul>
+<li>实际串行执行<ul>
+<li>存储过程封装</li>
+<li>分区</li>
+</ul>
+</li>
+<li>两阶段加锁（2PL）<ul>
+<li>实现方式</li>
+<li>性能分析</li>
+<li>谓词锁</li>
+<li>索引区间锁</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>乐观并发控制<ul>
+<li>可串行化快照隔离（SSI）<ul>
+<li>基于过期的条件做决定</li>
+<li>检测是否读取过期的 MVCC 对象</li>
+<li>检测写是否影响了之前的读</li>
+<li>性能问题<ul>
+<li>跟踪事务读写的粒度</li>
+<li>与实际串行执行相比</li>
+<li>与两阶段加锁相比</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+
+<p>数据存储环境中可能存在各种出错的情况：软硬件失效、应用程序崩溃、节点间链接中断、多客户端并发写入数据覆盖、数据部分更新、边界条件竞争等。通过事务（成功提交或失败回滚）可以简化容错机制，使应用程序安全地重试，不必担心部分失败地情况，但也意味着牺牲系统部分性能和可用性。</p>
+<h1 id="事务原理"><a href="#事务原理" class="headerlink" title="事务原理"></a>事务原理</h1><p>几乎所有的关系数据库和一些非关系数据库都支持事务处理，比如 MySQL、PostgreSQL、Oracle、SQL Server 等系统事务实现与 IBM System R 非常相似。</p>
+<p>NoSQL 则提供了新的数据模型、内置的复制和分区等手段改进关系模型。同时放弃了事务支持，或替换为更弱的保证。</p>
+<h2 id="ACID-的含义"><a href="#ACID-的含义" class="headerlink" title="ACID 的含义"></a>ACID 的含义</h2><h3 id="原子性（Atomicity）"><a href="#原子性（Atomicity）" class="headerlink" title="原子性（Atomicity）"></a>原子性（Atomicity）</h3><p>在出错时中止事务，并将部分完成的写入全部丢弃。</p>
+<p>描述了一个包含多个写操作的请求可能发生的情况，当原子事务中的一部分操作写入完成后写入后系统出现故障，则事务会中止，数据库须丢弃或撤销那些局部完成的更改。</p>
+<h3 id="一致性（Consistency）"><a href="#一致性（Consistency）" class="headerlink" title="一致性（Consistency）"></a>一致性（Consistency）</h3><p>在不同场景有不同含义：</p>
+<ul>
+<li><p>副本一致性以及异步复制模型。</p>
+</li>
+<li><p>一致性哈希：某些系统用于动态分区再平衡的方法。</p>
+</li>
+<li><p>CAP：用来表示线性化。</p>
+</li>
+<li><p>ACID：指数据库处于应用程序所期待的“预期状态”。</p>
+</li>
+</ul>
+<p>ACID 中的一致性指对数据有特定的预期状态，任何数据更改必须满足这些状态约束。</p>
+<ul>
+<li><p>更多是应用层属性，应用程序可能借助数据库提供得原子性和隔离性达到一致性。</p>
+</li>
+<li><p>本质上要求应用层来维护状态一致：数据库只能保证特定类型的恒等约束检查（外键、唯一等）以及存储，而应用程序需要定义有效/无效状态。</p>
+</li>
+</ul>
+<h3 id="隔离性（Isolation）"><a href="#隔离性（Isolation）" class="headerlink" title="隔离性（Isolation）"></a>隔离性（Isolation）</h3><p>意味着多个并发执行的事务相互隔离、不能交叉，由数据库保证当事务提交时，其结果与串行执行完全相同（当多个客户端同时访问数据库的相同记录，会遇到并发问题，即竞争条件）。</p>
+<p>实践中由于性能问题很少使用可串行化隔离（Oracle 的串行化功能本质是快照隔离）。</p>
+<h3 id="持久性（Durability）"><a href="#持久性（Durability）" class="headerlink" title="持久性（Durability）"></a>持久性（Durability）</h3><p>保证事务一旦提交成功，即使存在硬件故障或数据库崩溃，写入的数据都不会丢失。</p>
+<ul>
+<li><p>对于单节点数据库，持久性意味着数据已被写入非易失性存储；对于支持远程复制的数据库，持久性意味着已成功复制到多个节点。只有写入或复制完成，才能报告事务提交成功。</p>
+</li>
+<li><p>没有任何一种技术可以确保绝对的持久性，只能多种手段结合使用降低风险。</p>
+</li>
+</ul>
+<h2 id="单对象与多对象事务操作"><a href="#单对象与多对象事务操作" class="headerlink" title="单对象与多对象事务操作"></a>单对象与多对象事务操作</h2><p>多对象事务要求确定知道事务包含的读写操作。</p>
+<ul>
+<li><p>对于关系数据库，客户端与数据库服务器建立 TCP 连接，对于特定的某个连接，SQL 语句 BEGIN TRANSACTION 和 COMMIT 之间的操作属于同一个事务；</p>
+</li>
+<li><p>许多非关系数据库不会将这些操作组合在一起，即使支持多对象 API（批量插入、更新等），也不具备事务语意。</p>
+</li>
+</ul>
+<h3 id="单对象写入"><a href="#单对象写入" class="headerlink" title="单对象写入"></a>单对象写入</h3><p>对于单个对象的更新，需要确保写入的对象完整（可被解析的）、唯一（不存在新旧值混杂），写入过程中被读取也不会出现部分的值。可对每个对象采用加锁的方式、每次只允许一个线程访问实现隔离。</p>
+<p>某些数据库还提供了高级的原子操作（自增、比较-设置等），无需在应用层实现“读取-修改-写回”的过程，只有当前值没有被他人修改时才执行写入。</p>
+<p>单对象操作可以有效防止多个客户端并发修改同一对象时的更新丢失问题。</p>
+<h3 id="多对象事务"><a href="#多对象事务" class="headerlink" title="多对象事务"></a>多对象事务</h3><p>由于出现跨分区的多对象事务难以实现，而且在高可用或极致性能场景下由很多负面影响，很多分布式数据系统不支持多对象事务。</p>
+<p>要求写入多个不同的对象并进行协调的情况：</p>
+<ul>
+<li><p>对于关系数据模型，表中的某行可能是另一个表中的外键。</p>
+</li>
+<li><p>对于文档数据模型，如待更新字段在同一个文档中，可视为单个对象，此时不需要多对象事务。</p>
+</li>
+<li><p>除了纯粹键值存储以外，几乎所有其他系统都支持二级索引，每次更改值时都需要同步更新索引。</p>
+</li>
+</ul>
+<p>此时需要事务的原子性保证，否则会出现部分更新、数据不同步的情况。</p>
+<h3 id="处理错误与中止"><a href="#处理错误与中止" class="headerlink" title="处理错误与中止"></a>处理错误与中止</h3><p>如果发生了意外、所有操作被中止，之后可以安全地重试：即违反原子性/隔离性/持久性时，可完全放弃整个事务。</p>
+<p>一些系统无法遵循，比如无主节点的数据复制会在尽力而为的基础上尝试多做些工作，但遇上错误并不会撤销已完成操作，需要应用程序负责恢复。</p>
+<p>重试中止的事务存在以下问题：</p>
+<ul>
+<li><p><strong>重试补偿</strong>：如果事务实际执行成功，返回给客户端的消息在网络传输时发生意外，重试就会导致重复执行，此时需要额外的应用级重复数据删除机制。</p>
+</li>
+<li><p><strong>重试退避</strong>：如果由于系统超负荷导致错误，需要设置重试上限，比如指数回退，同时解决系统过载本身的问题。</p>
+</li>
+<li><p><strong>区分重试</strong>：由临时性故障（死锁、隔离违例、网络闪断、节点切换）所导致的错误需要重试，但永久性故障（违反约束）则重试无意义。</p>
+</li>
+<li><p><strong>外部影响</strong>：哪怕事务被中止，事务在数据库之外的副作用已生效（跨系统同时提交或放弃，可采用二阶段提交）。</p>
+</li>
+<li><p><strong>重试失败</strong>：如果客户端进程在重试过程中也发生失败，没有其他机制继续重试，则待写入的数据可能会因此而丢失。</p>
+</li>
+</ul>
+<h1 id="弱隔离级别"><a href="#弱隔离级别" class="headerlink" title="弱隔离级别"></a>弱隔离级别</h1><p>如果两个事务操作不存在依赖关系的不同数据，可以安全地并行执行。</p>
+<p>只有出现某个事务修改数据而另一个事务同时要读取该数据，或者两个事务同时修改相同数据时，才会引发并发问题（竞态条件）。</p>
+<p>这类问题很难通过测试发现，因为只会在特定时刻触发，难以稳定重现，对于大型应用也难以推理分析。</p>
+<p>因此数据库一直试图通过事务隔离来对应用开发者隐藏内部的各种并发问题，如使用可串行化级别的隔离，则不存在并发问题，但会严重影响性能，因此更倾向于使用弱隔离级别。</p>
+<h2 id="读写竞争"><a href="#读写竞争" class="headerlink" title="读写竞争"></a>读写竞争</h2><h3 id="脏写-gt-读-未提交"><a href="#脏写-gt-读-未提交" class="headerlink" title="脏写 -&gt; 读-未提交"></a>脏写 -&gt; 读-未提交</h3><p>即可以访问未提交事务修改的数据，不能防止脏读。</p>
+<h3 id="脏读-gt-读-提交"><a href="#脏读-gt-读-提交" class="headerlink" title="脏读 -&gt; 读-提交"></a>脏读 -&gt; 读-提交</h3><p>要求读数据库时只能看到已成功提交的数据（防止脏读），写数据库时只会覆盖已成功提交的数据（防止脏写）。</p>
+<p>基于加锁方式的“读-提交”隔离可能发生死锁。</p>
+<h4 id="防止脏读"><a href="#防止脏读" class="headerlink" title="防止脏读"></a>防止脏读</h4><p>脏读：某个事务已经完成部分数据写入，但事务尚未提交（或中止），另一个事务可访问未提交的数据。当有以下需求时，需要防止脏读：</p>
+<ul>
+<li><p>如果事务需更新多个对象，意味着另一个事务可能会看到部分更新，而非全部。</p>
+</li>
+<li><p>如果事务发生中止，则所有写入操作都需要回滚。</p>
+</li>
+</ul>
+<p>解决方法：当事务想修改某个对象（例如行或文档）时，它必须首先获得该对象的锁；然后一直持有锁直到事务提交（或中止）。在给定时刻只有一个事务可以拿到特定对象的锁，其他事务只能等该事务提交或中止后才能获得锁继续执行。</p>
+<h4 id="防止脏写"><a href="#防止脏写" class="headerlink" title="防止脏写"></a>防止脏写</h4><p>脏写：当两个事务同时尝试更新相同的对象，先前的写入是尚未提交事务的一部分，而被后写的事务覆盖。如果事务需要更新多个对象，脏写会带来非预期的错误结果。</p>
+<p>解决方法：对于每个待更新的对象，数据库都会维护其旧值和当前持锁事务将要设置的新值两个版本。在事务提交之前所有其他读操作都读取旧值；仅当写事务提交之后，才会切换到读取新值。</p>
+<p>但在读-提交级别的隔离中，无法解决两个客户端竞争同一个计数器执行增量的情况，因为这属于更新丢失（覆盖）。</p>
+<h4 id="存在问题"><a href="#存在问题" class="headerlink" title="存在问题"></a>存在问题</h4><p>”读-提交“的隔离级别存在 <strong>不可重复读取（nonrepeatable read）</strong> 或 <strong>读倾斜（read skew）</strong> 的问题：比如 A 账号转账到 B 账号的场景，存在读取到 B 账号收到转账前、A 账号发出转账后的情况，此时两边总额减少了。其他不可容忍的暂时性不一致场景：</p>
+<ul>
+<li><p><strong>数据备份</strong>：备份任务要复制整个数据库需要很长时间，在此过程中允许继续写入数据，因此得到镜像可能包含部分旧版本数据和部分新版本数据。</p>
+</li>
+<li><p><strong>分析查询与完整性检查</strong>：有时查询可能会扫描几乎大半个数据库，如果在不同时间点观察数据库，可能会返回无意义的结果。</p>
+</li>
+</ul>
+<h3 id="不可重复读-gt-可重复读"><a href="#不可重复读-gt-可重复读" class="headerlink" title="不可重复读 -&gt; 可重复读"></a>不可重复读 -&gt; 可重复读</h3><p>快照级别隔离要求每个事务都从数据库的一致性快照中读取，事务一开始看到是最近提交的数据（即使数据随后可能被另一个事务更改），保证每个事务都只看到该特定时间点的旧数据。</p>
+<ul>
+<li><p>适用于长时间运行的只读查询：如备份和分析，避免数据在查询过程中变化时读取到变化的数据。</p>
+</li>
+<li><p>快照级别隔离对于只读事务特别有效，但在具体实现时不同数据库对此有不同命名：Orcale 称之为可串行化，PostgreSQL、MySQL 称之为可重复读。</p>
+</li>
+</ul>
+<h4 id="实现快照级别隔离"><a href="#实现快照级别隔离" class="headerlink" title="实现快照级别隔离"></a>实现快照级别隔离</h4><p>通常采用写锁来防止脏写，正在进行写操作的事务会阻止同一对象上的其他事务，而读取不需要加锁。可以在处理正常写入的同时，在一致性快照上执行长时间的只读查询，两者没有锁竞争。</p>
+<p>多个事务可能在不同时间点查看数据库状态，所以数据库保留了对象多个不同的提交版本，因此也被称为 <strong>多版本并发控制（MVCC）</strong>。</p>
+<ul>
+<li><p>如果只提供读-提交级别隔离，则只保留对象的两个版本：一个已提交的旧版本和尚未提交的新版本。支持快照级别隔离的存储引擎可直接采用 MVCC 来实现读-提交隔离：</p>
+<ul>
+<li><p>“读-提交”级别下对每个不同的查询单独创建一个快照。</p>
+</li>
+<li><p>快照级别隔离则是使用一个快照来运行整个事务。</p>
+</li>
+</ul>
+</li>
+<li><p>表中的每行都有 <code>created_by</code> 字段，包含了创建该行的事务 ID。每行还有初始为空的 <code>deleted_by</code> 字段。如果事务要删除某行，只是将 <code>deleted_by</code> 字段设置为请求删除的事务 ID。事后 <strong>确定没有其他事务引用该标记删除的行</strong> 时，数据库的垃圾回收进程才去真正删除并释放存储空间。</p>
+</li>
+<li><p>当事务读数据库时，通过事务 ID 可以决定对象可见/不可见。</p>
+</li>
+</ul>
+<h4 id="一致性快照的可见性规则"><a href="#一致性快照的可见性规则" class="headerlink" title="一致性快照的可见性规则"></a>一致性快照的可见性规则</h4><p>长时间运行的事务可能会使用快照很长时间，从其他事务的角度来看，它可能在持续访问正在被覆盖或删除的内容。由于没有就地更新、而是每次修改总创建一个新版本，因此数据库可以以较小的运行代价来维护一致性快照。</p>
+<p>事务 ID 数据不可见：</p>
+<ul>
+<li><p>每个事务开始时，数据库列出尚在进行中的其他事务（未提交或中止），并忽略这些事务完成的写入（尽管之后可能被提交）。</p>
+</li>
+<li><p>所有中止事务所做的修改。</p>
+</li>
+<li><p>晚于当前事务的事务 ID 所做的任何修改（不管是否完成提交）。</p>
+</li>
+</ul>
+<p>事务 ID 数据可见：</p>
+<ul>
+<li><p>事务开始的时刻，创建该对象的事务已经完成了提交。</p>
+</li>
+<li><p>对象没有被标记为删除；或者即使标记了，但删除事务在当前事务开始时还没有完成提交。</p>
+</li>
+</ul>
+<h4 id="索引与快照级别隔离"><a href="#索引与快照级别隔离" class="headerlink" title="索引与快照级别隔离"></a>索引与快照级别隔离</h4><p>对于多版本的数据库要支持索引，可以把索引指向对象的所有版本（如把同一对象的不同版本放在一个内存页面上），并过滤对当前事务不可见版本。当后台的垃圾回收进程决定删除某个旧对象版本时也把对应的索引条目删除。</p>
+<p>CouchDB、Datomic 和 LMDB 使用另一种方法，主体结构是 B-tree，并采用了追加/写时复制的技术：当需要更新时都创建一个新的修改副本拷贝必要的内容（新的 B-tree root，代表该时刻数据库的一致性快照），让父结点或者递归向上直到树的 root 结点都指向新创建的结点，而忽略不受影响的页面。因此在查询时不需要根据事务 ID 过滤。</p>
+<h2 id="写写竞争（更新丢失）"><a href="#写写竞争（更新丢失）" class="headerlink" title="写写竞争（更新丢失）"></a>写写竞争（更新丢失）</h2><p>“读-提交”和“快照级别隔离”都是解决 <strong>只读事务遇到并发写时</strong> 数据可见性问题。</p>
+<p>当应用程序从数据库读取某些值，根据应用逻辑做出修改然后写回新值。有两个事务在同样的数据对象上执行类似操作时，由于隔离性，第二个写操作不包括第一个事务修改后的值，最终会导致第一个事务的修改值可能会丢失。</p>
+<p>更新丢失的其他场景：</p>
+<ul>
+<li><p>递增计数器。</p>
+</li>
+<li><p>对某复杂对象的一部分内容执行修改，如 JSON 文档。</p>
+</li>
+<li><p>两个用户同时编辑页面。</p>
+</li>
+</ul>
+<p>使用一级封锁协议可以解决 <strong>更新丢失</strong> 问题。</p>
+<h3 id="原子写操作"><a href="#原子写操作" class="headerlink" title="原子写操作"></a>原子写操作</h3><p>数据库内置原子操作可避免“读-修改-写回”操作，确保并发安全比如：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">UPDATE <span class="keyword">table</span> </span><br><span class="line"><span class="keyword">SET</span> <span class="keyword">value</span> <span class="operator">=</span> <span class="keyword">value</span> <span class="operator">+</span> <span class="number">1</span> </span><br><span class="line"><span class="keyword">WHERE</span> key <span class="operator">=</span> <span class="string">&#x27;foo&#x27;</span>; </span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>通常采用对读取对象加独占锁实现，确保更新提交前不会被其他事务读取，有时也被称为 <strong>游标稳定性</strong>。另一种实现方式是强制所有原子操作都在单线程上执行。</p>
+</li>
+<li><p>基于 ORM 框架很容易产生非“读取-修改-写回”的应用层代码，导致无法使用数据库提供的原子操作，可能会埋下难以发现的潜在错误。</p>
+</li>
+</ul>
+<h3 id="显式加锁"><a href="#显式加锁" class="headerlink" title="显式加锁"></a>显式加锁</h3><p>由应用程序显式锁定待更新的对象，然后执行“读-修改-写回”操作。此时如果有其他事务尝试同时读取对象，则必须等待当前正在执行得序列全部完成。</p>
+<h3 id="自动检测更新丢失"><a href="#自动检测更新丢失" class="headerlink" title="自动检测更新丢失"></a>自动检测更新丢失</h3><p>先让操作并发执行，如果事务管理器检测到了更新丢失风险则中止当前事务，并强制回退到安全的“读-修改-写回”方式。</p>
+<p>可借助快照级别隔离高效执行检查，如 PostgreSQL 的可重复读、Oracle 的可串行化、SQL Server 的快照级别隔离都能检测冲突并中止违规事务，但 MySQL InnoDB 的可重复读不支持。</p>
+<h3 id="原子比较和设置"><a href="#原子比较和设置" class="headerlink" title="原子比较和设置"></a>原子比较和设置</h3><p>对于不支持事务的数据库，有时会支持原子“比较和设置”操作以避免更新丢失：只有在上次读取的数据没有发生变化时才允许更新，否则回退到“读-修改-写回”方式：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">UPDATE <span class="keyword">table</span></span><br><span class="line"><span class="keyword">SET</span> <span class="keyword">value</span> <span class="operator">=</span> <span class="string">&#x27;new content&#x27;</span></span><br><span class="line"><span class="keyword">WHERE</span> id <span class="operator">=</span> <span class="string">&#x27;id&#x27;</span></span><br><span class="line"><span class="keyword">AND</span> <span class="keyword">value</span> <span class="operator">=</span> <span class="string">&#x27;old content&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="冲突解决与复制"><a href="#冲突解决与复制" class="headerlink" title="冲突解决与复制"></a>冲突解决与复制</h3><p>对于多副本的数据库，由于多节点上的数据副本、不同的节点可能会并发修改数据，必须采取一些额外的措施来防止丢失更新。</p>
+<ul>
+<li><p>加锁和原子修改都有个前提即只有一个最新的数据副本。多主节点或者无主节点的多副本数据库支持多个并发写，且通常以异步方式来同步更新，会有多个最新的数据副本，所以加锁和原子修改不适用。</p>
+</li>
+<li><p>多副本数据库通常支持多个并发写，然后保留多个冲突版本，由应用层逻辑或依靠特定的数据结构解决多版本问题。</p>
+</li>
+<li><p>如果操作可交换，由于顺序无关，原子操作在多副本情况下也可以工作。</p>
+</li>
+<li><p>默认情况下用最后写入获胜（LWW）的方法解决冲突会丢失更新。</p>
+</li>
+</ul>
+<h2 id="多对象冲突"><a href="#多对象冲突" class="headerlink" title="多对象冲突"></a>多对象冲突</h2><h3 id="写倾斜"><a href="#写倾斜" class="headerlink" title="写倾斜"></a>写倾斜</h3><p>写倾斜：约束条件为两个对象不能被同时修改，当由两个事务同时分别修改这两个对象都能安全通过检查、各自成功提交，则发生了写倾斜：</p>
+<ul>
+<li><p>可视为更广义的更新丢失问题。如果两个事务读取相同的一组对象，然后更新其中一部分：不同的事务可能更新不同的对象，则可能发生写倾斜；而不同的事务如果更新的是同一个对象，则可能发生脏写或更新丢失。</p>
+</li>
+<li><p>由于涉及多个对象，无法使用单对象原子操作规避。</p>
+</li>
+<li><p>基于快照级别隔离来实现更新丢失自动检测也无法解决，比如 MySQL InnoDB 可重复读，Oracle 可串行化和 SQL Server 的快照级别隔离都不支持检测写倾斜问题。解决写倾斜问题要求真正的可串行化。</p>
+</li>
+<li><p>某些数据库可自定义约束条件，然后由数据库代为检查、执行约束，比如唯一性，外键约束或者限制特定值。但涉及对象约束则大多数数据库都无法支持。开发者可通过触发器和物化视图来自行实现。</p>
+</li>
+<li><p>如果不能使用可串行化级别隔离，还可以对事务依赖的行来显式的加锁：</p>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">BEGIN</span> TRANSACTION;</span><br><span class="line"></span><br><span class="line"><span class="comment">--- FOR UPDATE 会通知数据库对返回的所有结果自动加锁</span></span><br><span class="line"><span class="keyword">SELECT</span> ... <span class="keyword">WHERE</span> ... <span class="keyword">FOR</span> UPDATE;</span><br><span class="line"></span><br><span class="line">UPDATE ... <span class="keyword">WHERE</span> ...;</span><br><span class="line"></span><br><span class="line"><span class="keyword">COMMIT</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="幻读"><a href="#幻读" class="headerlink" title="幻读"></a>幻读</h3><p>写倾斜主要出现在两个事务请求的数据范围存在重叠，或两个事务都可单独安全执行、但无法叠加执行的情况，这种情况无法通过对单对象加锁解决。其出现的模式：</p>
+<ul>
+<li><p>访问满足条件的行。</p>
+</li>
+<li><p>根据查询结果，应用层代码来决定下一步的操作。</p>
+</li>
+<li><p>如果应用程序决定继续执行，即发起数据库写入。</p>
+</li>
+</ul>
+<p>幻读：第三步的写入操作会改变第二步的前提条件，即提交写入后再次执行第一步的结果与第一次执行时的结果不同（使得另一个曾因为满足条件而开启事务的前提条件被破坏）。</p>
+<ul>
+<li><p>对于破坏条件中包含的记录，可以通过 <code>SELECT FOR UPDATE</code> 解决。</p>
+</li>
+<li><p>但如果是 <strong>先检查不满足条件的行、再添加符合条件的行</strong>，则无法通过这种范围锁来解决，因为要加锁的对象不存在。</p>
+</li>
+</ul>
+<h3 id="实体化冲突"><a href="#实体化冲突" class="headerlink" title="实体化冲突"></a>实体化冲突</h3><p>如果先决条件查询结果为空、没有对象可以加锁，还可以人为加入可加锁的对象：比如对于时间范围重叠问题，可以创建表格提前创建好实体与时间范围所有可能的组合以便于加锁，但并不存储这些时间范围与对象组合的具体占用信息。</p>
+<p>这种做法把并发控制机制降级为数据模型的思路总是不够优雅，而且也容易出错。因此更推荐使用可串行化隔离方案。</p>
+<h1 id="强隔离级别"><a href="#强隔离级别" class="headerlink" title="强隔离级别"></a>强隔离级别</h1><p>对于各种隔离级别，存在以下问题：</p>
+<ul>
+<li><p>隔离级别通常难以理解，而且不同的数据库的实现不尽一致；</p>
+</li>
+<li><p>检查应用层的代码往往很难判断在特定的隔离级别下是否安全，难以预测所有可能并发情况。</p>
+</li>
+<li><p>还缺乏好的工具来帮助检测竞争状况，静态分析难以应对特定场景下、不确定发送的并发性问题。</p>
+</li>
+</ul>
+<p><strong>可串行化</strong> 为最强的隔离级别，即确保并行执行的事务最终结果与串行执行相同。目前提供可串行化的数据库使用三种方式实现：</p>
+<ul>
+<li><p>严格按照串行顺序执行；</p>
+</li>
+<li><p>两阶段锁定；</p>
+</li>
+<li><p>乐观并发控制。</p>
+</li>
+</ul>
+<h2 id="悲观并发控制"><a href="#悲观并发控制" class="headerlink" title="悲观并发控制"></a>悲观并发控制</h2><ul>
+<li><p>两阶段加锁是典型的悲观并发控制机制：假设冲突发生必然出错，则直接放弃，采用等待方式直到绝对安全。相当于多线程编程中的互斥锁。</p>
+</li>
+<li><p>实际串行执行是极端悲观的选择：事务执行等价于事务对整个数据库（或分区）持有互斥锁。</p>
+</li>
+</ul>
+<h3 id="实际串行执行"><a href="#实际串行执行" class="headerlink" title="实际串行执行"></a>实际串行执行</h3><p>最直接的方法是避免并发，在单线程上顺序执行事务，回避诸如检测、防止事务冲突等间题。</p>
+<p>目前转向单线程执行事务主要是出于两方面的考虑：</p>
+<ul>
+<li><p>内存越来越便宜，许多应用可将整个活动数据集加载到内存中。</p>
+</li>
+<li><p>OLTP 事务通常执行很快，只产生少量的读写操作。</p>
+</li>
+<li><p>运行时间较长的分析查询则通常是只读的，可以在一致性快照运行，不需要运行在串行主循环中。</p>
+</li>
+</ul>
+<p>当满足以下约束条件，串行执行事务可以实现串行化隔离：</p>
+<ul>
+<li><p>简短而高效，否则一个缓慢的事务会影响整体执行性能。</p>
+</li>
+<li><p>仅限于活动数据集完全可以加载到内存的场景，对于很少访问数据被移到内存，当单线程事务访问时会严重拖慢性能。</p>
+</li>
+<li><p>写入吞吐量必须足够低，才能在单个 CPU 核上处理；否则就需要采用分区，最好没有跨分区事务（或占比很小）。</p>
+</li>
+</ul>
+<h4 id="存储过程封装"><a href="#存储过程封装" class="headerlink" title="存储过程封装"></a>存储过程封装</h4><p>事务机制设计初衷是襄括用户的、所有操作序列。由于人们做出决定并回应的速度较慢，如果所有操作都等待同时还要支持潜在大量并发需求，则系统大部分时间都将处于空闲中。</p>
+<p>OLTP 应用程序避免在事务执行中等待用户交互从而使事务非常简洁，Web 应用的着事务会在一个 HTTP 请求中提交，而不会跨越多个请求。</p>
+<ul>
+<li><p><strong>交互式事务</strong>：应用程序来提交查询，读取结果，可能会根据前一个查询的结果来进行其他查询，依此类推。请求与结果在应用层代码和数据库服务器之间来回交互。</p>
+</li>
+<li><p><strong>存储过程</strong>：为了获得足够的吞吐性能，系统需要能够同时处理多个事务。因此单线程串行执行的系统不支持交互式的多语句事务，应用程序必须提交整个事务代码作为存储过程打包发送到数据库。</p>
+</li>
+</ul>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E4%BA%A4%E4%BA%92%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B8%8E%E5%AD%98%E5%82%A8%E8%BF%87%E7%A8%8B.jpg" alt="交互式事务与存储过程"></p>
+<p>存储过程的优点：</p>
+<ul>
+<li><p>最新的存储过程已放弃 PL/SQL，使用通用的编程语言。</p>
+</li>
+<li><p>存储过程与内存式数据存储使得单线程上执行所有事务变得可行。不需要等待 I/O，避免加锁开销等复杂的并发控制机制，可得到高吞吐量。</p>
+</li>
+<li><p>可借助存储过程执行复制：如 VoltDB 在每个副本上执行相同的存储过程（但要求操作必须是确定性的）。</p>
+</li>
+</ul>
+<p>但也存在问题：</p>
+<ul>
+<li><p>开发语言因数据库厂商而异。</p>
+</li>
+<li><p>在数据库中运行代码难以管理：调试困难，版本控制部署复杂，测试不便，不容易与指标监控系统集成。</p>
+</li>
+<li><p>数据库被多个应用共享，要求性能更高，存储过程涉及不理想要比同样低效的应用服务器代码带来更大麻烦。</p>
+</li>
+</ul>
+<p>性能、兼容性问题被解决，但可维护性问题未解决。</p>
+<h4 id="分区"><a href="#分区" class="headerlink" title="分区"></a>分区</h4><p>串行执行的吞吐量被限制在单机单个 CPU 核。只读事务可在单独的快照上执行，但对于高写入需求的应用程序，单线程事务处理容易成为瓶颈。因此需要对数据库分区、扩展到多 CPU 多核。</p>
+<ul>
+<li><p>通过为每个 CPU 核分配一个分区、每个事务只在单分区中读写数据，可提升总体事务吞吐量，比如 VoltDB。</p>
+</li>
+<li><p>对于跨分区的事务，数据库必须在涉及的所有分区之间协调事务。存储过程需要跨越所有分区加锁执行以确保整个系统的可串行化，性能比单分区慢得多。</p>
+</li>
+<li><p>事务是否能只在单分区上执行，很大程度上取决于应用层的数据结构。比如键值数据比较容易切分，但带多个二级索引的数据需要大量的跨区协调，不适合在多分区上执行事务。</p>
+</li>
+</ul>
+<h2 id="乐观并发控制"><a href="#乐观并发控制" class="headerlink" title="乐观并发控制"></a>乐观并发控制</h2><p>假设冲突可能发生，事务会继续执行而不是中止；当事务提交时数据库检查是否确实发生了冲突，是则中止事务并重试。</p>
+<ul>
+<li><p>事务中的所有读取操作都是基于数据库的一致性快照。</p>
+</li>
+<li><p>如果系统还有足够的性能提升空间，且事务之间竞争不大，乐观并发控制会比悲观方式高效很多，通过可交换的原子操作还可以减少一些竞争情况。</p>
+</li>
+<li><p>如果冲突很多，大量的事务必须中止，当系统已接近其最大吞吐量，反复重试事务会使系统性能变得更差。</p>
+</li>
+</ul>
+<h3 id="可串行化快照隔离（SSI）"><a href="#可串行化快照隔离（SSI）" class="headerlink" title="可串行化快照隔离（SSI）"></a>可串行化快照隔离（SSI）</h3><p>两阶段加锁虽然可以保证串行化，但由于串行执行，性能较差且无法扩展；弱级别隔离虽然性能不错，但容易引发各种边界条件（如更新丢失，写倾斜，幻读等）。</p>
+<p>可串行化快照隔离算法（SSI）提供了完整的可串行性保证，而性能相比于快照隔离损失很小。</p>
+<h4 id="基于过期条件决定"><a href="#基于过期条件决定" class="headerlink" title="基于过期条件决定"></a>基于过期条件决定</h4><p>事务是基于某些前提条件而决定采取行动， 在事务开始时条件成立，而当事务要提交时，数据可能已经发生改变，条件不再成立。</p>
+<p>在执行查询时，数据库无法预知应用层逻辑如何使用查询结果，假定对查询结果的任何变化都应使写事务失效。</p>
+<p>数据库检测事务是否会修改其他事务的查询结果，并在此情况下中止写事务：</p>
+<ul>
+<li><p>读取前：读取是否作用于一个（即将）过期的 MVCC 对象（读之前已经有未提交的写入）。</p>
+</li>
+<li><p>写入前：检查写入是否影响即将完成的读取（读取之后又有新的写入）。</p>
+</li>
+</ul>
+<h4 id="检测过期"><a href="#检测过期" class="headerlink" title="检测过期"></a>检测过期</h4><p>检测是否读取过期的 MVCC 对象：快照隔离通常采用多版本并发控制技术实现，当事务从 MVCC 数据库一致性快照读取时会忽略在创建快照时尚未提交的事务写入。</p>
+<p>为防止这种异常：</p>
+<ul>
+<li><p>数据库需要跟踪由于 MVCC 可见性规则而被忽略的写操作，在事务提交时会检查是否存在一些当初被忽略的写操作现在已经完成了提交，是则中止当前事务。</p>
+</li>
+<li><p>读事务没有倾斜风险，不需要中止。通过减少不必要的中止，SSI 可以高效支持需要在一致性快照中运行很长时间的读事务。</p>
+</li>
+</ul>
+<h4 id="检测写影响"><a href="#检测写影响" class="headerlink" title="检测写影响"></a>检测写影响</h4><p>检测写是否影响了之前的读：为了避免在读取数据之后另一个事务修改了数据的情况，2PL 的索引区间锁可锁定与某个查询条件匹配的所有行。</p>
+<p>而 SSI 锁则不会阻塞其他事务：</p>
+<ul>
+<li><p>数据库可通过索引条目记录两个事务都查询了相同的结果（或在表级别跟踪此信息）。该额外记录只需保留很小一段时间，当并发的所有事务都处理提交或中止后就可以丢弃。</p>
+</li>
+<li><p>当另一个事务尝试修改时，首先检查索引，从而确定是否最近存在读取该数据的其他事务。类似在受影响的字段范围上获取写锁，但并不会阻塞读取，而直到读事务提交时才进一步通知变化状况。</p>
+</li>
+</ul>
+<h4 id="性能问题"><a href="#性能问题" class="headerlink" title="性能问题"></a>性能问题</h4><ul>
+<li><p>有时读取过期的数据不会造成太大影响，可以确信执行的最终结果是可串行化的。</p>
+</li>
+<li><p>事务中止的比例会显著影响 SSI 的性能表现。如运行很长时间的事务，读取和写入了大量数据，产生冲突并中止的概率就会增大，所以 SSI 要求读-写型事务要简短。但容忍度比两阶段加锁与串行执行高。</p>
+</li>
+<li><p><strong>权衡跟踪事务读、写的粒度</strong>：如果详细跟踪事务操作，可以准确推测有哪些事务受到影响、需要中止，但元数据记录开销可能很大；而粗粒度的记录则速度占优，但可能会扩大受影响事务范围。</p>
+</li>
+<li><p><strong>与实际串行执行相比</strong>：可以突破单个 CPU 核的限制，如将冲突检测分布在多台机器上，可提高总体吞吐量。数据可能跨多台机器进行分区，事务也可以在多个分区上读、写数据并保证可串行化隔离。</p>
+</li>
+<li><p><strong>与两阶段加锁相比</strong>：由于不需要等待其他事务所持有的锁，和快照隔离一样，读写通常不会互相阻塞。，这样使得查询延迟更加稳定、 可预测。 在一致性快照上执行只读查询不需要任何锁，有利于提高读密集的负载。</p>
+</li>
+</ul>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2021/02/06/DDIA_note-10/" title= "《DDIA》阅读笔记（八）：分布式系统的挑战">
+                    <div class="nextTitle">《DDIA》阅读笔记（八）：分布式系统的挑战</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2021/01/22/DDIA_note-8/" title= "《DDIA》阅读笔记（六）：数据分区">
+                    <div class="prevTitle">《DDIA》阅读笔记（六）：数据分区</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODYzMi8yNTEyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:yipwinghong@outlook.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yipwinghong" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/WeChat.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:100vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8B%E5%8A%A1%E5%8E%9F%E7%90%86"><span class="toc-number">1.</span> <span class="toc-text">事务原理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#ACID-%E7%9A%84%E5%90%AB%E4%B9%89"><span class="toc-number">1.1.</span> <span class="toc-text">ACID 的含义</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E5%AD%90%E6%80%A7%EF%BC%88Atomicity%EF%BC%89"><span class="toc-number">1.1.1.</span> <span class="toc-text">原子性（Atomicity）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E8%87%B4%E6%80%A7%EF%BC%88Consistency%EF%BC%89"><span class="toc-number">1.1.2.</span> <span class="toc-text">一致性（Consistency）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9A%94%E7%A6%BB%E6%80%A7%EF%BC%88Isolation%EF%BC%89"><span class="toc-number">1.1.3.</span> <span class="toc-text">隔离性（Isolation）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%81%E4%B9%85%E6%80%A7%EF%BC%88Durability%EF%BC%89"><span class="toc-number">1.1.4.</span> <span class="toc-text">持久性（Durability）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%95%E5%AF%B9%E8%B1%A1%E4%B8%8E%E5%A4%9A%E5%AF%B9%E8%B1%A1%E4%BA%8B%E5%8A%A1%E6%93%8D%E4%BD%9C"><span class="toc-number">1.2.</span> <span class="toc-text">单对象与多对象事务操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%95%E5%AF%B9%E8%B1%A1%E5%86%99%E5%85%A5"><span class="toc-number">1.2.1.</span> <span class="toc-text">单对象写入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%9A%E5%AF%B9%E8%B1%A1%E4%BA%8B%E5%8A%A1"><span class="toc-number">1.2.2.</span> <span class="toc-text">多对象事务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%84%E7%90%86%E9%94%99%E8%AF%AF%E4%B8%8E%E4%B8%AD%E6%AD%A2"><span class="toc-number">1.2.3.</span> <span class="toc-text">处理错误与中止</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BC%B1%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB"><span class="toc-number">2.</span> <span class="toc-text">弱隔离级别</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%BB%E5%86%99%E7%AB%9E%E4%BA%89"><span class="toc-number">2.1.</span> <span class="toc-text">读写竞争</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%84%8F%E5%86%99-gt-%E8%AF%BB-%E6%9C%AA%E6%8F%90%E4%BA%A4"><span class="toc-number">2.1.1.</span> <span class="toc-text">脏写 -&gt; 读-未提交</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%84%8F%E8%AF%BB-gt-%E8%AF%BB-%E6%8F%90%E4%BA%A4"><span class="toc-number">2.1.2.</span> <span class="toc-text">脏读 -&gt; 读-提交</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B2%E6%AD%A2%E8%84%8F%E8%AF%BB"><span class="toc-number">2.1.2.1.</span> <span class="toc-text">防止脏读</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B2%E6%AD%A2%E8%84%8F%E5%86%99"><span class="toc-number">2.1.2.2.</span> <span class="toc-text">防止脏写</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AD%98%E5%9C%A8%E9%97%AE%E9%A2%98"><span class="toc-number">2.1.2.3.</span> <span class="toc-text">存在问题</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E5%8F%AF%E9%87%8D%E5%A4%8D%E8%AF%BB-gt-%E5%8F%AF%E9%87%8D%E5%A4%8D%E8%AF%BB"><span class="toc-number">2.1.3.</span> <span class="toc-text">不可重复读 -&gt; 可重复读</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E5%BF%AB%E7%85%A7%E7%BA%A7%E5%88%AB%E9%9A%94%E7%A6%BB"><span class="toc-number">2.1.3.1.</span> <span class="toc-text">实现快照级别隔离</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%80%E8%87%B4%E6%80%A7%E5%BF%AB%E7%85%A7%E7%9A%84%E5%8F%AF%E8%A7%81%E6%80%A7%E8%A7%84%E5%88%99"><span class="toc-number">2.1.3.2.</span> <span class="toc-text">一致性快照的可见性规则</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%B4%A2%E5%BC%95%E4%B8%8E%E5%BF%AB%E7%85%A7%E7%BA%A7%E5%88%AB%E9%9A%94%E7%A6%BB"><span class="toc-number">2.1.3.3.</span> <span class="toc-text">索引与快照级别隔离</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%99%E5%86%99%E7%AB%9E%E4%BA%89%EF%BC%88%E6%9B%B4%E6%96%B0%E4%B8%A2%E5%A4%B1%EF%BC%89"><span class="toc-number">2.2.</span> <span class="toc-text">写写竞争（更新丢失）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E5%AD%90%E5%86%99%E6%93%8D%E4%BD%9C"><span class="toc-number">2.2.1.</span> <span class="toc-text">原子写操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%98%BE%E5%BC%8F%E5%8A%A0%E9%94%81"><span class="toc-number">2.2.2.</span> <span class="toc-text">显式加锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E5%8A%A8%E6%A3%80%E6%B5%8B%E6%9B%B4%E6%96%B0%E4%B8%A2%E5%A4%B1"><span class="toc-number">2.2.3.</span> <span class="toc-text">自动检测更新丢失</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E5%AD%90%E6%AF%94%E8%BE%83%E5%92%8C%E8%AE%BE%E7%BD%AE"><span class="toc-number">2.2.4.</span> <span class="toc-text">原子比较和设置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%B2%E7%AA%81%E8%A7%A3%E5%86%B3%E4%B8%8E%E5%A4%8D%E5%88%B6"><span class="toc-number">2.2.5.</span> <span class="toc-text">冲突解决与复制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A%E5%AF%B9%E8%B1%A1%E5%86%B2%E7%AA%81"><span class="toc-number">2.3.</span> <span class="toc-text">多对象冲突</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%99%E5%80%BE%E6%96%9C"><span class="toc-number">2.3.1.</span> <span class="toc-text">写倾斜</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B9%BB%E8%AF%BB"><span class="toc-number">2.3.2.</span> <span class="toc-text">幻读</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E4%BD%93%E5%8C%96%E5%86%B2%E7%AA%81"><span class="toc-number">2.3.3.</span> <span class="toc-text">实体化冲突</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BC%BA%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB"><span class="toc-number">3.</span> <span class="toc-text">强隔离级别</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%82%B2%E8%A7%82%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6"><span class="toc-number">3.1.</span> <span class="toc-text">悲观并发控制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E9%99%85%E4%B8%B2%E8%A1%8C%E6%89%A7%E8%A1%8C"><span class="toc-number">3.1.1.</span> <span class="toc-text">实际串行执行</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E8%BF%87%E7%A8%8B%E5%B0%81%E8%A3%85"><span class="toc-number">3.1.1.1.</span> <span class="toc-text">存储过程封装</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%86%E5%8C%BA"><span class="toc-number">3.1.1.2.</span> <span class="toc-text">分区</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%90%E8%A7%82%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6"><span class="toc-number">3.2.</span> <span class="toc-text">乐观并发控制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AF%E4%B8%B2%E8%A1%8C%E5%8C%96%E5%BF%AB%E7%85%A7%E9%9A%94%E7%A6%BB%EF%BC%88SSI%EF%BC%89"><span class="toc-number">3.2.1.</span> <span class="toc-text">可串行化快照隔离（SSI）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E8%BF%87%E6%9C%9F%E6%9D%A1%E4%BB%B6%E5%86%B3%E5%AE%9A"><span class="toc-number">3.2.1.1.</span> <span class="toc-text">基于过期条件决定</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A3%80%E6%B5%8B%E8%BF%87%E6%9C%9F"><span class="toc-number">3.2.1.2.</span> <span class="toc-text">检测过期</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A3%80%E6%B5%8B%E5%86%99%E5%BD%B1%E5%93%8D"><span class="toc-number">3.2.1.3.</span> <span class="toc-text">检测写影响</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%A7%E8%83%BD%E9%97%AE%E9%A2%98"><span class="toc-number">3.2.1.4.</span> <span class="toc-text">性能问题</span></a></li></ol></li></ol></li></ol></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 58
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span><a class="archive-post-title" href= "/2021/06/13/Go_cheat-sheet/" >Go Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/06</span><a class="archive-post-title" href= "/2021/06/06/2021-06-06_diary/" >Weekly Summary (2021-05-31_2021-06-06)</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/31</span><a class="archive-post-title" href= "/2021/05/31/2021-05-31_diary/" >2021 下半年工作学习安排</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/16</span><a class="archive-post-title" href= "/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/" >如何用图论解决 Secret Santa 问题？</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" >把 PostgreSQL 用作数据仓库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/" >SELECT * 对 SQL 性能不利的原因</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2021/02/24/DDIA_note-13/" >《DDIA》阅读笔记（九）：一致性与共识（共识问题）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/21</span><a class="archive-post-title" href= "/2021/02/21/2021-02-21_diary/" >近期工作学习规划</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/19</span><a class="archive-post-title" href= "/2021/02/19/DDIA_note-12/" >《DDIA》阅读笔记（九）：一致性与共识（顺序保证）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/13</span><a class="archive-post-title" href= "/2021/02/13/DDIA_note-11/" >《DDIA》阅读笔记（九）：一致性与共识（可线性化）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/06</span><a class="archive-post-title" href= "/2021/02/06/DDIA_note-10/" >《DDIA》阅读笔记（八）：分布式系统的挑战</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/27</span><a class="archive-post-title" href= "/2021/01/27/DDIA_note-9/" >《DDIA》阅读笔记（七）：事务</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/22</span><a class="archive-post-title" href= "/2021/01/22/DDIA_note-8/" >《DDIA》阅读笔记（六）：数据分区</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span><a class="archive-post-title" href= "/2021/01/21/DDIA_note-7/" >《DDIA》阅读笔记（五）：数据复制（无主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/20</span><a class="archive-post-title" href= "/2021/01/20/DDIA_note-6/" >《DDIA》阅读笔记（五）：数据复制（多主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/09</span><a class="archive-post-title" href= "/2021/01/09/DDIA_note-5/" >《DDIA》阅读笔记（五）：数据复制（单主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/01</span><a class="archive-post-title" href= "/2021/01/01/DB_tree-table-design-summary/" >树形表结构设计总结</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/19</span><a class="archive-post-title" href= "/2020/12/19/DDIA_note-4/" >《DDIA》阅读笔记（四）：数据编码与演化</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/13</span><a class="archive-post-title" href= "/2020/12/13/DDIA_note-3/" >《DDIA》阅读笔记（三）：数据存储与检索</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/04</span><a class="archive-post-title" href= "/2020/12/04/DDIA_note-2/" >《DDIA》阅读笔记（二）：数据模型与查询语言</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/02</span><a class="archive-post-title" href= "/2020/12/02/DDIA_note-1/" >《DDIA》阅读笔记（一）：可靠、可扩展与可维护的应用系统</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span><a class="archive-post-title" href= "/2020/10/08/Maven_external_dependencies_management/" >Maven 打包依赖外置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2020/10/04/JVM_prod-analysis-cmd/" >Java 应用常用调试分析方法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/30</span><a class="archive-post-title" href= "/2020/06/30/JVM_java-memory-area/" >Java 内存区域</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/28</span><a class="archive-post-title" href= "/2020/05/28/DB_data-warehouse-design-basic/" >数据仓库设计基础</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/08</span><a class="archive-post-title" href= "/2020/04/08/2020-04-08_diary/" >关于使用思维导图做笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/28</span><a class="archive-post-title" href= "/2020/03/28/Algorithm_leetcode-high-frequency-problems/" >LeetCode 高频面试题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2020/03/06/InfoSecty_personal-infomation-security-guide/" >個人信息安全保護指南</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/22</span><a class="archive-post-title" href= "/2020/02/22/2020-02-22_diary/" >免费 JetBrains 全家桶</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/16</span><a class="archive-post-title" href= "/2020/02/16/Nginx_cheat-sheet/" >Nginx Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Git_Cheat-Sheet/" >Git Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker&K8S_Cheat-Sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker_cheat-sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/03</span><a class="archive-post-title" href= "/2020/02/03/JVM_jstat-monitor-analysis/" >JVM jstat 监控分析</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/01</span><a class="archive-post-title" href= "/2020/02/01/JVM_GC-log-analysis/" >JVM GC 日志分析</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/01</span><a class="archive-post-title" href= "/2019/11/01/Design_design-patterns/" >设计模式与设计原则</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/30</span><a class="archive-post-title" href= "/2019/10/30/JVM_mindmap/" >Java 虚拟机与并发编程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_offset-reset/" >Kafka 位移重置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_dynamic-config/" >Kafka 动态配置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/20</span><a class="archive-post-title" href= "/2019/05/20/Kafka_common-scripts/" >Kafka 常用脚本</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/06</span><a class="archive-post-title" href= "/2019/05/06/Kafka_basic-conceptions/" >Kafka 基本概念</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2018/10/04/Python_async-programming/" >Python 异步编程总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/19</span><a class="archive-post-title" href= "/2018/09/19/Python_data-structure/" >Python 数据结构应用</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/13</span><a class="archive-post-title" href= "/2018/09/13/Python_decorator-basic-usage/" >Python 装饰器基本用法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/02</span><a class="archive-post-title" href= "/2018/09/02/JavaScript_ES6-grammar/" >ES6 语法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/30</span><a class="archive-post-title" href= "/2018/08/30/Vue_user-guide-4/" >Vue 学习笔记：前端路由、请求发送和状态管理</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/28</span><a class="archive-post-title" href= "/2018/08/28/JavaScript_cheat-sheet/" >JavaScript Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/24</span><a class="archive-post-title" href= "/2018/08/24/Vue_user-guide-3/" >Vue 学习笔记：组件</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/23</span><a class="archive-post-title" href= "/2018/08/23/Vue_user-guide-2/" >Vue 学习笔记（2）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/22</span><a class="archive-post-title" href= "/2018/08/22/Python_OOP-summary/" >Python 类与对象总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/20</span><a class="archive-post-title" href= "/2018/08/20/Vue_user-guide-1/" >Vue 学习笔记（1）</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="杂事"><span class="iconfont-archer">&#xe606;</span>杂事</span>
+    
+        <span class="sidebar-tag-name" data-tags="技术"><span class="iconfont-archer">&#xe606;</span>技术</span>
+    
+        <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
+    
+        <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
+    
+        <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
+    
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
+        <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
+    
+        <span class="sidebar-tag-name" data-tags="Maven"><span class="iconfont-archer">&#xe606;</span>Maven</span>
+    
+        <span class="sidebar-tag-name" data-tags="Nginx"><span class="iconfont-archer">&#xe606;</span>Nginx</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Vue"><span class="iconfont-archer">&#xe606;</span>Vue</span>
+    
+        <span class="sidebar-tag-name" data-tags="前端"><span class="iconfont-archer">&#xe606;</span>前端</span>
+    
+        <span class="sidebar-tag-name" data-tags="Git"><span class="iconfont-archer">&#xe606;</span>Git</span>
+    
+        <span class="sidebar-tag-name" data-tags="JavaScript"><span class="iconfont-archer">&#xe606;</span>JavaScript</span>
+    
+        <span class="sidebar-tag-name" data-tags="Go"><span class="iconfont-archer">&#xe606;</span>Go</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="《数据密集型应用系统设计》阅读笔记"><span class="iconfont-archer">&#xe60a;</span>《数据密集型应用系统设计》阅读笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Kylo Yip"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"live2d-widget-model-nietzsche"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>
+
+

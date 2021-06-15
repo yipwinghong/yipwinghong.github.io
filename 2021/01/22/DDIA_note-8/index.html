@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Kylo Yip">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Kylo Yip">
+    
+    <meta name="keywords" content="Kylo's Notebook,Kylo Yip">
+    
+    <meta name="description" content="">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>《DDIA》阅读笔记（六）：数据分区 · Kylo&#39;s Notebook</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Kylo's Notebook" type="application/atom+xml">
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >Kylo&#39;s Notebook</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">《DDIA》阅读笔记（六）：数据分区</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>Kylo's Notebook</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:100vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(https://api.ixiaowai.cn/mcapi/mcapi.php)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            《DDIA》阅读笔记（六）：数据分区
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "技术">技术</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "设计">设计</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">4.1k</span>Reading time: <span class="post-count reading-time">13 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2021/01/22</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="数据分区"><a href="#数据分区" class="headerlink" title="数据分区"></a>数据分区</h1><p>本章结构如下：</p>
+<blockquote class="pullquote mindmap mindmap-md"><ul>
+<li>数据分区<ul>
+<li>键值数据分区<ul>
+<li>基于关键字区间</li>
+<li>基于关键字哈希值<ul>
+<li>一致性哈希</li>
+<li>组合索引</li>
+</ul>
+</li>
+<li>数据倾斜与热点</li>
+</ul>
+</li>
+<li>分区与二级索引<ul>
+<li>基于文档（本地）</li>
+<li>基于词条（全局）</li>
+</ul>
+</li>
+<li>分区再平衡<ul>
+<li>动态再平衡策略<ul>
+<li>避免取模</li>
+<li>固定数量</li>
+<li>动态平衡</li>
+<li>按节点比例</li>
+</ul>
+</li>
+<li>自动与手动再平衡</li>
+</ul>
+</li>
+<li>请求路由<ul>
+<li>分布式协调</li>
+<li>并行查询执行</li>
+</ul>
+</li>
+<li>分区架构<ul>
+<li>PGXC<ul>
+<li>Hash 分片<ul>
+<li>普通哈希</li>
+<li>一致性哈希</li>
+</ul>
+</li>
+<li>Range 静态分片</li>
+<li>Set</li>
+</ul>
+</li>
+<li>NewSQL<ul>
+<li>Range 动态分片</li>
+<li>Group</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+
+<p>数据分区也称为数据分片，主要目的是提高可扩展性。</p>
+<ul>
+<li><p>不同的分区可以放在无共享集群的不同节点上，因此把大数据集分配到更多的磁盘（数据量）、查询负载（吞吐量）分布到更多的处理器上。</p>
+</li>
+<li><p>通常与复制结合使用，每个分区在多个节点都存有副本，某条记录属于特定的分区，相同内容会保存在不同的节点上以提高系统的容错性：每个分区都有自己的主副本，被分配给某节点，而从副本则分配在其他一些节点。</p>
+</li>
+<li><p>理论上每个分区基本保持独立运行，因此可以将数据库分布扩展到多台机器，但如果写入需要跨多个分区，就涉及分布式事务，情况会变得更复杂。</p>
+</li>
+</ul>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E5%88%86%E5%8C%BA%E4%B8%8E%E5%89%AF%E6%9C%AC.jpg" alt="分区与副本"></p>
+<h2 id="键值数据的分区"><a href="#键值数据的分区" class="headerlink" title="键值数据的分区"></a>键值数据的分区</h2><p>对于键值数据，分区的主要目标是将数据和查询负载均匀分布在所有节点上。</p>
+<ul>
+<li><p>如果分区不均匀，某些分区节点比其他分区承担更多的数据量或查询负载，称之为 <strong>倾斜</strong>，负载严重不成比例的分区即成为系统热点，会导致分区效率严重下降。</p>
+</li>
+<li><p>将记录随机均匀分配给所有节点上以避免热点，但当试图读取特定的数据时，无法知道数据保存位置，需要 <strong>并行查询所有节点</strong>。解决方法是使用键值数据模型，利用关键字访问。</p>
+</li>
+</ul>
+<h3 id="基于关键字区间"><a href="#基于关键字区间" class="headerlink" title="基于关键字区间"></a>基于关键字区间</h3><p>先对关键字进行排序，为每个分区分配一段连续的关键字或者关键字区间范围（不一定要均匀分布，因为数据本身可能就不均匀）。</p>
+<ul>
+<li><p>优点是 <strong>支持高效的区间查询</strong>，将关键字作为一个拼接起来的索引项从而一次查询得到多个相关记录（参考“多列索引”），缺点是 <strong>某些访问模式会导致热点</strong>：如按日期分区，所有写操作都集中在当天的分区。</p>
+</li>
+<li><p>要解决范围分区的访问热点，可引入 <strong>多关键字拼接</strong> 作为分区的键：比如要是同一天写入的数据分配到不同的节点，可以把节点编号与日期拼接作为分区的键。</p>
+</li>
+<li><p>采用这种分区策略的系统有 Bigtable，其开源版本 HBase、RethinkDB 和 MongoDB 2.4-。</p>
+</li>
+</ul>
+<h3 id="基于关键字哈希值"><a href="#基于关键字哈希值" class="headerlink" title="基于关键字哈希值"></a>基于关键字哈希值</h3><p>使用好的哈希函数可以处理数据倾斜、使其均匀分布。</p>
+<ul>
+<li><p>Cassandra 和 MongoDB 使用 MD5、Voldemore 使用 Fowler-Noll-Vo 函数作为哈希函数。</p>
+</li>
+<li><p>可为每个分区分配一个哈希范围，关键字根据其哈希值的范围划分到不同的分区中。分区边界可以是均匀间隔或伪随机选择（一致性哈希）。</p>
+</li>
+<li><p>通过关键字哈希进行分区打破了关键字原有的顺序关系，会丧失了良好的区间查询特性。</p>
+</li>
+<li><p>可在区间分区和哈希分区之间折中（如 Cassandra）：表可以声明为由多个列组成的复合主键，只有第一部分可用于哈希分区，而其他列则用作组合索引来对 SSTable 中的数据进行排序。如果为第一列指定固定值，可对其他列执行高效的区间查询。</p>
+</li>
+</ul>
+<p>哈希策略：</p>
+<ul>
+<li><p>一致性哈希：采用随机选择的分区边界来规避中央控制或分布式共识，主要用于 CDN 等网络缓存系统。</p>
+</li>
+<li><p>组合索引：为一对多的关系提供了一个优雅的数据模型。比如在社交网站上用户可能会发布多条消息更新，如更新的关键字设置为用户 id 和时间戳的组合，可有效检索由某用户在一段时间内所做的所有更新且按时间戳排序。不同的用户可存储在不同的分区上，但是对于某一用户，消息按时间戳顺序存储在一个分区上。</p>
+</li>
+</ul>
+<h3 id="数据倾斜与热点"><a href="#数据倾斜与热点" class="headerlink" title="数据倾斜与热点"></a>数据倾斜与热点</h3><p>即大量读/写操作针对同一个关键字、请求都将被路由到同一个分区的极端情况。</p>
+<ul>
+<li><p>多数系统无法自动消除高度倾斜的负载，只能在应用层减轻：比如在关键字的开头或结尾处添加一个随机数、使数据分配到不同分区。</p>
+</li>
+<li><p>读取时需从所有关键字中读取数据然后再合并，因此通常只对少量的热点关键字附加随机数才有意义。对于写入吞吐量低的绝大多数关键字引入了不必要的开销，还需要额外的元数据来标记进行特殊处理的关键字。</p>
+</li>
+</ul>
+<h2 id="分区与二级索引"><a href="#分区与二级索引" class="headerlink" title="分区与二级索引"></a>分区与二级索引</h2><p>涉及二级索引时分区会变得复杂：二级索引通常不能唯一标识一条记录，而是用来加速特定值的查询（红色的汽车），它们不能规整地映射到分区中。解决方法是使用基于文档的分区和基于词条的分区。</p>
+<h3 id="基于文档（本地）"><a href="#基于文档（本地）" class="headerlink" title="基于文档（本地）"></a>基于文档（本地）</h3><p>分区之间独立，各自维护二级索引，只负责自己分区内的文档，不关心其他分区中数据。</p>
+<ul>
+<li><p>写入数据时，只需要处理包含目标文档 ID 所在分区。</p>
+</li>
+<li><p>读取数据时，除非对文档 id 做了特别处理，否则不太可能把关键字为某值的数据放在一个分区（红色的汽车），因此需要将查询发送到所有的分区、再合并所有返回的结果。</p>
+</li>
+<li><p>这种查询方法也称为分散/聚集，二级索引的查询代价高昂，即使采用了并行查询也容易导致读延迟显著放大。</p>
+</li>
+</ul>
+<p>使用基于文档分区的二级索引有 MongoDB、Riak、Cassandra、Elasticsearch、SolrCloud、VoltDB。</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E5%9F%BA%E4%BA%8E%E6%96%87%E6%A1%A3%E7%9A%84%E5%88%86%E5%8C%BA.jpg" alt="基于文档的分区"></p>
+<h3 id="基于词条（全局）"><a href="#基于词条（全局）" class="headerlink" title="基于词条（全局）"></a>基于词条（全局）</h3><p>可对所有的数据构建全局索引，而不是每个分区维护自己的本地索引。全局索引也必须进行分区，可以与数据关键字采用不同的分区策略（红色的汽车分收录到索引 red 中，而索引从 a 到 g 开始的颜色分在分区 0 中）。</p>
+<ul>
+<li><p>读取效率比基于文档的分区高效，不需要采用 scatter/gather 对所有的分区都执行一遍查询，客户端只需要向包含词条的分区发出读请求。</p>
+</li>
+<li><p>缺点在于写入速度较慢且非常复杂，某个文档更新时可能涉及多个分布在不同分区、不同节点上的二级索引。</p>
+</li>
+<li><p>如果索引时刻保持最新，写入的数据立即反映在最新的索引上，对于词条分区来讲需要跨多个相关分区的分布式事务支持，写入速度会受极大影响。因此在事件中对全局二级索引的更新一般是异步的。</p>
+</li>
+</ul>
+<p>使用全局索引的系统有 Riak 的搜索功能和 Oracle 数据仓库（可选择）。</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E5%9F%BA%E4%BA%8E%E8%AF%8D%E6%9D%A1%E7%9A%84%E5%88%86%E5%8C%BA.jpg" alt="基于词条的分区"></p>
+<h2 id="分区再平衡"><a href="#分区再平衡" class="headerlink" title="分区再平衡"></a>分区再平衡</h2><p>随着时间推移，数据库可能出现：</p>
+<ul>
+<li><p>查询压力增加，需要更多的 CPU 来处理负载。</p>
+</li>
+<li><p>数据规模增加，需要更多的磁盘和内存存储数据。</p>
+</li>
+<li><p>节点出现故障，需要其他机器来接管失效节点。</p>
+</li>
+</ul>
+<p>这些情况需要把数据和请求从一个节点转移到另一个节点，这个过程称为 <strong>再平衡</strong>，其至少要满足：</p>
+<ul>
+<li><p>再平衡完成后，负载、数据存储、读写请求等在集群更均匀地分布。</p>
+</li>
+<li><p>再平衡过程中，数据库应该可以继续正常提供读写服务。</p>
+</li>
+<li><p>避免不必要的负载迁移，以加快动态再平衡，并尽显减少网络和磁盘 I/0 影响。</p>
+</li>
+</ul>
+<p>再平衡的实现基于以下策略：</p>
+<h3 id="避免取模"><a href="#避免取模" class="headerlink" title="避免取模"></a>避免取模</h3><p>即将哈希值划分为不同的区间范围，然后将每个区间分配给分区的做法。</p>
+<p>如果对节点数取模划定分区，当节点数 N 发生了变化，会导致很多关键字需要从现有的节点迁移到另一个节点，因此再平衡成本很高。</p>
+<h3 id="固定数量"><a href="#固定数量" class="headerlink" title="固定数量"></a>固定数量</h3><p>在数据库创建时先创建远超实际节点数的固定分区数，然后为每个节点分配多个分区。</p>
+<ul>
+<li><p>为集群添加节点时新节点从现有的节点上匀走几个分区，直到再次达到全局平衡（不必停机）。</p>
+</li>
+<li><p>选中的分区会在节点之间迁移，分区总数量维持不变，不改变关键字到分区的映射关系，只需调整分区与节点的对应关系。</p>
+</li>
+<li><p>分区包含固定上限的数据量，实际大小与集群中的数据总量成正比：如果分区里的数据量非常大，每次再平衡和节点故障恢复的代价就很大；但是如果一个分区太小，就会产生太多的开销。</p>
+</li>
+<li><p>如果分区数量固定了但总数据量却高度不确定，就难以达到一个最佳取舍点。</p>
+</li>
+</ul>
+<h3 id="动态分区"><a href="#动态分区" class="headerlink" title="动态分区"></a>动态分区</h3><p>对于采用关键字区间分区的数据库，如果边界设置有问题，最终可能会出现所有数据都在一个分区而其他分区基本为空（倾斜），设定固定边界、固定数量的分区将非常不便，而手动去重新配置分区边界又非常繁琐。</p>
+<p>采用动态分区：</p>
+<ul>
+<li><p>HBase（借助 HDFS）、RethinkDB 等，当分区的数据增长超过一个可配置的参数阈值就会拆成两个分区、各自承担一半数据量；如果大量数据被删除，分区缩小到阈值，则将相邻分区合并（类似 B 树的分裂合并）。</p>
+</li>
+<li><p>分区与节点多对一，当大分区分裂后，可以将其中的一半转移到其他节点以平衡负载。</p>
+</li>
+<li><p>优点在于分区数量可以自动适配数据总量，数据量小时系统开销很小，在数据量大时每个分区的大小则被限制在一个可分配的最大值。</p>
+</li>
+<li><p><strong>预分裂</strong>：空数据库没有先验知识可帮助确定分区边界，会从一个分区开始分配。直到达到第一个分裂点之前，所有的写入操作都必须由单个节点来处理，而其他节点则处于空闲状态。为了缓解这个问题，HBase、MongoDB 允许在一个空数据库上配置一组初始分区。</p>
+</li>
+</ul>
+<h3 id="按节点比例"><a href="#按节点比例" class="headerlink" title="按节点比例"></a>按节点比例</h3><p>以上分区方式中，分区的数量都与节点数量无关。另外也可以使分区数与集群节点数成正比关系（Cassandra 和 Ketama），每个节点具有固定数量的分区：</p>
+<ul>
+<li><p>当节点数不变时，每个分区的大小与数据集大小保持正比的增长关系；当节点数增加时，分区则会调整变得更小。较大的数据量通常需要大量的节点来存储，这种方法使每个分区大小保持稳定。</p>
+</li>
+<li><p>当一个新节点加入集群时，随机选择固定数量的分区进行分裂，取走原分区一半数据量。当平均分区数量较大时，新节点最终从现有节点中拿走相当数量的负载。</p>
+</li>
+<li><p>随机选择分区边界的前提要求采用基于哈希分区（也符合一致性哈希），一些新设计的哈希函数也可以以较低的元数据开销达到类似的效果。</p>
+</li>
+</ul>
+<h3 id="自动或手动"><a href="#自动或手动" class="headerlink" title="自动或手动"></a>自动或手动</h3><p>全自动式再平衡会更加方便，但也有可能出现结果难以预测的情况导致异常，造成网络或节点负载过重，影响其他请求的性能。而纯手动方式又相对繁琐。Couchbase、Riak、Voldemort 会自动生成一个分区分配建议方案，由故哪里有确认生效。</p>
+<p>将自动平衡与自动故障检测相结合可能存在一些风险：例如假设某个节点负载过重，对请求的响应暂时受到影响；其他节点认为该节点失效、激活自动平衡转移其负载。这反而加重该节点、其他节点以及网络的负荷，使总体情况变得更糟，甚至导致级联式的失效扩散。</p>
+<h2 id="请求路由"><a href="#请求路由" class="headerlink" title="请求路由"></a>请求路由</h2><p>将数据分布在多个节点、分区上，客户端在发送请求时还需要知悉应该连接到哪个节点，还可能随再平衡的发生而变化。</p>
+<p>这就需要服务发现能力，有以下几种策略：</p>
+<ul>
+<li><p><strong>节点</strong>：允许客户端连接任意的节点，比如循环式的负载均衡器。如果某节点拥有所请求的分区则直接处理求，否则将请求转发到下一个合适的节点接收答复，并将答复返回给客户端。</p>
+</li>
+<li><p><strong>路由层</strong>：将所有客户端的请求都发送到一个路由层，即充当分区感知的负载均衡器。将请求转发到对应的分区节点上。</p>
+</li>
+<li><p><strong>客户端</strong>：客户端感知分区和节点分配关系，直接连接到目标节点。</p>
+</li>
+</ul>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E8%AF%B7%E6%B1%82%E8%B7%AF%E7%94%B1.jpg" alt="请求路由"></p>
+<p>当使用路由层或随机选择节点发送请求时，客户端需要知道目标节点的 IP 地址。IP 地址的变化往往没有“分区－节点”变化般频繁，采用 DNS 即可。</p>
+<h3 id="分布式协调"><a href="#分布式协调" class="headerlink" title="分布式协调"></a>分布式协调</h3><p>请求路由需要所有参与者都要达成共识，否则请求可能被发送到错误的节点。</p>
+<p>许多分布式数据系统会依靠独立的协调服务跟踪集群元数据，如 ZooKeeper：</p>
+<ul>
+<li><p>每个节点都向 ZK 中注册自己，ZK 维护了分区到节点的最终映射关系。</p>
+</li>
+<li><p>其他参与者，即路由层或分区感知的客户端可以向 ZK 订阅此信息。</p>
+</li>
+<li><p>分区发生改变或者添加、删除节点时，ZK 主动通知路由层，使路由信息保持最新状态。</p>
+</li>
+</ul>
+<p>应用实例：</p>
+<ul>
+<li><p>Espresso 使用 Helix（ZooKeeper 底层）实现请求路由层，HBase、SolrCloud、Kafka 都使用 Kafka 跟踪分区分配情况。MongoDB 则是依赖于自身的配置服务器和 Mongos 守护进程充当路由层。</p>
+</li>
+<li><p>Cassandra 和 Riak 节点之间使用 gossip 协议同步集群状态变化。请求可以发送到任何节点，该节点负责将其转发到目标分区节点，虽然增加了数据库节点的复杂性，但是避免了对外部协调服务的依赖。</p>
+</li>
+<li><p>Couchbase 不支持自动再平衡功能，通过配置 moxi 路由选择层向集群节点学习最新的路由变化。</p>
+</li>
+</ul>
+<h3 id="并行查询执行"><a href="#并行查询执行" class="headerlink" title="并行查询执行"></a>并行查询执行</h3><p>对于大规模并行处理（MPP）一类用于数据分析的关系数据库（比如 Greenplum、GaussDB），查询类型方面要比读取或写入单个关键字查询复杂（对于基于文档分区的二级索引，要求分散/聚集查询）。</p>
+<p>对于数据仓库，MPP 查询优化器将复杂的查询（多个联合、过滤、分组和聚合）操作分解成许多执行阶段和分区，以便在集群的不同节点上并行执行。尤其当涉及全表扫描这样的查询操作，可以通过并行执行获益。</p>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2021/01/27/DDIA_note-9/" title= "《DDIA》阅读笔记（七）：事务">
+                    <div class="nextTitle">《DDIA》阅读笔记（七）：事务</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2021/01/21/DDIA_note-7/" title= "《DDIA》阅读笔记（五）：数据复制（无主节点）">
+                    <div class="prevTitle">《DDIA》阅读笔记（五）：数据复制（无主节点）</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODYzMi8yNTEyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:yipwinghong@outlook.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yipwinghong" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/WeChat.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:100vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E5%88%86%E5%8C%BA"><span class="toc-number">1.</span> <span class="toc-text">数据分区</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%94%AE%E5%80%BC%E6%95%B0%E6%8D%AE%E7%9A%84%E5%88%86%E5%8C%BA"><span class="toc-number">1.1.</span> <span class="toc-text">键值数据的分区</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E5%85%B3%E9%94%AE%E5%AD%97%E5%8C%BA%E9%97%B4"><span class="toc-number">1.1.1.</span> <span class="toc-text">基于关键字区间</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E5%85%B3%E9%94%AE%E5%AD%97%E5%93%88%E5%B8%8C%E5%80%BC"><span class="toc-number">1.1.2.</span> <span class="toc-text">基于关键字哈希值</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E5%80%BE%E6%96%9C%E4%B8%8E%E7%83%AD%E7%82%B9"><span class="toc-number">1.1.3.</span> <span class="toc-text">数据倾斜与热点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E5%8C%BA%E4%B8%8E%E4%BA%8C%E7%BA%A7%E7%B4%A2%E5%BC%95"><span class="toc-number">1.2.</span> <span class="toc-text">分区与二级索引</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E6%96%87%E6%A1%A3%EF%BC%88%E6%9C%AC%E5%9C%B0%EF%BC%89"><span class="toc-number">1.2.1.</span> <span class="toc-text">基于文档（本地）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E8%AF%8D%E6%9D%A1%EF%BC%88%E5%85%A8%E5%B1%80%EF%BC%89"><span class="toc-number">1.2.2.</span> <span class="toc-text">基于词条（全局）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E5%8C%BA%E5%86%8D%E5%B9%B3%E8%A1%A1"><span class="toc-number">1.3.</span> <span class="toc-text">分区再平衡</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%81%BF%E5%85%8D%E5%8F%96%E6%A8%A1"><span class="toc-number">1.3.1.</span> <span class="toc-text">避免取模</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%BA%E5%AE%9A%E6%95%B0%E9%87%8F"><span class="toc-number">1.3.2.</span> <span class="toc-text">固定数量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA"><span class="toc-number">1.3.3.</span> <span class="toc-text">动态分区</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%89%E8%8A%82%E7%82%B9%E6%AF%94%E4%BE%8B"><span class="toc-number">1.3.4.</span> <span class="toc-text">按节点比例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E5%8A%A8%E6%88%96%E6%89%8B%E5%8A%A8"><span class="toc-number">1.3.5.</span> <span class="toc-text">自动或手动</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%B7%E6%B1%82%E8%B7%AF%E7%94%B1"><span class="toc-number">1.4.</span> <span class="toc-text">请求路由</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E5%8D%8F%E8%B0%83"><span class="toc-number">1.4.1.</span> <span class="toc-text">分布式协调</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B9%B6%E8%A1%8C%E6%9F%A5%E8%AF%A2%E6%89%A7%E8%A1%8C"><span class="toc-number">1.4.2.</span> <span class="toc-text">并行查询执行</span></a></li></ol></li></ol></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 58
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span><a class="archive-post-title" href= "/2021/06/13/Go_cheat-sheet/" >Go Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/06</span><a class="archive-post-title" href= "/2021/06/06/2021-06-06_diary/" >Weekly Summary (2021-05-31_2021-06-06)</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/31</span><a class="archive-post-title" href= "/2021/05/31/2021-05-31_diary/" >2021 下半年工作学习安排</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/16</span><a class="archive-post-title" href= "/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/" >如何用图论解决 Secret Santa 问题？</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" >把 PostgreSQL 用作数据仓库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/" >SELECT * 对 SQL 性能不利的原因</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2021/02/24/DDIA_note-13/" >《DDIA》阅读笔记（九）：一致性与共识（共识问题）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/21</span><a class="archive-post-title" href= "/2021/02/21/2021-02-21_diary/" >近期工作学习规划</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/19</span><a class="archive-post-title" href= "/2021/02/19/DDIA_note-12/" >《DDIA》阅读笔记（九）：一致性与共识（顺序保证）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/13</span><a class="archive-post-title" href= "/2021/02/13/DDIA_note-11/" >《DDIA》阅读笔记（九）：一致性与共识（可线性化）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/06</span><a class="archive-post-title" href= "/2021/02/06/DDIA_note-10/" >《DDIA》阅读笔记（八）：分布式系统的挑战</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/27</span><a class="archive-post-title" href= "/2021/01/27/DDIA_note-9/" >《DDIA》阅读笔记（七）：事务</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/22</span><a class="archive-post-title" href= "/2021/01/22/DDIA_note-8/" >《DDIA》阅读笔记（六）：数据分区</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span><a class="archive-post-title" href= "/2021/01/21/DDIA_note-7/" >《DDIA》阅读笔记（五）：数据复制（无主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/20</span><a class="archive-post-title" href= "/2021/01/20/DDIA_note-6/" >《DDIA》阅读笔记（五）：数据复制（多主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/09</span><a class="archive-post-title" href= "/2021/01/09/DDIA_note-5/" >《DDIA》阅读笔记（五）：数据复制（单主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/01</span><a class="archive-post-title" href= "/2021/01/01/DB_tree-table-design-summary/" >树形表结构设计总结</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/19</span><a class="archive-post-title" href= "/2020/12/19/DDIA_note-4/" >《DDIA》阅读笔记（四）：数据编码与演化</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/13</span><a class="archive-post-title" href= "/2020/12/13/DDIA_note-3/" >《DDIA》阅读笔记（三）：数据存储与检索</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/04</span><a class="archive-post-title" href= "/2020/12/04/DDIA_note-2/" >《DDIA》阅读笔记（二）：数据模型与查询语言</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/02</span><a class="archive-post-title" href= "/2020/12/02/DDIA_note-1/" >《DDIA》阅读笔记（一）：可靠、可扩展与可维护的应用系统</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span><a class="archive-post-title" href= "/2020/10/08/Maven_external_dependencies_management/" >Maven 打包依赖外置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2020/10/04/JVM_prod-analysis-cmd/" >Java 应用常用调试分析方法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/30</span><a class="archive-post-title" href= "/2020/06/30/JVM_java-memory-area/" >Java 内存区域</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/28</span><a class="archive-post-title" href= "/2020/05/28/DB_data-warehouse-design-basic/" >数据仓库设计基础</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/08</span><a class="archive-post-title" href= "/2020/04/08/2020-04-08_diary/" >关于使用思维导图做笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/28</span><a class="archive-post-title" href= "/2020/03/28/Algorithm_leetcode-high-frequency-problems/" >LeetCode 高频面试题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2020/03/06/InfoSecty_personal-infomation-security-guide/" >個人信息安全保護指南</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/22</span><a class="archive-post-title" href= "/2020/02/22/2020-02-22_diary/" >免费 JetBrains 全家桶</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/16</span><a class="archive-post-title" href= "/2020/02/16/Nginx_cheat-sheet/" >Nginx Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Git_Cheat-Sheet/" >Git Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker&K8S_Cheat-Sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker_cheat-sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/03</span><a class="archive-post-title" href= "/2020/02/03/JVM_jstat-monitor-analysis/" >JVM jstat 监控分析</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/01</span><a class="archive-post-title" href= "/2020/02/01/JVM_GC-log-analysis/" >JVM GC 日志分析</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/01</span><a class="archive-post-title" href= "/2019/11/01/Design_design-patterns/" >设计模式与设计原则</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/30</span><a class="archive-post-title" href= "/2019/10/30/JVM_mindmap/" >Java 虚拟机与并发编程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_offset-reset/" >Kafka 位移重置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_dynamic-config/" >Kafka 动态配置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/20</span><a class="archive-post-title" href= "/2019/05/20/Kafka_common-scripts/" >Kafka 常用脚本</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/06</span><a class="archive-post-title" href= "/2019/05/06/Kafka_basic-conceptions/" >Kafka 基本概念</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2018/10/04/Python_async-programming/" >Python 异步编程总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/19</span><a class="archive-post-title" href= "/2018/09/19/Python_data-structure/" >Python 数据结构应用</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/13</span><a class="archive-post-title" href= "/2018/09/13/Python_decorator-basic-usage/" >Python 装饰器基本用法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/02</span><a class="archive-post-title" href= "/2018/09/02/JavaScript_ES6-grammar/" >ES6 语法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/30</span><a class="archive-post-title" href= "/2018/08/30/Vue_user-guide-4/" >Vue 学习笔记：前端路由、请求发送和状态管理</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/28</span><a class="archive-post-title" href= "/2018/08/28/JavaScript_cheat-sheet/" >JavaScript Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/24</span><a class="archive-post-title" href= "/2018/08/24/Vue_user-guide-3/" >Vue 学习笔记：组件</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/23</span><a class="archive-post-title" href= "/2018/08/23/Vue_user-guide-2/" >Vue 学习笔记（2）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/22</span><a class="archive-post-title" href= "/2018/08/22/Python_OOP-summary/" >Python 类与对象总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/20</span><a class="archive-post-title" href= "/2018/08/20/Vue_user-guide-1/" >Vue 学习笔记（1）</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="杂事"><span class="iconfont-archer">&#xe606;</span>杂事</span>
+    
+        <span class="sidebar-tag-name" data-tags="技术"><span class="iconfont-archer">&#xe606;</span>技术</span>
+    
+        <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
+    
+        <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
+    
+        <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
+    
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
+        <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
+    
+        <span class="sidebar-tag-name" data-tags="Maven"><span class="iconfont-archer">&#xe606;</span>Maven</span>
+    
+        <span class="sidebar-tag-name" data-tags="Nginx"><span class="iconfont-archer">&#xe606;</span>Nginx</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Vue"><span class="iconfont-archer">&#xe606;</span>Vue</span>
+    
+        <span class="sidebar-tag-name" data-tags="前端"><span class="iconfont-archer">&#xe606;</span>前端</span>
+    
+        <span class="sidebar-tag-name" data-tags="Git"><span class="iconfont-archer">&#xe606;</span>Git</span>
+    
+        <span class="sidebar-tag-name" data-tags="JavaScript"><span class="iconfont-archer">&#xe606;</span>JavaScript</span>
+    
+        <span class="sidebar-tag-name" data-tags="Go"><span class="iconfont-archer">&#xe606;</span>Go</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="《数据密集型应用系统设计》阅读笔记"><span class="iconfont-archer">&#xe60a;</span>《数据密集型应用系统设计》阅读笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Kylo Yip"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"live2d-widget-model-nietzsche"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>
+
+

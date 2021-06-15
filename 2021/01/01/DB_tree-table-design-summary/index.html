@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Kylo Yip">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Kylo Yip">
+    
+    <meta name="keywords" content="Kylo's Notebook,Kylo Yip">
+    
+    <meta name="description" content="">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>树形表结构设计总结 · Kylo&#39;s Notebook</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Kylo's Notebook" type="application/atom+xml">
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >Kylo&#39;s Notebook</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">树形表结构设计总结</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>Kylo's Notebook</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:100vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(https://api.ixiaowai.cn/mcapi/mcapi.php)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            树形表结构设计总结
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "技术">技术</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "数据库">数据库</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">3.1k</span>Reading time: <span class="post-count reading-time">12 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2021/01/01</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="树形表结构设计总结"><a href="#树形表结构设计总结" class="headerlink" title="树形表结构设计总结"></a>树形表结构设计总结</h1><p>在业务建模中树形表是很常见的结构，在多种场景的中都会用到，比如：</p>
+<ul>
+<li><p>用户权限管理</p>
+</li>
+<li><p>企业组织架构</p>
+</li>
+<li><p>论坛网站评论功能</p>
+</li>
+<li><p>……</p>
+</li>
+</ul>
+<p>以用户评论功能为例，其业务场景是：</p>
+<ul>
+<li><p>用户可以发表多条评论。</p>
+</li>
+<li><p>用户可以对其他用户的评论进行回复。</p>
+</li>
+<li><p>用户可以对其他用户的回复进行回复。</p>
+</li>
+<li><p>用户删除评论或回复后，所有对其回复（及其子级）的回复都会被级联删除。</p>
+</li>
+<li><p>…</p>
+</li>
+</ul>
+<p>这类功能常见的设计方法如下：</p>
+<table>
+<thead>
+<tr>
+<th>设计</th>
+<th>查询父子节点</th>
+<th>查询树结构（后代/祖先）</th>
+<th>插入</th>
+<th>删除</th>
+<th>引用完整</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>邻接表</td>
+<td>简单</td>
+<td>困难（除非支持递归查询）</td>
+<td>简单</td>
+<td>简单</td>
+<td>是</td>
+</tr>
+<tr>
+<td>枚举路径</td>
+<td>简单</td>
+<td>简单</td>
+<td>简单</td>
+<td>简单</td>
+<td>否</td>
+</tr>
+<tr>
+<td>嵌套集</td>
+<td>困难</td>
+<td>简单</td>
+<td>困难</td>
+<td>困难</td>
+<td>否</td>
+</tr>
+<tr>
+<td>闭包表</td>
+<td>简单</td>
+<td>简单</td>
+<td>简单</td>
+<td>简单</td>
+<td>是</td>
+</tr>
+</tbody></table>
+<h2 id="邻接表（Adjacency-List）"><a href="#邻接表（Adjacency-List）" class="headerlink" title="邻接表（Adjacency List）"></a>邻接表（Adjacency List）</h2><p>邻接表是最广泛使用的设计方法，其使用 <code>parent_id</code> 字段引用同一张表的其他记录，并建立外键约束维护关系。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> Comments (</span><br><span class="line">  comment_id SERIAL <span class="keyword">PRIMARY</span> KEY,</span><br><span class="line">  parent_id <span class="type">BIGINT</span> UNSIGNED,</span><br><span class="line">  comment TEXT <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  <span class="keyword">FOREIGN</span> KEY (parent_id) <span class="keyword">REFERENCES</span> Comments(comment_id)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>查询一条评论和它的直接后代：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> c1.<span class="operator">*</span>, c2.<span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> Comments c1 </span><br><span class="line"><span class="keyword">LEFT</span> <span class="keyword">JOIN</span> Comments c2 <span class="keyword">ON</span> c2.parent_id <span class="operator">=</span> c1.comment_id;</span><br><span class="line"><span class="comment">--- LEFT JOIN Comments c3 ON c3.parent_id = c2.comment_id;</span></span><br><span class="line"><span class="comment">--- ...</span></span><br><span class="line"><span class="comment">--- LEFT JOIN Comments cn ON cn.parent_id = cm.comment_id;</span></span><br></pre></td></tr></table></figure>
+
+<p>这种做法存在以下问题：</p>
+<ul>
+<li><p><strong>扩展性差</strong>：每增加一层查询都要额外扩展一个关联（通过 ORM 框架或在业务代码中生成动态 SQL 则这种情况能有所缓解）。</p>
+</li>
+<li><p><strong>难以使用聚合函数</strong>（比如 <code>COUNT</code>、<code>SUM</code>、<code>MAX</code>、<code>MIN</code> 等）。</p>
+</li>
+</ul>
+<p>可以先查询出所有行，在业务代码中重新构造出这棵树。但处理数据之前就进行从数据库到应用程序之间的 <strong>大量数据复制</strong>，非常低效（可能只需要部分子树，或者只需要统计值而非全量数据，但不得不查出完整的树）。</p>
+<p>另一方面是如果要从树中 <strong>删除节点很困难</strong>，需要执行多次查询找到所有后代节点，自底向上逐个删除这些节点以满足外键完整性。</p>
+<p>解决方法：</p>
+<ul>
+<li><p><strong>不使用外键约束</strong>，但需要配合其他方法处理迷失节点，尽可能少产生零散数据。</p>
+</li>
+<li><p>可以使用 <strong>触发器</strong> 或指定外键模式为 <code>ON DELETE CASCADE</code> 实现 <strong>级联删除</strong>，清理整棵子树。</p>
+</li>
+<li><p>如果删除非叶子节点（并提升其子节点），或者移动子节点到另一个子节点，则需要先修改其 <code>parent_id</code> 再删除：</p>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> parent_id</span><br><span class="line"><span class="keyword">FROM</span> Comments </span><br><span class="line"><span class="keyword">WHERE</span> comment_id <span class="operator">=</span> <span class="number">6</span>;</span><br><span class="line"></span><br><span class="line">UPDATE Comments </span><br><span class="line"><span class="keyword">SET</span> parent_id <span class="operator">=</span> <span class="number">4</span> </span><br><span class="line"><span class="keyword">WHERE</span> parent_id <span class="operator">=</span> <span class="number">6</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">DELETE</span> <span class="keyword">FROM</span> Comments</span><br><span class="line"><span class="keyword">WHERE</span> comment_id <span class="operator">=</span> <span class="number">6</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这种做法也有好处，即增加或修改节点比较方便，只需要指定 <code>parent_id</code>：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> Comments (parent_id, comment) </span><br><span class="line"><span class="keyword">VALUES</span> (<span class="number">7</span>, <span class="string">&#x27;OK!&#x27;</span>);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">UPDATE Comments </span><br><span class="line"><span class="keyword">SET</span> parent_id <span class="operator">=</span> <span class="number">3</span></span><br><span class="line"><span class="keyword">WHERE</span> comment_id <span class="operator">=</span> <span class="number">6</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="递归查询（Recursive-Query）"><a href="#递归查询（Recursive-Query）" class="headerlink" title="递归查询（Recursive Query）"></a>递归查询（Recursive Query）</h3><p>邻接表存在难以实现扩展查询，但一些关系型数据库（比如 Microsoft SQL Server 2005、Oracle 11gR2、IBM DB2 和 PostgreSQL 8.4 ）提供了递归查询（符合 SQL-99 标准）的支持，能有效解决这种问题：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">WITH</span> CommentTree (comment_id, parent_id, comment, depth)</span><br><span class="line"><span class="keyword">AS</span> (</span><br><span class="line">  <span class="keyword">SELECT</span> <span class="operator">*</span>, <span class="number">0</span> <span class="keyword">AS</span> depth</span><br><span class="line">  <span class="keyword">FROM</span> Comments</span><br><span class="line">  <span class="keyword">WHERE</span> parent_id <span class="keyword">IS</span> <span class="keyword">NULL</span></span><br><span class="line">  <span class="keyword">UNION</span> <span class="keyword">ALL</span></span><br><span class="line">  <span class="keyword">SELECT</span> c.<span class="operator">*</span>, ct.depth <span class="operator">+</span> <span class="number">1</span> <span class="keyword">AS</span> depth</span><br><span class="line">  <span class="keyword">FROM</span> CommentTree ct</span><br><span class="line">  <span class="keyword">JOIN</span> Comments c <span class="keyword">ON</span> (ct.comment <span class="operator">=</span> c.parent_id)</span><br><span class="line">)</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> CommentTree <span class="keyword">WHERE</span> comment_id <span class="operator">=</span> <span class="number">10</span></span><br></pre></td></tr></table></figure>
+
+<p>MySQL、SQLite、Infomix、Oracle 10g 则不支持递归查询。</p>
+<blockquote>
+<p>Oracle 9i 和 10g 支持 <code>WITH</code> 子句，但不是在递归查询时使用。它们有着自己特殊的语法定义：<code>START WITH</code> 和 <code>CONNECT BY PRIOR</code>。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> Comments</span><br><span class="line"><span class="keyword">START</span> <span class="keyword">WITH</span> comment_id <span class="operator">=</span> <span class="number">9876</span></span><br><span class="line"><span class="keyword">CONNECT</span> <span class="keyword">BY</span> PRIOR parent_id <span class="operator">=</span> comment_id;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<h2 id="枚举路径（Path-Enumeration）"><a href="#枚举路径（Path-Enumeration）" class="headerlink" title="枚举路径（Path Enumeration）"></a>枚举路径（Path Enumeration）</h2><p>路径枚举的将所有祖先的信息组合成类似 <strong>Linux 绝对路径</strong> 的字符串，分隔符相邻两个节点间距离是 1，并保存为每个节点的属性，能很巧妙地解决了邻接表 <strong>从树中获取一个给定节点的所有祖先的开销很大</strong> 的问题。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> Comments (</span><br><span class="line">  comment_id SERIAL <span class="keyword">PRIMARY</span> KEY,</span><br><span class="line">  parent_id <span class="type">BIGINT</span> UNSIGNED,</span><br><span class="line">  comment TEXT <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  path <span class="type">VARCHAR</span>(<span class="number">1000</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>比如 <code>comment_id</code> 为 2 的评论是 <code>comment_id</code> 为 1（<code>path</code> 的值为“1/”）的回复，则其 <code>path</code> 可记为“1/2/”；<code>comment_id</code> 为 3 的评论是 <code>comment_id</code> 为 2 的回复，则可以记为“1/2/3”。</p>
+<p>通过比较每个节点的路径，可以查询一个节点的祖先（比如评论 7 的祖先，可匹配“1/4/6/%”、“1/4/5”、“1/%”）或后代（比如评论 4 的后代，可匹配“1/4/5”、“1/4/6”、“1/4/6/7”）：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> </span><br><span class="line"><span class="keyword">FROM</span> Comments <span class="keyword">AS</span> c</span><br><span class="line"><span class="keyword">WHERE</span> <span class="string">&#x27;1/4/6/7/&#x27;</span> <span class="keyword">LIKE</span> c.path <span class="operator">||</span> <span class="string">&#x27;%&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> Comments <span class="keyword">AS</span> c</span><br><span class="line"><span class="keyword">WHERE</span> c.path <span class="keyword">LIKE</span> <span class="string">&#x27;1/4/&#x27;</span> <span class="operator">||</span> <span class="string">&#x27;%&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<p>计算一棵子树所有节点的值的总和、统计数量等操作同样也只需要使用 <code>LIKE</code>：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="built_in">COUNT</span>(<span class="operator">*</span>)</span><br><span class="line"><span class="keyword">FROM</span> Comments <span class="keyword">AS</span> c</span><br><span class="line"><span class="keyword">WHERE</span> c.path <span class="keyword">LIKE</span> <span class="string">&#x27;1/4/&#x27;</span> <span class="operator">||</span> <span class="string">&#x27;%&#x27;</span></span><br><span class="line"><span class="keyword">GROUP</span> <span class="keyword">BY</span> comment;</span><br></pre></td></tr></table></figure>
+<p>在树中插入节点时无需修改任何其他的行：</p>
+<ul>
+<li><p>复制一份要插入节点的逻辑上的父亲节点的路径，将这个新节点的 ID 追加到路径末尾。</p>
+</li>
+<li><p>如果 ID 是在插入时自动生成的，可能需要先插入这条记录，再获取这条记录的 ID，并更新它的路径。</p>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> Comments (comment) <span class="keyword">VALUES</span> (<span class="string">&#x27;OK!&#x27;</span>);</span><br><span class="line"></span><br><span class="line">UPDATE Comments </span><br><span class="line"><span class="keyword">SET</span> path <span class="operator">=</span> (</span><br><span class="line">  <span class="keyword">SELECT</span> path</span><br><span class="line">  <span class="keyword">FROM</span> Comments</span><br><span class="line">  <span class="keyword">WHERE</span> comment_id <span class="operator">=</span> <span class="number">7</span></span><br><span class="line">) <span class="operator">||</span> LAST_INSERT_ID() <span class="operator">||</span> <span class="string">&#x27;/&#x27;</span></span><br><span class="line"><span class="keyword">WHERE</span> comment_id <span class="operator">=</span> LAST_INSERT_ID();</span><br></pre></td></tr></table></figure>
+
+<p>这种设计也存在问题：</p>
+<ul>
+<li><p>没有外键约束不能确保路径格式总是正确、路径中的节点确实存在，依赖于应用程序的逻辑代码维护路径字符串。</p>
+</li>
+<li><p>验证字符串正确性开销很大（<code>LIKE</code> 操作非最左前缀查询难以利用索引）。</p>
+</li>
+<li><p>无论是 <code>VARCHAR</code> 还是 <code>TEXT</code> 类型，字符串类型长度都存在限制，树结构无法无限扩展。</p>
+</li>
+</ul>
+<h2 id="嵌套集（Nested-Sets）"><a href="#嵌套集（Nested-Sets）" class="headerlink" title="嵌套集（Nested Sets）"></a>嵌套集（Nested Sets）</h2><p>使用两个数字编码 <code>nsleft</code> 和 <code>nsright</code> 表示每个节点：</p>
+<ul>
+<li><p><code>nsleft</code> 的值小于该节点所有后代的 ID，<code>nsright</code> 的值大于该节点所有后代的 ID（数值与 <code>comment_id</code> 无关）。</p>
+</li>
+<li><p>建表时需要对树进行一次深度优先遍历，在逐层深入时依次递增地分配 <code>nsleft</code> 的值，在返回时依次递增地分配 <code>nsright</code> 的值。</p>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> Comments (</span><br><span class="line">  comment_id SERIAL <span class="keyword">PRIMARY</span> KEY,</span><br><span class="line">  nsleft <span class="type">INTEGER</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  nsright <span class="type">INTEGER</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  comment TEXT <span class="keyword">NOT</span> <span class="keyword">NULL</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p><code>nsleft</code> 和 <code>nsright</code> 可用于查找给定节点的后代或祖先：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> c2.<span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> Comments <span class="keyword">AS</span> c1</span><br><span class="line"><span class="keyword">JOIN</span> Comments <span class="keyword">AS</span> c2 <span class="keyword">ON</span> c2.nsleft <span class="keyword">BETWEEN</span> c1.nsleft <span class="keyword">AND</span> c1.nsright</span><br><span class="line"><span class="keyword">WHERE</span> c1.comment_id <span class="operator">=</span> <span class="number">4</span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> c2.<span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> Comments <span class="keyword">AS</span> c1</span><br><span class="line"><span class="keyword">JOIN</span> Comments <span class="keyword">AS</span> c2 <span class="keyword">ON</span> c1.nsleft <span class="keyword">BETWEEN</span> c2.nsleft <span class="keyword">AND</span> c2.nsright</span><br><span class="line"><span class="keyword">WHERE</span> c1.comment_id <span class="operator">=</span> <span class="number">6</span>;</span><br></pre></td></tr></table></figure>
+<p>其优点体现在 <strong>删除一个非叶子节点时其后代会自动代替被删除的节点</strong>，成为其直接祖先节点的直接后代。</p>
+<p>尽管每个节点的左右两个值是有序分配，而每个节点也总是和它相邻的父兄节点进行比较，但这种设计不需要保存分层关系。</p>
+<p>在删除节点时造成 <strong>数值不连续也不会对树结构产生影响</strong>，比如计算给定节点的深度然后删除其父节点，再次计算深度时即会少一层：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> c1.comment_id, <span class="built_in">COUNT</span>(c2.comment_id) <span class="keyword">AS</span> depth</span><br><span class="line"><span class="keyword">FROM</span> Comments <span class="keyword">AS</span> c1</span><br><span class="line"><span class="keyword">JOIN</span> Comment <span class="keyword">AS</span> c2 <span class="keyword">ON</span> c1.nsleft <span class="keyword">BETWEEN</span> c2.nsleft <span class="keyword">AND</span> c2.nsright</span><br><span class="line"><span class="keyword">WHERE</span> c1.comment_id <span class="operator">=</span> <span class="number">7</span></span><br><span class="line"><span class="keyword">GROUP</span> <span class="keyword">BY</span> c1.comment_id;</span><br><span class="line"></span><br><span class="line"><span class="keyword">DELETE</span> <span class="keyword">FROM</span> Comment <span class="keyword">WHERE</span> comment_id <span class="operator">=</span> <span class="number">6</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">--- 此时再次执行相同的查询会少一层</span></span><br></pre></td></tr></table></figure>
+<p>代价是某些查询操作会变得复杂，比如获取一个节点的直接父亲或者直接后代。</p>
+<p>在嵌套集中要访问父亲节点需要：</p>
+<ul>
+<li><p>给定节点 c1 的直接父亲是该节点的一个祖先，且这两个节点之间没有任何其他节点。</p>
+</li>
+<li><p>使用递归的外连接查询一个节点 x，它既是 c1 的祖先，同时也是另一个 Y 节点的后代。</p>
+</li>
+<li><p>随后使 Y=x，并继续查询，直到查询返回空（即不存在这样的节点），此时的 Y 便是 c1 的直接父亲节点：</p>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> parent.<span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> Comment <span class="keyword">AS</span> c</span><br><span class="line"><span class="keyword">JOIN</span> Comment <span class="keyword">AS</span> parent <span class="keyword">ON</span> c.nsleft <span class="keyword">BETWEEN</span> parent.nsleft <span class="keyword">AND</span> parent.nsright</span><br><span class="line"><span class="keyword">LEFT</span> <span class="keyword">JOIN</span> Comment <span class="keyword">AS</span> in_between <span class="keyword">ON</span> c.nsleft <span class="keyword">BETWEEN</span> in_between.nsleft <span class="keyword">AND</span> in_between.nsright <span class="keyword">AND</span> in_between.nsleft <span class="keyword">BETWEEN</span> parent.nsleft <span class="keyword">AND</span> parent.nsright</span><br><span class="line"><span class="keyword">WHERE</span> c.comment_id <span class="operator">=</span> <span class="number">6</span> <span class="keyword">AND</span> in_between.comment_id <span class="keyword">IS</span> <span class="keyword">NULL</span>;</span><br></pre></td></tr></table></figure>
+<p>对树的插入和移动操作也很复杂：</p>
+<ul>
+<li><p>插入节点时，需要重新计算其相邻兄弟节点、祖先节点和它祖先节点的兄弟，来确保它们的左右值都比这个新节点的左值大。</p>
+</li>
+<li><p>如果这个新节点是一个非叶子节点，还要检查它的子孙节点。</p>
+</li>
+</ul>
+<p>假设新插入的节点是一个叶子节点，以下语句可以更新每个需要更新的地方：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">UPDATE Comments</span><br><span class="line"><span class="keyword">SET</span> nsleft <span class="operator">=</span> <span class="keyword">CASE</span> <span class="keyword">WHEN</span> nsleft <span class="operator">&gt;=</span> <span class="number">8</span> <span class="keyword">THEN</span> nsleft <span class="operator">+</span> <span class="number">2</span> <span class="keyword">ELSE</span> nsleft <span class="keyword">END</span>,</span><br><span class="line">nsright <span class="operator">=</span> nsright<span class="operator">+</span><span class="number">2</span>;</span><br><span class="line"><span class="keyword">WHERE</span> nsright <span class="operator">&gt;=</span> <span class="number">7</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> Comments (nsleft, nsright, comment) <span class="keyword">VALUES</span> (<span class="number">8</span>, <span class="number">9</span>, <span class="string">&#x27;OK!&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>嵌套集设计能实现简单快速的查询（给定节点的祖先和后代），比操作单独的节点简单，但由于增删改太复杂，总的来说还是不太推荐。</p>
+<h2 id="闭包表（Closure-Table）"><a href="#闭包表（Closure-Table）" class="headerlink" title="闭包表（Closure Table）"></a>闭包表（Closure Table）</h2><p>闭包表是我最喜欢的一种设计：</p>
+<ul>
+<li><p>创建另一个表 <strong>记录树中所有节点间的关系</strong>：将树中任何具有（直接或间接的）“祖先-后代”关系节点对存储在 <code>TreePaths</code> 表中，同时增加一行指向节点自己。</p>
+</li>
+<li><p>除了能快速查询给定节点的祖先和后代，闭包表能更加简单地维护分层信息。</p>
+</li>
+<li><p>为了使它更方便地查询直接父亲节点或孩子节点，在 <code>TreePaths</code> 表中增加一个 <code>path_length</code> 字段，对于节点的自身引用 <code>path_length</code> 为 0，到直接子节点 <code>path_length</code> 为 1，以此类推。</p>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> Comments (</span><br><span class="line">  comment_id SERIAL <span class="keyword">PRIMARY</span> KEY,</span><br><span class="line">  comment TEXT <span class="keyword">NOT</span> <span class="keyword">NULL</span></span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> TreePaths (</span><br><span class="line">  ancestor <span class="type">BIGINT</span> UNSIGNED <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  descendant <span class="type">BIGINT</span> UNSIGNED <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  path_length <span class="type">BIGINT</span> UNSIGNED <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (ancestor, descendant),</span><br><span class="line">  <span class="keyword">FOREIGN</span> KEY (ancestor) <span class="keyword">REFERENCES</span> Comments(comment_id),</span><br><span class="line">  <span class="keyword">FOREIGN</span> KEY (descendant) <span class="keyword">REFERENCES</span> Comments(comment_id),</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>查询直接子节点很简单：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> TreePaths</span><br><span class="line"><span class="keyword">WHERE</span> ancestor <span class="operator">=</span> <span class="number">4</span> <span class="keyword">AND</span> path_length <span class="operator">=</span> <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+
+<p>搜索所有后代或祖先也只需要关联路径表：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> c.<span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> Comments <span class="keyword">AS</span> c</span><br><span class="line"><span class="keyword">JOIN</span> TreePaths <span class="keyword">AS</span> t <span class="keyword">ON</span> c.comment_id <span class="operator">=</span> t.descendant</span><br><span class="line"><span class="keyword">WHERE</span> t.ancestor <span class="operator">=</span> <span class="number">4</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> c.<span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> Comments <span class="keyword">AS</span> c</span><br><span class="line"><span class="keyword">JOIN</span> TreePaths <span class="keyword">AS</span> t <span class="keyword">ON</span> c.comment_id <span class="operator">=</span> t.descendant</span><br><span class="line"><span class="keyword">WHERE</span> t.descendant <span class="operator">=</span> <span class="number">4</span>;</span><br></pre></td></tr></table></figure>
+<p>插入新的叶子节点时，比如 5 的子节点（ID 为 8），应首先插入一条自己到自己的关系，然后搜索 <code>TreePath</code> 表中后代为 5 的节点，增加该节点和新插入节点的“祖先-后代”关系，包括 5 的自我引用。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> TreePaths (ancestor, descendant)</span><br><span class="line"><span class="keyword">SELECT</span> t.ancestor, <span class="number">8</span></span><br><span class="line"><span class="keyword">FROM</span> TreePaths <span class="keyword">AS</span> t</span><br><span class="line"><span class="keyword">WHERE</span> t.descendant <span class="operator">=</span> <span class="number">5</span></span><br><span class="line"><span class="keyword">UNION</span> <span class="keyword">ALL</span> </span><br><span class="line"><span class="keyword">SELECT</span> <span class="number">8</span>, <span class="number">8</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> Comments (<span class="number">8</span>, <span class="string">&#x27;OK&#x27;</span>);</span><br></pre></td></tr></table></figure>
+<p>该模式下删除数据为逻辑删除（只是删除关系，节点还存在），要删除一个叶子节点，比如 ID 为 7，应删除 <code>TreePaths</code> 表中后代为 7 的行。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DELETE</span> <span class="keyword">FROM</span> TreePaths <span class="keyword">WHERE</span> descendant <span class="operator">=</span> <span class="number">7</span>;</span><br></pre></td></tr></table></figure>
+<p>要删除一棵完整的子树，比如 ID 为 4 的记录及其后代，可删除所有在 <code>TreePath</code> 表中后代为 4 的行：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DELETE</span> <span class="keyword">FROM</span> TreePaths</span><br><span class="line"><span class="keyword">WHERE</span> descendant <span class="keyword">IN</span> (</span><br><span class="line">  <span class="keyword">SELECT</span> descendant</span><br><span class="line">  <span class="keyword">FROM</span> TreePaths</span><br><span class="line">  <span class="keyword">WHERE</span> ancestor <span class="operator">=</span> <span class="number">4</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>要从一个地方移动一棵子树到另一地方相对复杂，但也有固定的算法：</p>
+<ul>
+<li><p><strong>断开这棵子树和它的祖先们的关系</strong>。需要找到这棵子树的顶点，删除它的所有子节点和它的所有祖先节点间的关系。</p>
+</li>
+<li><p><strong>将这棵孤立的树和新节点及它的祖先建立关系</strong>。可以使用 <strong><code>CROSS JOIN</code> 创建一个新节点及其祖先</strong> 和 <strong>这棵孤立的树中所有节点</strong> 间的笛卡儿积来建立所有需要的关系。</p>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DELETE</span> <span class="keyword">FROM</span> TreePaths</span><br><span class="line"><span class="keyword">WHERE</span> descendant <span class="keyword">IN</span> (</span><br><span class="line">  <span class="keyword">SELECT</span> descendant</span><br><span class="line">  <span class="keyword">FROM</span> TreePaths</span><br><span class="line">  <span class="keyword">WHERE</span> ancestor <span class="operator">=</span> <span class="number">6</span></span><br><span class="line">) <span class="keyword">AND</span> ancestor <span class="keyword">IN</span> (</span><br><span class="line">  <span class="keyword">SELECT</span> ancestor</span><br><span class="line">  <span class="keyword">FROM</span> TreePaths</span><br><span class="line">  <span class="keyword">WHERE</span> descendant <span class="operator">=</span> <span class="number">6</span> <span class="keyword">AND</span> ancestor <span class="operator">!=</span> descendant</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> TreePaths (ancestor, descendant)</span><br><span class="line"><span class="keyword">SELECT</span> supertree.ancestor, subtree.descendant</span><br><span class="line"><span class="keyword">FROM</span> TreePaths <span class="keyword">AS</span> supertree</span><br><span class="line"><span class="keyword">CROSS</span> <span class="keyword">JOIN</span> TreePaths <span class="keyword">AS</span> subtree</span><br><span class="line"><span class="keyword">WHERE</span> supertree.descendant <span class="operator">=</span> <span class="number">3</span> <span class="keyword">AND</span> subtree.ancestor <span class="operator">=</span> <span class="number">6</span>;</span><br></pre></td></tr></table></figure>
+
+<p>未完待续（结构图解和性能测试）。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li><p>在实现层面邻接表最简单，如果数据库支持 <code>WITH</code> 或者 <code>CONNECT BY PRIOR</code> 递归查询，则会更高效（对递归查询性能存疑，有待测试）。</p>
+</li>
+<li><p>枚举路径能直观地展示祖先到后代之间的路径，由于不能确保引用完整性，需要结合其他手段确保数据正确。</p>
+</li>
+<li><p>嵌套集不能确保引用完整性，且业务复杂度比较高，建议在查询性能要求很高、对其他操作要求不高的场合才使用。</p>
+</li>
+<li><p>闭包表的优势是支持多叉树，以空间换时间的方法减少操作过程中由于冗余的计算造成的消耗。</p>
+</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
+<li>Bill Karwin. SQL Antipatterns [M]. Pragmatic Bookshelf, 2010.</li>
+</ol>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2021/01/09/DDIA_note-5/" title= "《DDIA》阅读笔记（五）：数据复制（单主节点）">
+                    <div class="nextTitle">《DDIA》阅读笔记（五）：数据复制（单主节点）</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2020/12/19/DDIA_note-4/" title= "《DDIA》阅读笔记（四）：数据编码与演化">
+                    <div class="prevTitle">《DDIA》阅读笔记（四）：数据编码与演化</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODYzMi8yNTEyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:yipwinghong@outlook.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yipwinghong" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/WeChat.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:100vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A0%91%E5%BD%A2%E8%A1%A8%E7%BB%93%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%80%BB%E7%BB%93"><span class="toc-number">1.</span> <span class="toc-text">树形表结构设计总结</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%82%BB%E6%8E%A5%E8%A1%A8%EF%BC%88Adjacency-List%EF%BC%89"><span class="toc-number">1.1.</span> <span class="toc-text">邻接表（Adjacency List）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%92%E5%BD%92%E6%9F%A5%E8%AF%A2%EF%BC%88Recursive-Query%EF%BC%89"><span class="toc-number">1.1.1.</span> <span class="toc-text">递归查询（Recursive Query）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%9A%E4%B8%BE%E8%B7%AF%E5%BE%84%EF%BC%88Path-Enumeration%EF%BC%89"><span class="toc-number">1.2.</span> <span class="toc-text">枚举路径（Path Enumeration）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B5%8C%E5%A5%97%E9%9B%86%EF%BC%88Nested-Sets%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">嵌套集（Nested Sets）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AD%E5%8C%85%E8%A1%A8%EF%BC%88Closure-Table%EF%BC%89"><span class="toc-number">1.4.</span> <span class="toc-text">闭包表（Closure Table）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">1.5.</span> <span class="toc-text">总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number">1.6.</span> <span class="toc-text">参考</span></a></li></ol></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 58
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span><a class="archive-post-title" href= "/2021/06/13/Go_cheat-sheet/" >Go Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/06</span><a class="archive-post-title" href= "/2021/06/06/2021-06-06_diary/" >Weekly Summary (2021-05-31_2021-06-06)</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/31</span><a class="archive-post-title" href= "/2021/05/31/2021-05-31_diary/" >2021 下半年工作学习安排</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/16</span><a class="archive-post-title" href= "/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/" >如何用图论解决 Secret Santa 问题？</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" >把 PostgreSQL 用作数据仓库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/" >SELECT * 对 SQL 性能不利的原因</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2021/02/24/DDIA_note-13/" >《DDIA》阅读笔记（九）：一致性与共识（共识问题）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/21</span><a class="archive-post-title" href= "/2021/02/21/2021-02-21_diary/" >近期工作学习规划</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/19</span><a class="archive-post-title" href= "/2021/02/19/DDIA_note-12/" >《DDIA》阅读笔记（九）：一致性与共识（顺序保证）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/13</span><a class="archive-post-title" href= "/2021/02/13/DDIA_note-11/" >《DDIA》阅读笔记（九）：一致性与共识（可线性化）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/06</span><a class="archive-post-title" href= "/2021/02/06/DDIA_note-10/" >《DDIA》阅读笔记（八）：分布式系统的挑战</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/27</span><a class="archive-post-title" href= "/2021/01/27/DDIA_note-9/" >《DDIA》阅读笔记（七）：事务</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/22</span><a class="archive-post-title" href= "/2021/01/22/DDIA_note-8/" >《DDIA》阅读笔记（六）：数据分区</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span><a class="archive-post-title" href= "/2021/01/21/DDIA_note-7/" >《DDIA》阅读笔记（五）：数据复制（无主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/20</span><a class="archive-post-title" href= "/2021/01/20/DDIA_note-6/" >《DDIA》阅读笔记（五）：数据复制（多主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/09</span><a class="archive-post-title" href= "/2021/01/09/DDIA_note-5/" >《DDIA》阅读笔记（五）：数据复制（单主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/01</span><a class="archive-post-title" href= "/2021/01/01/DB_tree-table-design-summary/" >树形表结构设计总结</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/19</span><a class="archive-post-title" href= "/2020/12/19/DDIA_note-4/" >《DDIA》阅读笔记（四）：数据编码与演化</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/13</span><a class="archive-post-title" href= "/2020/12/13/DDIA_note-3/" >《DDIA》阅读笔记（三）：数据存储与检索</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/04</span><a class="archive-post-title" href= "/2020/12/04/DDIA_note-2/" >《DDIA》阅读笔记（二）：数据模型与查询语言</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/02</span><a class="archive-post-title" href= "/2020/12/02/DDIA_note-1/" >《DDIA》阅读笔记（一）：可靠、可扩展与可维护的应用系统</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span><a class="archive-post-title" href= "/2020/10/08/Maven_external_dependencies_management/" >Maven 打包依赖外置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2020/10/04/JVM_prod-analysis-cmd/" >Java 应用常用调试分析方法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/30</span><a class="archive-post-title" href= "/2020/06/30/JVM_java-memory-area/" >Java 内存区域</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/28</span><a class="archive-post-title" href= "/2020/05/28/DB_data-warehouse-design-basic/" >数据仓库设计基础</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/08</span><a class="archive-post-title" href= "/2020/04/08/2020-04-08_diary/" >关于使用思维导图做笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/28</span><a class="archive-post-title" href= "/2020/03/28/Algorithm_leetcode-high-frequency-problems/" >LeetCode 高频面试题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2020/03/06/InfoSecty_personal-infomation-security-guide/" >個人信息安全保護指南</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/22</span><a class="archive-post-title" href= "/2020/02/22/2020-02-22_diary/" >免费 JetBrains 全家桶</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/16</span><a class="archive-post-title" href= "/2020/02/16/Nginx_cheat-sheet/" >Nginx Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Git_Cheat-Sheet/" >Git Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker&K8S_Cheat-Sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker_cheat-sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/03</span><a class="archive-post-title" href= "/2020/02/03/JVM_jstat-monitor-analysis/" >JVM jstat 监控分析</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/01</span><a class="archive-post-title" href= "/2020/02/01/JVM_GC-log-analysis/" >JVM GC 日志分析</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/01</span><a class="archive-post-title" href= "/2019/11/01/Design_design-patterns/" >设计模式与设计原则</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/30</span><a class="archive-post-title" href= "/2019/10/30/JVM_mindmap/" >Java 虚拟机与并发编程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_offset-reset/" >Kafka 位移重置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_dynamic-config/" >Kafka 动态配置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/20</span><a class="archive-post-title" href= "/2019/05/20/Kafka_common-scripts/" >Kafka 常用脚本</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/06</span><a class="archive-post-title" href= "/2019/05/06/Kafka_basic-conceptions/" >Kafka 基本概念</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2018/10/04/Python_async-programming/" >Python 异步编程总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/19</span><a class="archive-post-title" href= "/2018/09/19/Python_data-structure/" >Python 数据结构应用</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/13</span><a class="archive-post-title" href= "/2018/09/13/Python_decorator-basic-usage/" >Python 装饰器基本用法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/02</span><a class="archive-post-title" href= "/2018/09/02/JavaScript_ES6-grammar/" >ES6 语法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/30</span><a class="archive-post-title" href= "/2018/08/30/Vue_user-guide-4/" >Vue 学习笔记：前端路由、请求发送和状态管理</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/28</span><a class="archive-post-title" href= "/2018/08/28/JavaScript_cheat-sheet/" >JavaScript Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/24</span><a class="archive-post-title" href= "/2018/08/24/Vue_user-guide-3/" >Vue 学习笔记：组件</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/23</span><a class="archive-post-title" href= "/2018/08/23/Vue_user-guide-2/" >Vue 学习笔记（2）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/22</span><a class="archive-post-title" href= "/2018/08/22/Python_OOP-summary/" >Python 类与对象总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/20</span><a class="archive-post-title" href= "/2018/08/20/Vue_user-guide-1/" >Vue 学习笔记（1）</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="杂事"><span class="iconfont-archer">&#xe606;</span>杂事</span>
+    
+        <span class="sidebar-tag-name" data-tags="技术"><span class="iconfont-archer">&#xe606;</span>技术</span>
+    
+        <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
+    
+        <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
+    
+        <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
+    
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
+        <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
+    
+        <span class="sidebar-tag-name" data-tags="Maven"><span class="iconfont-archer">&#xe606;</span>Maven</span>
+    
+        <span class="sidebar-tag-name" data-tags="Nginx"><span class="iconfont-archer">&#xe606;</span>Nginx</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Vue"><span class="iconfont-archer">&#xe606;</span>Vue</span>
+    
+        <span class="sidebar-tag-name" data-tags="前端"><span class="iconfont-archer">&#xe606;</span>前端</span>
+    
+        <span class="sidebar-tag-name" data-tags="Git"><span class="iconfont-archer">&#xe606;</span>Git</span>
+    
+        <span class="sidebar-tag-name" data-tags="JavaScript"><span class="iconfont-archer">&#xe606;</span>JavaScript</span>
+    
+        <span class="sidebar-tag-name" data-tags="Go"><span class="iconfont-archer">&#xe606;</span>Go</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="《数据密集型应用系统设计》阅读笔记"><span class="iconfont-archer">&#xe60a;</span>《数据密集型应用系统设计》阅读笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Kylo Yip"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"live2d-widget-model-nietzsche"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>
+
+

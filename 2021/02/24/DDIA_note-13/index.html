@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Kylo Yip">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Kylo Yip">
+    
+    <meta name="keywords" content="Kylo's Notebook,Kylo Yip">
+    
+    <meta name="description" content="">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>《DDIA》阅读笔记（九）：一致性与共识（共识问题） · Kylo&#39;s Notebook</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Kylo's Notebook" type="application/atom+xml">
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >Kylo&#39;s Notebook</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">《DDIA》阅读笔记（九）：一致性与共识（共识问题）</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>Kylo's Notebook</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:100vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(https://api.ixiaowai.cn/mcapi/mcapi.php)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            《DDIA》阅读笔记（九）：一致性与共识（共识问题）
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "技术">技术</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "设计">设计</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">7.7k</span>Reading time: <span class="post-count reading-time">26 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2021/02/24</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="共识问题"><a href="#共识问题" class="headerlink" title="共识问题"></a>共识问题</h1><p>有很多重要的场景都需要集群节点达成某种一致：</p>
+<ul>
+<li><p><strong>主节点选举</strong>：对于主从复制的数据库，所有节点需要就何者充当主节点达成一致。如果由于网络故障原因出现节点之间无法通信，就很容易出现争议。此时共识对于避免错误的故障切换非常重要，后者会导致脑裂：如果集群中存在两个主节点都在接受写请求，最终导致数据不一致甚至丢失。</p>
+</li>
+<li><p><strong>原子事务提交</strong>：对于支持跨节点或跨分区事务的数据库，可能存在某个事务在一些节点上执行成功，在其他节点执行失败的情况。为了维护事务的原子性，所有节点必须对事务的结果达成一致：成功提交或失败回滚。</p>
+</li>
+</ul>
+<blockquote>
+<p>共识的不可能性 — FLP 理论：如果节点存在可能崩溃的风险，则不存在总是能够达成共识的稳定算法。在分布式系统中必须假设节点可能会崩溃。</p>
+<ul>
+<li><p>FLP 结论是基于异步系统模型而做的证明，假定确定性算法都不能使用任何时钟或超时机制（来检测崩溃节点）。</p>
+</li>
+<li><p>另外即使算法使用了随机数来检测节点故障也可以绕过 FLP 结论。</p>
+</li>
+</ul>
+</blockquote>
+<p><strong>无主复制和多主复制等系统通常不支持全局共识</strong>：这些系统可能会发生冲突，或许也可以接受或者寻找其他方案，例如没有线性化保证时就需要处理好数据多个冲突分支以及版本合并等。</p>
+<p>共识意味着就某一项提议，所有节点做出一致的决定而且不可撤销。多个广泛的问题最终都可以归结为共识并且彼此等价，因此如果找到其中一个解决方案，就可以容易地将其转换为其他问题的解决方案。</p>
+<ul>
+<li><p><strong>可线性化的“比较设置”寄存器</strong>：寄存器需要根据当前值是否等于输入的参数，来自动决定接下来是否应该设置新值。</p>
+</li>
+<li><p><strong>原子事务提交</strong>：数据库需要决定是否提交或中止分布式事务。</p>
+</li>
+<li><p><strong>全序广播</strong>：消息系统要决定以何种顺序发送消息。</p>
+</li>
+<li><p><strong>锁与租约</strong>：当多个客户端争抢锁或租约时，要决定其中哪一个成功。</p>
+</li>
+<li><p><strong>成员/协调服务</strong>：对于失败检测器（例如超时机制），系统要决定节点的存活状态（例如基于会话超时）。</p>
+</li>
+<li><p><strong>唯一性约束</strong>：当多个事务在相同的主键上试图并发创建冲突资源时， 约束条件要决定哪一个被允许，哪些违反约束因而必须失败。</p>
+</li>
+</ul>
+<h2 id="原子提交与两阶段提交：停止服务-人工介入"><a href="#原子提交与两阶段提交：停止服务-人工介入" class="headerlink" title="原子提交与两阶段提交：停止服务/人工介入"></a>原子提交与两阶段提交：停止服务/人工介入</h2><p>当一个包含多笔写操作的事务在执行过程出现任何意外，原子性为上层应用提供简单的语义：事务结果成功提交或失败回滚。这样可以防止失败的事务破坏系统，避免形成部分成功夹杂着部分失败。这对于多对象事务和维护二级索引（与主数据保持一致）很重要。</p>
+<h3 id="事务原子提交"><a href="#事务原子提交" class="headerlink" title="事务原子提交"></a>事务原子提交</h3><p>对于单数据库节点执行事务，原子性由存储引擎保证。当客户端请求数据库节点提交事务时，数据库首先使事务的写入持久化（如预写日志），然后把提交记录追加写入到磁盘的日志文件中。如果数据库在该过程中间发生了崩溃，当节点重启后事务可以从日志中恢复。如果在崩溃之前提交记录已成功写入磁盘，则认为事务已安全提交；否则回滚该事务的所有写入。</p>
+<p>当事务涉及多个节点，比如一个分区数据库中多对象事务，或者基于词条分区的二级索引，向所有节点发送提交请求、各节点独立执行提交则容易造成部分失败：</p>
+<ul>
+<li><p>某些节点可能会检测到违反约束或有冲突而决定中止，而其他节点则可能成功提交。</p>
+</li>
+<li><p>某些提交请求可能在网络中丢失，最终由于超时而中止，而其他提交请求则通过。</p>
+</li>
+<li><p>某些节点可能在日志记录写入之前发生崩溃，然后在恢复时回滚，而其他节点则成功提交。</p>
+</li>
+</ul>
+<p>一部分节点提交了事务，而其他节点却放弃了事务，节点之间就会变得不一致而且某个节点一旦提交了事务，即使使事后发现其他节点发生中止，也无法再撤销已提交的事务。因此要求数据一旦提交，即被其他事务可见，进而其他客户端会基于此做出相应的决策。</p>
+<p>可以通过补偿性事务达到一致，即试用一笔新的事务低效效果，但前后两笔事务完全独立，跨事务正确性由应用层保证。</p>
+<h3 id="两阶段提交（2PC）"><a href="#两阶段提交（2PC）" class="headerlink" title="两阶段提交（2PC）"></a>两阶段提交（2PC）</h3><p>一种在多节点之间实现事务原子提交的算法，也称作阻塞式原子提交协议。</p>
+<p>在某些数据库内部使用，或者以 XA 事务形式或 SOAP Web 服务 WS-AtomicTransaction 形式提供给应用程序。</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4.jpg" alt="两阶段提交"></p>
+<p>2PC 引入了新组件 <strong>协调者</strong>（通常实现为共享库，运行在请求事务的同一进程中，或其他单独的进程或服务，比如 Narayana，JOTM，BTM，MSDTC）。通常 2PC 事务从应用程序在多个数据库节点（<strong>参与者</strong>）上执行数据读写开始，当应用程序准备提交事务时：</p>
+<ul>
+<li><p>协调者开始阶段 1：发送准备请求到所有节点，寻问是否可以提交。</p>
+</li>
+<li><p>参与者回应是，则协调者在阶段 2 发出提交请求，提交开始实际执行。</p>
+</li>
+<li><p>参与者回应否，则协调者在阶段 2 发出放弃请求。</p>
+</li>
+</ul>
+<h3 id="系统的承诺"><a href="#系统的承诺" class="headerlink" title="系统的承诺"></a>系统的承诺</h3><p>2PC 过程：</p>
+<ul>
+<li><p>应用程序启动分布式事务时，首先向协调者请求全局唯一的事务 id。</p>
+</li>
+<li><p>应用程序在每个参与节点上执行单节点事务，将全局唯一事务 id 附加到事务上。此时读写在单节点完成，如果出现问题则协调者和其他参与者可以安全中止。</p>
+</li>
+<li><p>当应用程序准备提交时，协调者向所有参与者发送准备请求，并附带全局事务 id。如果准备请求中的任意一个发生失败或超时，则协调者通知所有参与者放弃事务。</p>
+</li>
+<li><p>参与者收到准备请求后，确保任何情况下都可以提交事务，包括安全地将事务数据写入磁盘，并检查是否存在冲突或约束违规。一旦向协调者回答“是”则承诺会提交事务。此时仍未真正提交，只是表态不会放弃事务。</p>
+</li>
+<li><p>提交点：当协调者收到所有准备请求的答复时，就提交或放弃事务做出明确决定。协调者把最后的决定写入磁盘事务日志中，防止系统容崩溃，并可恢复之前的决定。</p>
+</li>
+<li><p>协调者的决定写入磁盘之后，向所有参与者发送提交或放弃请求。如果出现失败或超时，则协调者必须一直重试直到成功，任何节点不允许反悔。即使参与者在此阶段故障，在恢复之后也必须继续执行。</p>
+</li>
+</ul>
+<h3 id="协调者发生故障"><a href="#协调者发生故障" class="headerlink" title="协调者发生故障"></a>协调者发生故障</h3><p>如果参与者或网络在 2PC 期间发生失败，如果在第一阶段，则协调者会决定中止交易；如果在第二阶段，则协调者将无限期重试。</p>
+<p>但对于协调者故障的情况：</p>
+<ul>
+<li><p>如果在发送准备请求前失败，则可以安全中止。</p>
+</li>
+<li><p>如果参与者收到准备请求且做出“是”的回应，则参与者不能单方面放弃，必须等待协调者决定，此时参与者处于不确定状态（不能通过超时机制解决，可能导致参与者间状态不一致）。</p>
+</li>
+<li><p>唯一方法是等待协调者恢复，因此协调者在向参与者发送提交或中止请求前要将决定写入磁盘事务日志，恢复后通过读取日志确定未决事务状态（没有日志则中止）。</p>
+</li>
+</ul>
+<h3 id="三阶段提交（3PC）"><a href="#三阶段提交（3PC）" class="headerlink" title="三阶段提交（3PC）"></a>三阶段提交（3PC）</h3><p>3PC 假定一个有界的网络延迟和节点在规定时间内响应（现实情况很难确保，则无法保证原子性）。</p>
+<p>通常非阻塞原子提交依赖于完美的故障检测器，可靠地判断节点是否已崩溃。但在无限延迟的网络环境中，超时机制不是可靠的故障检测器，因为即使节点正常，请求也可能由于网络问题而最终超时。</p>
+<p>因此普遍还是使用阻塞的 2PC。</p>
+<h2 id="实践中的分布式事务"><a href="#实践中的分布式事务" class="headerlink" title="实践中的分布式事务"></a>实践中的分布式事务</h2><p>分布式事务一方面被看作式一个其他方案难以企及的重要安全保证，另一方面由于操作上的缺陷、性能问题（MySQL 的分布式事务比单节点事务慢 10 倍以上，2PC 的性能问题主要是来自防止崩溃恢复而做的磁盘 I/O，fsync，以及额外的网络往返开销）和承诺不可靠等问题遭受诟病，因此由于运维方面的问题很多云服务商决定不支持分布式事务。</p>
+<hr>
+<p>两种分布式事务概念：</p>
+<ul>
+<li><p>数据库内分布式事务：某些分布式数据库（标配支持复制和分区）支持跨节点的内部事务，比如 VoltDB 和 MySQL CLuster 的 NDB 存储引擎。此外，所有参与节点都运行着相同的数据库软件。</p>
+</li>
+<li><p>异构分布式事务：即存在两种或以上的参与者实现技术。比如来自不同供应商的数据库，或非数据库系统（消息中间件）。即使是完全不同的系统，跨系统的分布式事务也必须确保原子提交。</p>
+</li>
+</ul>
+<h3 id="Exactly-Once-消息处理"><a href="#Exactly-Once-消息处理" class="headerlink" title="Exactly-Once 消息处理"></a>Exactly-Once 消息处理</h3><p>异构分布式事务旨在无缝集成多种系统，结果是恰好一次地处理。</p>
+<ul>
+<li><p>比如数据库与消息队列，可通过自动提交消息确认和数据库写入来实现。如果消息发送或数据库事务任何一个发送失败，则两者必须中止，消息队列可稍后重传消息。因此自动提交消息和消息处理结果，可确保消息有效处理且仅有一次。而如果事务最后发生中止，则放弃所有部分完成结果。</p>
+</li>
+<li><p>只有在所有受影响的系统都使用相同的原子提交协议的前提下，这种分布式事务才是可行的。如果不支持两阶段提交，在某个环节出错需要重试，则可能会重复发送。除非假定结果和副作用都可以在事务中止时回滚，则可以安全地重新处理消息。</p>
+</li>
+</ul>
+<h3 id="XA-交易"><a href="#XA-交易" class="headerlink" title="XA 交易"></a>XA 交易</h3><p>X/Open XA（eXtended Architecture XA）是异构环境下实施 2PC 的工业标准，在许多关系型数据库（PostgreSQL、MySQL、DB2、SQL Server、Oracle）和消息队列（ActiveMQ、HornetQ、MSMQ、IBM MQ）都支持 XA。</p>
+<ul>
+<li><p>XA 是一个与事务协调这通信的 C API，也支持其他语言的 API 绑定，比如 Java 的 JTA，可以支持很多 JDBC 驱动和 JMS 驱动。</p>
+</li>
+<li><p>XA 假定应用程序通过网络或客户端的库函数与参与者节点进行通信。如果驱动程序支持 XA, 意味着应用可以调用 XA API 确定操作是否是异构分布式事务的一部分，是则发送必要的信息给数据库服务器。同时它还支持回调，协调者通过回调函数通知参与者执行准备、提交或中止。</p>
+</li>
+<li><p>事务协调者实现 XA API，与产生事务的应用程序运行在相同的进程中。这些 API 跟踪事务中所有的参与者，通过回调协调节点进行准备工作，然后收集参与者投票，在本地磁盘文件记录事务最终决定。</p>
+</li>
+<li><p>如果应用程序进程发生崩溃或者所在的节点出现故障，协调者就需要做相应的处理，所有完成了准备阶段但尚未提交的参与者就会陷入停顿。由于事务日志保存在应用服务器本地磁盘上，该节点必须先重启，然后协调者通过 XA API 读取日志、进而恢复事务的决定。完成这些之后协调者才能继续使用数据库驱动 XA 回调来要求所有参与者执行提交（或中止）。数据库服务器无法直接与协调者进行通信，而须通过相应的 API。</p>
+</li>
+</ul>
+<h3 id="停顿时仍持有锁"><a href="#停顿时仍持有锁" class="headerlink" title="停顿时仍持有锁"></a>停顿时仍持有锁</h3><p>在分布式事务中需要关注陷入停顿、不确定应该提交或中止的参与者节点，不能忽略、清理而维持工作。</p>
+<ul>
+<li><p>数据库事务通常持有待修改行的行级独占锁，用以防止脏写。如果要使用可串行化隔离，2PC 锁的数据库还会对事务曾经读取的行持有读共享锁。</p>
+</li>
+<li><p>在事务提交或中止前，数据库不会释放锁，事务在整个停顿期间都一直持有。如果协调者日志由于某种原因彻底丢失，数据对象将永久处于锁状态中，至少需要管理员手动解决。</p>
+</li>
+<li><p>数据被加锁时其他事务无法执行修改甚至读取，导致上层应用不可用，因此必须解决处于停顿状态的事务。</p>
+</li>
+</ul>
+<h3 id="从协调者故障中恢复"><a href="#从协调者故障中恢复" class="headerlink" title="从协调者故障中恢复"></a>从协调者故障中恢复</h3><p>理论上如果协调者崩溃之后重新启动应该可以从日志中恢复那些停顿的事务，然而在实践中孤立的不确定事务确实会发生：</p>
+<ul>
+<li><p>当协调者恢复失败，基于 2PC 的正确实现要求，重启处于停顿状态的数据库节点也无法解决问题，因为要保持重启前事务的加锁。</p>
+</li>
+<li><p>唯一的解决方法是让管理员手动决定究竟是执行提交还是回滚。管理员仔细检查每个有问题的参与者，确定是否有节点已完成提交（或中止），将相同的结果一一应用于所有的参与者上。此时需要大量的手工操作，由巨大的压力和时间限制。</p>
+</li>
+<li><p>许多 XA 的实现都支持紧急避险措施，称之为启发式决策：参与者节点可以在紧急情况下单方面做出决定，放弃或者继续停顿事务，而不需要等到协调者发出指令。但启发式意味着破坏原子性，违背了 2PC 做出的承诺，只能用于应急。</p>
+</li>
+</ul>
+<h3 id="局限性"><a href="#局限性" class="headerlink" title="局限性"></a>局限性</h3><p>XA 事务解决了多个参与者之间达成一致的问题，但同时引入了操作的限制，特别当核心的事务协调者本身就是数据库（存储事务投票结果）。</p>
+<h4 id="单点故障"><a href="#单点故障" class="headerlink" title="单点故障"></a>单点故障</h4><p>如果协调者不支持数据复制，而是在单节点上运行，则存在单点故障问题（导致很多应用阻塞在停顿事务的锁上）。现实情况是有许多协调者的实现默认情况下并非高可用，或者只支持最基本的复制。</p>
+<h4 id="有状态"><a href="#有状态" class="headerlink" title="有状态"></a>有状态</h4><p>许多服务器端应用程序都倾向于无状态模式（HTTP），所有的持久状态都保存在数据库中，这样应用服务器可轻松地添加或删除实例。但当协调者是应用服务器的一部分时，协调者的日志成为可靠系统的重要组成部分，它要求与数据库本身一样重要（需要日志恢复有疑问的事务），此时应用服务器不再无状态。</p>
+<h4 id="高复杂度"><a href="#高复杂度" class="headerlink" title="高复杂度"></a>高复杂度</h4><p>由于 XA 需要与各种数据系统保持兼容，它最终是多系统可兼容的最低标准。比如它无法深入探测不同系统之间的死锁条件（需要更复杂的协议使得不同系统交换事务等待的锁信息），不适用于 SSI（需要更复杂的协议识别不同系统间的写冲突）。</p>
+<h4 id="低容错"><a href="#低容错" class="headerlink" title="低容错"></a>低容错</h4><p>数据库内部的分布式事务限制更少，比如支持 SSI（可串行化快照隔离）。但 2PC 要成功提交事务，还要求所有参与者都投票赞成，如果有任何部分故障，整个事务只能失败，意味着扩大事务失败的风险，降低容错性。</p>
+<h2 id="支持容错的共识：自动切换"><a href="#支持容错的共识：自动切换" class="headerlink" title="支持容错的共识：自动切换"></a>支持容错的共识：自动切换</h2><p>共识即让几个节点就某项提议达成一致，共识问题即是一或多个节点可以提议某些值，由共识算法来决定最终值，其中共识算法必须满足：</p>
+<ul>
+<li><p><strong>协商一致性（Uniform Agreement）</strong>：所有节点接受相同的决议。</p>
+</li>
+<li><p><strong>诚实性（Integrity）</strong>：所有节点不能反悔，对一项决议不能有两次决定。与协商一致性定义了共识的核心，即决定一致的结果不能改变。</p>
+</li>
+<li><p><strong>合法性（Validity）</strong>：如果决定了值 v，则 v 一定是由某个节点所提议的。比如该决定不能为 NULL，即使满足协商一致性和诚实性，也没有任何实际效果。</p>
+</li>
+<li><p><strong>可中止性（Termination）</strong>：节点如果不崩溃则最终一定可以达成决议。当考虑容错性，就不能强行指定某个节点独裁、做出所有决定。可中止性点强调一个共识算法不能原地空转，必须取得实质性进展。</p>
+</li>
+</ul>
+<p>上述共识的系统模型假定在满足某种限制下，当某个节点发生崩溃后（小于半数节点），节点就彻底消失不再出现。</p>
+<p>在该模型下，所有采取等待节点恢复的算法都无法满足终止性，特别是 2PC 不符合可终止性要求。</p>
+<p>大多数共识算法都假定系统不存在拜占庭式错误，而对于拜占庭式错误，只要故障节点数小于三分之一也可以达成共识。</p>
+<h3 id="共识算法与全序广播"><a href="#共识算法与全序广播" class="headerlink" title="共识算法与全序广播"></a>共识算法与全序广播</h3><p>著名的容错式共识算法包括 VSR、Paxos、Raft、Zab，其中大部分不是直接使用共识的形式化模型（提议并决定某个值，同时满足四个属性），而是决定一系列的值，采用全序关系广播算法，其要点是消息按照相同的顺序有且只有一次地发送到所有节点，相当于进行了多轮共识：在每一轮节点提出要发送的消息、决定下一个消息全局顺序。</p>
+<ul>
+<li><p><strong>协商一致性</strong>：所有节点决定相同的顺序发送相同消息。</p>
+</li>
+<li><p><strong>诚实性</strong>：消息不能重复。</p>
+</li>
+<li><p><strong>合法性</strong>：消息不会被破坏，也不能凭空捏造。</p>
+</li>
+<li><p><strong>可中止性</strong>：消息不会丢失。</p>
+</li>
+</ul>
+<p>VSR、Raft、Zab 都直接采取全序关系广播，比重复性的一轮共识，只解决一个提议更高效，而 Paxos 则有对应的优化版本 Multi-Paxos。</p>
+<h3 id="主从复制与共识"><a href="#主从复制与共识" class="headerlink" title="主从复制与共识"></a>主从复制与共识</h3><p>在主从复制中所有写入操作由主节点负责，并以相同的顺序发送到从节点来保持副本更新。其是否全序关系广播，取决于如何选择主节点。</p>
+<ul>
+<li><p>如果主节点由管理员手动选择配置，即为独裁式的一致性算法：只允许一个节点接受写入，如果发生故障则系统无法写入，直到手动配置新节点为主节点。这种做法需要认为干预，不满足共识的可终止性。</p>
+</li>
+<li><p>一些数据库支持持自动选举主节点和故障切换，通过选举把某个从节点者提升为新的主节点，更接近容错式全序关系广播，从而达成共识。</p>
+</li>
+<li><p>脑裂问题：所有的节点都需要同意主节点，否则两个主节点会导致数据库出现不一致，因此需要共识算法选出一位主节点。但是如果这里描述的共识算法实际上是全序关系广播，且全序关系广播很像主从复制，主从复制又需要选举主节点，则形成循环。</p>
+</li>
+</ul>
+<h3 id="Epoch-和-Quorum"><a href="#Epoch-和-Quorum" class="headerlink" title="Epoch 和 Quorum"></a>Epoch 和 Quorum</h3><p>目前讨论的共识协议在内部都使用某种形式的主节点，都采用了一种弱化的保证：协议定义了一个世代编号（epoch number），如 Paxos 中的 ballot number、VSP 中的 view number、Raft 中的 term number，并保证在每个世代中主节点都是唯一确定的。</p>
+<ul>
+<li><p>如果发现当前的主节点失效，节点就开始一轮投票选举新的主节点，选举会赋予一个单调递增的 epoch 号。如果出现了两个不同的主节点对应千不同 epoch 号，则更高 epoch 号的主节点获胜。</p>
+</li>
+<li><p>在主节点做出任何决定之前须检查是否存在比它更高的 epoch 号码，否则就会产生冲突的决定。节点不能依靠自己所掌握的信息来决策，不能仅仅自认为主节点。</p>
+</li>
+<li><p>节点须从 quorum 节点中收集投票。主节点如果想要做出某个决定，须将提议发送给其他所有节点，等待 quorum 节点的响应。quorum 通常由多数节点组成，且只有当没有更高 epoch 的主节点存在时，节点才会对当前的提议进行投票。</p>
+</li>
+<li><p>两轮投票：首先是投票决定谁是主节点，然后是对主节点的提议进行投票。且参与两轮的 quorum 必须有重叠（至少有一个参与者参与了两次投票）。如果在针对提议的投票中没有出现更高 epoch 号码，就可以得出结论：没有发生更高 epoch 的主节点选举， 当前的主节点地位没有改变，可以安全地就提议进行投票。</p>
+</li>
+</ul>
+<p>区别于 2PC，共识算法同时具备正确性和容错性：</p>
+<ul>
+<li><p>2PC 的协调者并不是依靠选举产生。</p>
+</li>
+<li><p>容错共识算法只需要收到多数节点的投票结果即可通过决议，而 2PC 要求每个参与者都必须做出“是”才能最终通过。</p>
+</li>
+<li><p>共识算法定义了恢复过程，出现故障后通过该过程节点可以选举出新的主节点，然后进入一致的状态，确保总是能够满足安全属性。</p>
+</li>
+</ul>
+<h3 id="局限性-1"><a href="#局限性-1" class="headerlink" title="局限性"></a>局限性</h3><p>共识算法兼顾安全性（一致性、完整性、有效性）和容错性（大多数节点工作就能保证可用）。共识可提供全序关系广播，以容错的方式实现线性化。</p>
+<p>但也存在以下代价需要考量。</p>
+<h4 id="同步复制"><a href="#同步复制" class="headerlink" title="同步复制"></a>同步复制</h4><p>在达成一致性决议之前，节点投票的过程是同步复制过程，这意味着牺牲性能。</p>
+<p>因此数据库通常配置为异步复制，即使存在某些已提交数据在故障切换时丢失数据的情况。</p>
+<h4 id="故障误判"><a href="#故障误判" class="headerlink" title="故障误判"></a>故障误判</h4><p>共识系统通常依靠超时机制检测节点失效。在网络延迟高度不确定的环境中，特别是跨区域分布的系统，经常由于网络延迟的原因，导致节点错误地认为主节点发生故障。</p>
+<p>这种误判并不会损害安全属性，但频繁的主节点选举显著降低了性能，系统最终会花费更多的时间和资源在选举主节点上而不是原本的服务任务。</p>
+<h4 id="多数节点"><a href="#多数节点" class="headerlink" title="多数节点"></a>多数节点</h4><p>共识体系需要严格的多数节点才能运行，如果由于网络故障切断了节点之间的连接，则只有多数节点所在的分区可以继续工作，剩下的少数节点则处于事实上的停顿状态。</p>
+<p>（线性化的代价）</p>
+<h4 id="静态成员组成"><a href="#静态成员组成" class="headerlink" title="静态成员组成"></a>静态成员组成</h4><p>多数共识算法假定一组固定参与投票的节点集， 这意味着不能动态添加或删除节点。</p>
+<p>动态成员资格的扩展特性可以在集群中的按需调整节点数，但相比于静态的成员组成，其理解程度和接受程度要低很多。</p>
+<h4 id="网络问题敏感"><a href="#网络问题敏感" class="headerlink" title="网络问题敏感"></a>网络问题敏感</h4><p>共识算法往往对网络问题特别敏感。</p>
+<p>例如 Raft 已被发现存在不合理的边界条件处理，如果网络中存在某一条网络连接持续不可靠，Raft 就会不断在两个节点之间反复切换主节点，当前主节点不断被赶下台，这最终导致系统根本无法正常提供服务。</p>
+<p>其他共识算法也有类似的问题，所以面对不可靠网络，如何设计更具鲁棒性的共识算法仍然是一个开放性的研究问题。</p>
+<h2 id="成员与协调服务"><a href="#成员与协调服务" class="headerlink" title="成员与协调服务"></a>成员与协调服务</h2><p>ZooKeeper 和 Etcd 通常称为“分布式键值存储”或“协调与配置服务”，其对外提供读写入主键的值，或遍历主键等 API。</p>
+<p>但区别于主流数据库，其主要针对保存少量、可完全载入内存的数据（即使可以持久化）。通常采用容错的全序广播算法在所有节点上复制这些数据从而实现高可靠（每条消息代表数据库写请求，按相同的顺序在多个节点应用写操作，从而达到多副本的一致性）。</p>
+<p>ZooKeeper 模仿了 Google Chubby 分布式锁服务，并提供了很多其他特性：</p>
+<ul>
+<li><p><strong>线性化原子操作</strong>：使用原子“比较-设置”操作， 可以实现加锁服务。</p>
+</li>
+<li><p><strong>操作全序</strong>：当资源被锁或者租约保护时， 需要 fencing 令牌来防止某些客户端发生进程暂停而引起锁冲突。</p>
+</li>
+<li><p><strong>故障检测</strong>：客户端与 ZK 节点维护一个长期会话 客户端会周期性地与 ZK 服务节点互相交换心跳信息，以检查对方是否存活（可识别闪断或长时间心跳停止，自动处理锁资源释放）。</p>
+</li>
+<li><p><strong>更改通知</strong>：客户端不仅可以读取其他客户端所创建的锁和键值，还可以监视它们的变化，即订阅通知机制。</p>
+</li>
+</ul>
+<h3 id="节点任务分配"><a href="#节点任务分配" class="headerlink" title="节点任务分配"></a>节点任务分配</h3><ul>
+<li><p>如果系统有多个流程或服务的实例，并且需求其中的一个实例充当主节点；而如果主节点失效，由其他某个节点来接管。这非常吻合主从复制数据库，此外它对于作业调度系统（或类似的有状态服务）也非常有用。</p>
+</li>
+<li><p>对于一些分区资源（数据库、消息流、文件存储、分布式 Actor System），需要决定将那个分区分配给哪个节点，当有新节点加入集群时，需要将某些现有分区从当前节点迁移到新节点从而实现负载动态平衡，则可以利用 ZK 的原子操作 ephemeral nodes 和通知机制实现。如果实现无误，它可以非常方便地使应用程序达到自动故障中恢复，减少入工干预。</p>
+</li>
+<li><p>应用程序最初可能只运行在单节点，之后可能最终扩展到数千节点。试图在如此庞大的集群上进行多数者投票会非常低效。ZK 通常是在固定数最的节点（通常三到五个）上运行投票，可以非常高效地支持大量的客户端。因此 ZK 其实提供了一种将跨节点协调服务（包括共识，操作排序和故障检测）专业外包的方式。</p>
+</li>
+<li><p>ZK 管理的数据一般变化非常缓慢（分钟、小时级），如果需要保存实时变化的数据，应该考虑其他工具（比如 Apache BookKeeper）。</p>
+</li>
+</ul>
+<h3 id="服务发现"><a href="#服务发现" class="headerlink" title="服务发现"></a>服务发现</h3><p>即确定需要某项服务时，应该连接到哪个 IP 地址等。使用 ZK，可以在节点启动时将网络端口信息向 ZK 等服务注册，客户端只需要向 ZK 注册表寻问。</p>
+<ul>
+<li><p>服务发现不一定需要共识。通过服务名称来获取 IP 地址传统的查询方式是 DNS，它使用多层缓存来实现高性能与高可用性。从 DNS 读取肯定不满足线性化，而现实情况是如果 DNS 返回的结果是过期的旧值通常也不会产生什么大问题。DNS 对于网络产生中断时服务可用性和鲁棒性更为重要一些。</p>
+</li>
+<li><p>即使服务发现不需要共识，但主节点选举肯定需要。因此如果共识系统已经明确知道主节点，可以利用来帮助次级服务发现各自的主节点。现在一些共识系统支持只读的缓存副本。这些副本异步地接收其他共识算法所达成的决议日志，但自身并不太参与投票，而主要是提供不需要支持线性化的读取服务。</p>
+</li>
+</ul>
+<h3 id="成员服务"><a href="#成员服务" class="headerlink" title="成员服务"></a>成员服务</h3><p>用来确定当前哪些节点处于活动状态并属于集群的有效成员。由于无限的网络延迟无法可靠地检测一个节点究竟是否发生了故障。但是可以将故障检测与共识绑定，让所有节点就节点的存活达成一致意见。</p>
+<p>虽然依然可能误判，即便如此系统就成员资格问题的决定是全体一致是最重要的。例如选举主节点的方式可能是简单地投票选择编号最小的节点，一且节点对于当前包含哪些成员出现了不同意见，共识过程就无法继续。</p>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2021/03/06/Arthas_Cheat-Sheet/" title= "Arthas Cheat Sheet">
+                    <div class="nextTitle">Arthas Cheat Sheet</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2021/02/21/2021-02-21_diary/" title= "近期工作学习规划">
+                    <div class="prevTitle">近期工作学习规划</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODYzMi8yNTEyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:yipwinghong@outlook.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yipwinghong" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/WeChat.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:100vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B1%E8%AF%86%E9%97%AE%E9%A2%98"><span class="toc-number">1.</span> <span class="toc-text">共识问题</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E5%AD%90%E6%8F%90%E4%BA%A4%E4%B8%8E%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%EF%BC%9A%E5%81%9C%E6%AD%A2%E6%9C%8D%E5%8A%A1-%E4%BA%BA%E5%B7%A5%E4%BB%8B%E5%85%A5"><span class="toc-number">1.1.</span> <span class="toc-text">原子提交与两阶段提交：停止服务&#x2F;人工介入</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8B%E5%8A%A1%E5%8E%9F%E5%AD%90%E6%8F%90%E4%BA%A4"><span class="toc-number">1.1.1.</span> <span class="toc-text">事务原子提交</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%EF%BC%882PC%EF%BC%89"><span class="toc-number">1.1.2.</span> <span class="toc-text">两阶段提交（2PC）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%89%BF%E8%AF%BA"><span class="toc-number">1.1.3.</span> <span class="toc-text">系统的承诺</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8D%8F%E8%B0%83%E8%80%85%E5%8F%91%E7%94%9F%E6%95%85%E9%9A%9C"><span class="toc-number">1.1.4.</span> <span class="toc-text">协调者发生故障</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%EF%BC%883PC%EF%BC%89"><span class="toc-number">1.1.5.</span> <span class="toc-text">三阶段提交（3PC）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E8%B7%B5%E4%B8%AD%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1"><span class="toc-number">1.2.</span> <span class="toc-text">实践中的分布式事务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Exactly-Once-%E6%B6%88%E6%81%AF%E5%A4%84%E7%90%86"><span class="toc-number">1.2.1.</span> <span class="toc-text">Exactly-Once 消息处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#XA-%E4%BA%A4%E6%98%93"><span class="toc-number">1.2.2.</span> <span class="toc-text">XA 交易</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%81%9C%E9%A1%BF%E6%97%B6%E4%BB%8D%E6%8C%81%E6%9C%89%E9%94%81"><span class="toc-number">1.2.3.</span> <span class="toc-text">停顿时仍持有锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%8E%E5%8D%8F%E8%B0%83%E8%80%85%E6%95%85%E9%9A%9C%E4%B8%AD%E6%81%A2%E5%A4%8D"><span class="toc-number">1.2.4.</span> <span class="toc-text">从协调者故障中恢复</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B1%80%E9%99%90%E6%80%A7"><span class="toc-number">1.2.5.</span> <span class="toc-text">局限性</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8D%95%E7%82%B9%E6%95%85%E9%9A%9C"><span class="toc-number">1.2.5.1.</span> <span class="toc-text">单点故障</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%9C%89%E7%8A%B6%E6%80%81"><span class="toc-number">1.2.5.2.</span> <span class="toc-text">有状态</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%AB%98%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="toc-number">1.2.5.3.</span> <span class="toc-text">高复杂度</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BD%8E%E5%AE%B9%E9%94%99"><span class="toc-number">1.2.5.4.</span> <span class="toc-text">低容错</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%94%AF%E6%8C%81%E5%AE%B9%E9%94%99%E7%9A%84%E5%85%B1%E8%AF%86%EF%BC%9A%E8%87%AA%E5%8A%A8%E5%88%87%E6%8D%A2"><span class="toc-number">1.3.</span> <span class="toc-text">支持容错的共识：自动切换</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B1%E8%AF%86%E7%AE%97%E6%B3%95%E4%B8%8E%E5%85%A8%E5%BA%8F%E5%B9%BF%E6%92%AD"><span class="toc-number">1.3.1.</span> <span class="toc-text">共识算法与全序广播</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%E4%B8%8E%E5%85%B1%E8%AF%86"><span class="toc-number">1.3.2.</span> <span class="toc-text">主从复制与共识</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Epoch-%E5%92%8C-Quorum"><span class="toc-number">1.3.3.</span> <span class="toc-text">Epoch 和 Quorum</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B1%80%E9%99%90%E6%80%A7-1"><span class="toc-number">1.3.4.</span> <span class="toc-text">局限性</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%90%8C%E6%AD%A5%E5%A4%8D%E5%88%B6"><span class="toc-number">1.3.4.1.</span> <span class="toc-text">同步复制</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%95%85%E9%9A%9C%E8%AF%AF%E5%88%A4"><span class="toc-number">1.3.4.2.</span> <span class="toc-text">故障误判</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%9A%E6%95%B0%E8%8A%82%E7%82%B9"><span class="toc-number">1.3.4.3.</span> <span class="toc-text">多数节点</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E6%88%90%E5%91%98%E7%BB%84%E6%88%90"><span class="toc-number">1.3.4.4.</span> <span class="toc-text">静态成员组成</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98%E6%95%8F%E6%84%9F"><span class="toc-number">1.3.4.5.</span> <span class="toc-text">网络问题敏感</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%90%E5%91%98%E4%B8%8E%E5%8D%8F%E8%B0%83%E6%9C%8D%E5%8A%A1"><span class="toc-number">1.4.</span> <span class="toc-text">成员与协调服务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%8A%82%E7%82%B9%E4%BB%BB%E5%8A%A1%E5%88%86%E9%85%8D"><span class="toc-number">1.4.1.</span> <span class="toc-text">节点任务分配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0"><span class="toc-number">1.4.2.</span> <span class="toc-text">服务发现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%88%90%E5%91%98%E6%9C%8D%E5%8A%A1"><span class="toc-number">1.4.3.</span> <span class="toc-text">成员服务</span></a></li></ol></li></ol></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 58
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span><a class="archive-post-title" href= "/2021/06/13/Go_cheat-sheet/" >Go Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/06</span><a class="archive-post-title" href= "/2021/06/06/2021-06-06_diary/" >Weekly Summary (2021-05-31_2021-06-06)</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/31</span><a class="archive-post-title" href= "/2021/05/31/2021-05-31_diary/" >2021 下半年工作学习安排</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/16</span><a class="archive-post-title" href= "/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/" >如何用图论解决 Secret Santa 问题？</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" >把 PostgreSQL 用作数据仓库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/" >SELECT * 对 SQL 性能不利的原因</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2021/02/24/DDIA_note-13/" >《DDIA》阅读笔记（九）：一致性与共识（共识问题）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/21</span><a class="archive-post-title" href= "/2021/02/21/2021-02-21_diary/" >近期工作学习规划</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/19</span><a class="archive-post-title" href= "/2021/02/19/DDIA_note-12/" >《DDIA》阅读笔记（九）：一致性与共识（顺序保证）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/13</span><a class="archive-post-title" href= "/2021/02/13/DDIA_note-11/" >《DDIA》阅读笔记（九）：一致性与共识（可线性化）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/06</span><a class="archive-post-title" href= "/2021/02/06/DDIA_note-10/" >《DDIA》阅读笔记（八）：分布式系统的挑战</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/27</span><a class="archive-post-title" href= "/2021/01/27/DDIA_note-9/" >《DDIA》阅读笔记（七）：事务</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/22</span><a class="archive-post-title" href= "/2021/01/22/DDIA_note-8/" >《DDIA》阅读笔记（六）：数据分区</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span><a class="archive-post-title" href= "/2021/01/21/DDIA_note-7/" >《DDIA》阅读笔记（五）：数据复制（无主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/20</span><a class="archive-post-title" href= "/2021/01/20/DDIA_note-6/" >《DDIA》阅读笔记（五）：数据复制（多主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/09</span><a class="archive-post-title" href= "/2021/01/09/DDIA_note-5/" >《DDIA》阅读笔记（五）：数据复制（单主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/01</span><a class="archive-post-title" href= "/2021/01/01/DB_tree-table-design-summary/" >树形表结构设计总结</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/19</span><a class="archive-post-title" href= "/2020/12/19/DDIA_note-4/" >《DDIA》阅读笔记（四）：数据编码与演化</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/13</span><a class="archive-post-title" href= "/2020/12/13/DDIA_note-3/" >《DDIA》阅读笔记（三）：数据存储与检索</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/04</span><a class="archive-post-title" href= "/2020/12/04/DDIA_note-2/" >《DDIA》阅读笔记（二）：数据模型与查询语言</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/02</span><a class="archive-post-title" href= "/2020/12/02/DDIA_note-1/" >《DDIA》阅读笔记（一）：可靠、可扩展与可维护的应用系统</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span><a class="archive-post-title" href= "/2020/10/08/Maven_external_dependencies_management/" >Maven 打包依赖外置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2020/10/04/JVM_prod-analysis-cmd/" >Java 应用常用调试分析方法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/30</span><a class="archive-post-title" href= "/2020/06/30/JVM_java-memory-area/" >Java 内存区域</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/28</span><a class="archive-post-title" href= "/2020/05/28/DB_data-warehouse-design-basic/" >数据仓库设计基础</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/08</span><a class="archive-post-title" href= "/2020/04/08/2020-04-08_diary/" >关于使用思维导图做笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/28</span><a class="archive-post-title" href= "/2020/03/28/Algorithm_leetcode-high-frequency-problems/" >LeetCode 高频面试题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2020/03/06/InfoSecty_personal-infomation-security-guide/" >個人信息安全保護指南</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/22</span><a class="archive-post-title" href= "/2020/02/22/2020-02-22_diary/" >免费 JetBrains 全家桶</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/16</span><a class="archive-post-title" href= "/2020/02/16/Nginx_cheat-sheet/" >Nginx Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Git_Cheat-Sheet/" >Git Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker&K8S_Cheat-Sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker_cheat-sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/03</span><a class="archive-post-title" href= "/2020/02/03/JVM_jstat-monitor-analysis/" >JVM jstat 监控分析</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/01</span><a class="archive-post-title" href= "/2020/02/01/JVM_GC-log-analysis/" >JVM GC 日志分析</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/01</span><a class="archive-post-title" href= "/2019/11/01/Design_design-patterns/" >设计模式与设计原则</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/30</span><a class="archive-post-title" href= "/2019/10/30/JVM_mindmap/" >Java 虚拟机与并发编程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_offset-reset/" >Kafka 位移重置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_dynamic-config/" >Kafka 动态配置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/20</span><a class="archive-post-title" href= "/2019/05/20/Kafka_common-scripts/" >Kafka 常用脚本</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/06</span><a class="archive-post-title" href= "/2019/05/06/Kafka_basic-conceptions/" >Kafka 基本概念</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2018/10/04/Python_async-programming/" >Python 异步编程总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/19</span><a class="archive-post-title" href= "/2018/09/19/Python_data-structure/" >Python 数据结构应用</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/13</span><a class="archive-post-title" href= "/2018/09/13/Python_decorator-basic-usage/" >Python 装饰器基本用法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/02</span><a class="archive-post-title" href= "/2018/09/02/JavaScript_ES6-grammar/" >ES6 语法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/30</span><a class="archive-post-title" href= "/2018/08/30/Vue_user-guide-4/" >Vue 学习笔记：前端路由、请求发送和状态管理</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/28</span><a class="archive-post-title" href= "/2018/08/28/JavaScript_cheat-sheet/" >JavaScript Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/24</span><a class="archive-post-title" href= "/2018/08/24/Vue_user-guide-3/" >Vue 学习笔记：组件</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/23</span><a class="archive-post-title" href= "/2018/08/23/Vue_user-guide-2/" >Vue 学习笔记（2）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/22</span><a class="archive-post-title" href= "/2018/08/22/Python_OOP-summary/" >Python 类与对象总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/20</span><a class="archive-post-title" href= "/2018/08/20/Vue_user-guide-1/" >Vue 学习笔记（1）</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="杂事"><span class="iconfont-archer">&#xe606;</span>杂事</span>
+    
+        <span class="sidebar-tag-name" data-tags="技术"><span class="iconfont-archer">&#xe606;</span>技术</span>
+    
+        <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
+    
+        <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
+    
+        <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
+    
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
+        <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
+    
+        <span class="sidebar-tag-name" data-tags="Maven"><span class="iconfont-archer">&#xe606;</span>Maven</span>
+    
+        <span class="sidebar-tag-name" data-tags="Nginx"><span class="iconfont-archer">&#xe606;</span>Nginx</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Vue"><span class="iconfont-archer">&#xe606;</span>Vue</span>
+    
+        <span class="sidebar-tag-name" data-tags="前端"><span class="iconfont-archer">&#xe606;</span>前端</span>
+    
+        <span class="sidebar-tag-name" data-tags="Git"><span class="iconfont-archer">&#xe606;</span>Git</span>
+    
+        <span class="sidebar-tag-name" data-tags="JavaScript"><span class="iconfont-archer">&#xe606;</span>JavaScript</span>
+    
+        <span class="sidebar-tag-name" data-tags="Go"><span class="iconfont-archer">&#xe606;</span>Go</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="《数据密集型应用系统设计》阅读笔记"><span class="iconfont-archer">&#xe60a;</span>《数据密集型应用系统设计》阅读笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Kylo Yip"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"live2d-widget-model-nietzsche"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>
+
+

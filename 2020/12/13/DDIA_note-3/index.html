@@ -1,0 +1,1861 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Kylo Yip">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Kylo Yip">
+    
+    <meta name="keywords" content="Kylo's Notebook,Kylo Yip">
+    
+    <meta name="description" content="">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>《DDIA》阅读笔记（三）：数据存储与检索 · Kylo&#39;s Notebook</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Kylo's Notebook" type="application/atom+xml">
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >Kylo&#39;s Notebook</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">《DDIA》阅读笔记（三）：数据存储与检索</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>Kylo's Notebook</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:100vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(https://api.ixiaowai.cn/mcapi/mcapi.php)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            《DDIA》阅读笔记（三）：数据存储与检索
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "技术">技术</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "设计">设计</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">7.6k</span>Reading time: <span class="post-count reading-time">25 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2020/12/13</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <p>本章结构如下：</p>
+<blockquote class="pullquote mindmap mindmap-md"><ul>
+<li>数据存储与检索<ul>
+<li>数据结构<ul>
+<li>哈希索引<ul>
+<li>追加写入</li>
+<li>偏移量</li>
+<li>分段压缩</li>
+<li>文件格式</li>
+<li>删除记录</li>
+<li>崩溃恢复</li>
+<li>部分写入</li>
+<li>并发控制</li>
+<li>局限性<ul>
+<li>哈希表必须全部放入内存</li>
+<li>区间访问效率不高</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>LSM-Tree<ul>
+<li>构建和维护 SSTables<ul>
+<li>处理写请求</li>
+<li>处理读请求</li>
+<li>合并和压缩</li>
+<li>崩溃恢复</li>
+</ul>
+</li>
+<li>LSM 存储引擎</li>
+<li>性能优化<ul>
+<li>布隆过滤器</li>
+<li>压缩合并策略</li>
+</ul>
+</li>
+<li>优势与劣势<ul>
+<li>写放大</li>
+<li>写入较快</li>
+<li>读取较慢</li>
+<li>更好的压缩</li>
+<li>写入带宽开销</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>B-trees<ul>
+<li>分页设计<ul>
+<li>查找</li>
+<li>更新</li>
+<li>插入</li>
+</ul>
+</li>
+<li>可靠性<ul>
+<li>预写日志</li>
+<li>并发控制</li>
+</ul>
+</li>
+<li>性能优化<ul>
+<li>写时复制</li>
+<li>键略缩信息</li>
+<li>相邻布局</li>
+<li>添加额外指针</li>
+<li>分形树</li>
+</ul>
+</li>
+<li>优势与劣势<ul>
+<li>读取较快</li>
+<li>写入较慢</li>
+<li>并发控制</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>其他索引结构<ul>
+<li>在索引中存储值<ul>
+<li>堆文件</li>
+<li>聚簇索引</li>
+</ul>
+</li>
+<li>多列索引<ul>
+<li>级联索引、多维索引</li>
+<li>全文搜索和模糊索引</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>在内存中保存所有内容<ul>
+<li>应用实例</li>
+<li>反缓存架构</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>事务处理与分析处理<ul>
+<li>事务处理系统（OLTP）<ul>
+<li>日志结构</li>
+<li>原地更新</li>
+</ul>
+</li>
+<li>分析系统（OLAP）</li>
+<li>数据仓库</li>
+<li>星型与雪花型分析模式</li>
+</ul>
+</li>
+<li>列式存储<ul>
+<li>列压缩<ul>
+<li>列与列簇</li>
+<li>矢量化处理</li>
+</ul>
+</li>
+<li>排序操作</li>
+<li>写操作</li>
+<li>聚合：数据立方体与物化视图</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+
+<h1 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h1><p>索引：通过保留一些额外的元数据以帮助查找数据，但同时由于每次写入数据都需要更新索引，因此任何类型的索引都会降低写速度。</p>
+<p>因此存储系统需要在 <strong>加入索引以加速查询</strong> 与 <strong>限制索引避免降低写入速度</strong> 之间权衡。</p>
+<p>对于 OLTP 系统，有两种主流的存储引擎：</p>
+<ul>
+<li><p>日志结构：只允许追加式更新文件和删除过时的文件，不会修改己写入的文件。比如 BitCask、SSTables、LSM-tree、LevelDB、Cassandra、HBase、Lucene 等。</p>
+</li>
+<li><p>原地更新：以 B-tree 为代表，将磁盘视为可以覆盖的一组固定大小的页，已用于所有主要的关系数据库以及大量的非关系数据库。</p>
+</li>
+</ul>
+<p>前者的关键思想是系统地将磁盘上随机访问写入转为顺序写入，由于硬盘驱动器和 SSD 的性能特性，可以实现更高的写入吞吐量。</p>
+<h2 id="哈希索引"><a href="#哈希索引" class="headerlink" title="哈希索引"></a>哈希索引</h2><p>哈希索引的应用实例：Riak 中的默认存储引擎 Bitcask。</p>
+<h3 id="追加写入"><a href="#追加写入" class="headerlink" title="追加写入"></a>追加写入</h3><p>数据库通过追加写入，相比起修改原记录，有以下优势：</p>
+<ul>
+<li><p>追加和分段合并主要是顺序写，通常比随机写入快，特别是在旋转式磁性硬盘上。</p>
+</li>
+<li><p>段文件是追加或不可变的，则并发和崩溃恢复更简单。</p>
+</li>
+<li><p>合并旧段可以避免随着时间推移数据文件碎片化。</p>
+</li>
+</ul>
+<h3 id="偏移量"><a href="#偏移量" class="headerlink" title="偏移量"></a>偏移量</h3><p>假设数据存储全部采用追加式文件组成，则索引策略为保存内存中的哈希表：</p>
+<ul>
+<li><p>把每个键映射到数据文件中特定的字节偏移量以便找到每个值的位置。只需一次磁盘寻址就可以将 value 从磁盘加载到内存（结合缓存则无需任何磁盘 I/O）。</p>
+</li>
+<li><p>每当在文件中追加新的键值对时还要更新 hash map 来反映刚写入的数据偏移量（包括插入新的键和更新已有的）。</p>
+</li>
+</ul>
+<p>适用于每个键的值频繁更新、但没有太多不同的 key（因为要求所有 key 都保存在内存）的场景。</p>
+<h3 id="分段压缩"><a href="#分段压缩" class="headerlink" title="分段压缩"></a>分段压缩</h3><p>当写操作为追加日志到一个文件，为了避免用尽磁盘空间，可以把日志分解成等大小的段，文件达到一定大小即关闭，将后续写入新的段中，再可以在这些段上执行压缩（日志中丢弃重复的键，只保留最近的更新）。</p>
+<p>由于压缩可使得段更小，也可以在执行压缩的同时将多个段合并在一起，写入另一个新文件，而合并和压缩的过程可以在后台线程中执行，运行时用旧的段文件继续处理读写请求。当合并过程完成后，将读取请求切换到新的合并段上，而旧的段文件可以安全删除。</p>
+<h3 id="文件格式"><a href="#文件格式" class="headerlink" title="文件格式"></a>文件格式</h3><p>相比起 CSV，使用二进制格式更快更简单，以字节为单位记录字符串长度，后续跟上原始字符串（不需要转义）。</p>
+<h3 id="删除记录"><a href="#删除记录" class="headerlink" title="删除记录"></a>删除记录</h3><p>墓碑标记：要删除键与其关联的值，则必须在数据文件中追加一个特殊的删除记录，当合并日志段时发现墓碑标记则会丢弃该键的所有值。</p>
+<h3 id="崩溃恢复"><a href="#崩溃恢复" class="headerlink" title="崩溃恢复"></a>崩溃恢复</h3><p>数据库重新启动，内存中的 hash map 将丢失。</p>
+<p>Bitcask 将每个段的 hash map 的快照存储在磁盘上，更快地加载到内存中，而无需从头到尾扫描整个文件、重新记录偏移量，以此加快恢复速度。</p>
+<h3 id="部分写入"><a href="#部分写入" class="headerlink" title="部分写入"></a>部分写入</h3><p>将记录追加到日志的过程中数据库可能会崩溃。</p>
+<p>Bitcask 文件包括校验值可以发现损坏部分并丢弃。</p>
+<h3 id="并发控制"><a href="#并发控制" class="headerlink" title="并发控制"></a>并发控制</h3><ul>
+<li><p>写入：由于写入以严格的先后顺序追加到日志中，通常只有一个写线程。</p>
+</li>
+<li><p>读取：数据文件段是追加的，并且是不可变的，所以可以被多个线程同时读取。</p>
+</li>
+</ul>
+<h3 id="局限性"><a href="#局限性" class="headerlink" title="局限性"></a>局限性</h3><ul>
+<li><p>哈希表必须全部放入内存。</p>
+</li>
+<li><p>区间访问效率不高。</p>
+</li>
+</ul>
+<h2 id="LSM-Tree"><a href="#LSM-Tree" class="headerlink" title="LSM-Tree"></a>LSM-Tree</h2><p>如果把顺序写入、后出现的值优先于之前的值改为要求 key-value 对的顺序按键排序，则成为排序字符串表，简称 SSTable。</p>
+<p>SSTable 要求每个键在每个合并的段文件中只出现一次（在压缩过程保证），具备以下优点：</p>
+<ul>
+<li><p><strong>合并段更简单高效</strong>：即使文件大于可用内存，并发读取多个输入段文件，比较每个文件的第一个键，（按排序顺序）把最小的键取出到文件，就能产生一个新的按键排序的合并段文件。当多个段包含相同的键时可保留最新段的值，并丢弃旧段中的值。</p>
+</li>
+<li><p>在文件中查找特定的键时，<strong>无需在内存中保存所有键的索引</strong>，但仍然需要一个内存索引来记录键的偏移，它可以是稀疏的。</p>
+</li>
+<li><p>顺序写入磁盘，支持非常高的吞吐量。</p>
+</li>
+</ul>
+<p>应用实例：</p>
+<ul>
+<li><p>LevelDB 和 RocksDB，主要用于嵌入到其他应用程序的键值存储引擎库。类似的存储引擎还被用于 Cassandra 和 HBase。</p>
+</li>
+<li><p>Elasticsearch 和 Solr 的全文索引存储引擎 Lucene。</p>
+</li>
+</ul>
+<h3 id="构建和维护-SSTables"><a href="#构建和维护-SSTables" class="headerlink" title="构建和维护 SSTables"></a>构建和维护 SSTables</h3><p>索引的顺序采用树结构维护，比如：</p>
+<ul>
+<li><p>内存排序：红黑树、AVL 树</p>
+</li>
+<li><p>磁盘排序：B-树</p>
+</li>
+<li><p>…</p>
+</li>
+</ul>
+<p>SSTable 的维护涉及以下操作：</p>
+<h4 id="处理写请求"><a href="#处理写请求" class="headerlink" title="处理写请求"></a>处理写请求</h4><ul>
+<li><p>将数据添加到内存中的平衡树数据结构（有时被称为内存表）中。</p>
+</li>
+<li><p>当内存表大于某个阈值（几 MB）时，将其写入 SSTable 文件；由于树已经维护了按键排序的键值对，写磁盘比较高效。</p>
+</li>
+<li><p>在 SSTable 写磁盘的同时，写入可以继续添加到新的内存表实例。</p>
+</li>
+</ul>
+<h4 id="处理读请求"><a href="#处理读请求" class="headerlink" title="处理读请求"></a>处理读请求</h4><p>先尝试在内存表中查找键，然后是最新的磁盘段文件，接下来是次新的磁盘段文件，以此类推直到找到目标或为空。</p>
+<h4 id="合并和压缩"><a href="#合并和压缩" class="headerlink" title="合并和压缩"></a>合并和压缩</h4><p>后台进程周期性地执行段合并与压缩过程以合并多个段文件，并丢弃已被覆盖或删除的值。</p>
+<h4 id="崩溃恢复-1"><a href="#崩溃恢复-1" class="headerlink" title="崩溃恢复"></a>崩溃恢复</h4><ul>
+<li><p>数据库崩溃时最近的写入、在内存表但尚未写入磁盘的数据就会丢失。</p>
+</li>
+<li><p>可以在磁盘上保留单独的日志，每个写入都会立即追加到该日志（无需排序），用于崩溃后恢复内存表。</p>
+</li>
+<li><p>每当将内存表写入 SSTable 时，相应的日志可以被丢弃。</p>
+</li>
+</ul>
+<h3 id="LSM-存储引擎"><a href="#LSM-存储引擎" class="headerlink" title="LSM 存储引擎"></a>LSM 存储引擎</h3><p>即只追加、基于合并和压缩排序文件原理的存储引擎。</p>
+<h3 id="性能优化"><a href="#性能优化" class="headerlink" title="性能优化"></a>性能优化</h3><h4 id="布隆过滤器"><a href="#布隆过滤器" class="headerlink" title="布隆过滤器"></a>布隆过滤器</h4><p>当查找数据库中某个不存在的键时， LSM-Tree 算法可能很慢：在确定键不存在之前，必须先检查内存表，然后将段一直回溯访问到最旧的段文件（可能必须从磁盘多次读取）。</p>
+<p>为了优化这种访问，可以引入额外的布隆过滤器，可用于近似计算集合的内容，快速判断集合中存在/不存在的键，节省了了对不存在的键的不必要的磁盘 I/O。</p>
+<h4 id="压缩合并策略"><a href="#压缩合并策略" class="headerlink" title="压缩合并策略"></a>压缩合并策略</h4><p>不同的策略会影响决定 SSTables 压缩和合并时的具体顺序和时机：</p>
+<ul>
+<li><p>大小分级：较新的和较小的 SSTables 被连续合并到较旧和较大的 SSTables。</p>
+</li>
+<li><p>分层压缩：键的范围分裂成更小的 SSTables, 旧数据被移动到单独的“层级”，因此压缩可以逐步进行并节省磁盘空间。</p>
+</li>
+<li><p>HBase 支持前者，Cassandra 两种都支持。</p>
+</li>
+</ul>
+<h3 id="优势和劣势"><a href="#优势和劣势" class="headerlink" title="优势和劣势"></a>优势和劣势</h3><p>LST-Tree 的基本思想时保存在后台合并的一系列 SSTable，即使数据集远大于可用内存仍然能正常工作。</p>
+<h4 id="写放大"><a href="#写放大" class="headerlink" title="写放大"></a>写放大</h4><p>由于需要反复压缩和 SSTable 的合并，日志结构索引会重写数据多次（在数据库内由于一次数据库写入请求导致的多次磁盘写）。对于 SSD 有限的擦写覆盖次数需要尤其关注。</p>
+<p>对于大量写密集的应用，瓶颈在于数据库写入磁盘的速率：存储引擎写入磁盘次数越多，可用磁盘带宽中每秒可处理的写入越少。</p>
+<h4 id="写入较快"><a href="#写入较快" class="headerlink" title="写入较快"></a>写入较快</h4><p>磁盘顺序写入，速度快。</p>
+<p>由于较低的写放大（取决于存储引擎配置和工作负载）以及顺序写入紧凑的 SSTable，而不必重写树中的多个页，写入吞吐量比 B-tree 更高。</p>
+<blockquote>
+<p>在许多 SSD 固件内部使用日志结构化算法将随机写入转换为底层存储芯片上的顺序写入，所以存储引擎写入模式的影响不明显。然而更低的写放大和碎片减少对于 SSD 上仍然有益，以更紧凑的方式表示数据，从而在可用的 I/ 0带宽中支持更多的读写请求。</p>
+</blockquote>
+<h4 id="读取较慢"><a href="#读取较慢" class="headerlink" title="读取较慢"></a>读取较慢</h4><p>必须在不同的压缩阶段检查多个不同的数据结构和 SSTable。但由于数据排序存储，还有效支持区间查询。</p>
+<h4 id="更好的压缩"><a href="#更好的压缩" class="headerlink" title="更好的压缩"></a>更好的压缩</h4><p>通过定期重写消除碎片化，通常磁盘上的文件比 B-tree 小很多，当使用分层压缩时，具有较低的存储开销。</p>
+<h4 id="写入带宽开销"><a href="#写入带宽开销" class="headerlink" title="写入带宽开销"></a>写入带宽开销</h4><p>高写入吞吐量时，磁盘的有限写入带宽需要在初始写入（记录并刷新内存表到磁盘）和后台运行的压缩线程之间所共享。因此压缩过程有时会干扰读写操作。</p>
+<ul>
+<li><p>虽然存储引擎执行增量压缩且不影响并发访问，但受限于磁盘的并发资源，压缩时容易发生读写请求等待的情况，响应延迟不具确定性。</p>
+</li>
+<li><p>写入空数据库时全部的磁盘带宽可用于初始写入，但随着数据量变大，压缩所需的磁盘带宽就越多。</p>
+</li>
+<li><p>如果压缩无法匹配新数据写入速率，未合并段的数量不断增加，直到磁盘空间不足。</p>
+</li>
+<li><p>由于查询时需要检查更多的段文件，读取速度也会降低 。</p>
+</li>
+</ul>
+<p>通常即使压缩不能跟上，基于 SSTable 的存储引擎也不会限制到来的写入速率，因此需要仔细配置压缩和额外的监控措施来及时发现这种情况。</p>
+<h2 id="B-Tree"><a href="#B-Tree" class="headerlink" title="B-Tree"></a>B-Tree</h2><p>B-tree 保留按键排序的键值对，可以实现高效的键值查询和区间查询。</p>
+<p>B-tree 是几乎所有关系数据库中的标准索引实现，许多非关系型数据库也经常使用。</p>
+<h3 id="分页设计"><a href="#分页设计" class="headerlink" title="分页设计"></a>分页设计</h3><p>区别于 SSTable 和哈希索引将日志结构索引将数据库分解为可变大小的段（数 MB或更大）。B-tree：</p>
+<ul>
+<li><p>将数据库分解成固定大小的块或页（传统 4KB，有时更大）作为内部读写的最小单元，设计上更接近底层硬件，比如磁盘也是按固定大小的块排列。</p>
+</li>
+<li><p>页面包含多个连续区间内的键以及对子页的引用（可用地址标识，类似指针指向磁盘地址），相邻引用之间的键指示这些范围的边界，以某一页作为根，构成树形结构。</p>
+</li>
+<li><p>页所包含的子页引用数量称为 <strong>分支因子</strong>，取决于存储页面引用和范围边界所需的空间总量（通常几百个）。</p>
+</li>
+<li><p>树的维护算法要确保树保持平衡，具有 n 个键的树总是具有 O(logn) 的深度，大多数数据库可以适合 3~4 层的 B-tree，不需要遍历太深的层次即可找到所需的页。</p>
+</li>
+</ul>
+<h4 id="查找操作"><a href="#查找操作" class="headerlink" title="查找操作"></a>查找操作</h4><p>从根页开始遍历，由于每个孩子负责一个区间内的键、相邻孩子指示区间边界，沿着孩子及其进一步分解的子区间查找，最终到达包含单个键的页（叶子），该页包含每个内联键的值或包含可以找到值的页的引用。</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/B%20Tree.png" alt="B Tree"></p>
+<h4 id="更新操作"><a href="#更新操作" class="headerlink" title="更新操作"></a>更新操作</h4><p>搜索包含目标键的叶子页，更改该页的值并将页写回到磁盘（对该页的任何引用仍然有效）。</p>
+<h4 id="插入操作"><a href="#插入操作" class="headerlink" title="插入操作"></a>插入操作</h4><p>要添加新键，则需要找到其范围包含新键的页，并将其添加到该页。</p>
+<p>如果页中没有足够的可用空间来容纳新键则将其分裂为两个半满的页，并且父页也需要更新以包含分裂之后的新的键范围。</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/B%20Tree%20%E5%88%86%E8%A3%82.jpg" alt="B Tree 分裂"></p>
+<h2 id="其他索引结构"><a href="#其他索引结构" class="headerlink" title="其他索引结构"></a>其他索引结构</h2><p>以上都是键值索引，类似主键索引，用于标识关系模型中的一行（文档模型中的一个文档、图模型中的一个顶点），其他记录可以通过其主键来引用。</p>
+<p>二级索引（即非聚簇索引，需要二次查找）用于高效地进行联结操作，可以容易地基于键值索引来构建。主要区别在于可能有许多行（文档，顶点）具有相同键，可以使用两种方式解决：</p>
+<ul>
+<li><p>使索引中的每个值成为匹配行标识符的列表（像全文索引中的 posting list）；</p>
+</li>
+<li><p>追加一些行标识符来使每个键变得唯一。</p>
+</li>
+</ul>
+<p>B-Tree 和 日志结构索引都可以用作二级索索引。</p>
+<h3 id="在索引中存储值"><a href="#在索引中存储值" class="headerlink" title="在索引中存储值"></a>在索引中存储值</h3><p>索引中的键是查询搜索的对象，而值则可以：实际行（文档，顶点）或对其他地方存储的行的引用。</p>
+<h4 id="堆文件"><a href="#堆文件" class="headerlink" title="堆文件"></a>堆文件</h4><p><strong>堆文件</strong> 是对其他地方存储的行的引用（行的具体位置），不以特定的顺序存储数据，可以是追加或记录删除行以便用新数据覆盖。</p>
+<p>当存在多个二级索引时可以避免复制数据，即每个索引只引用堆文件中的位置信息， 实际数据仍保存在一个位置。</p>
+<p>当更新值时只要新值的字节数不大于旧值，记录就可以直接覆盖，否则可能需要移动数据以得到一个足够大空间的新位置。所有索引都需要更新以指向记录的新的堆位置，或者在旧堆位置保留一个间接指针。</p>
+<h4 id="聚簇索引"><a href="#聚簇索引" class="headerlink" title="聚簇索引"></a>聚簇索引</h4><p>从索引到堆文件的额外跳转在读取时存在太多的性能损失，因此可能希望将索引行直接存储在索引中，被称为聚簇索引。</p>
+<p><strong>聚簇索引</strong>（在索引中直接保存行数据）和 <strong>非聚簇索引</strong>（仅存储索引中的数据的引用）之间有一种折中设计称为覆盖索引或包含列的索引，它在索引中保存一些表的列值，可以支持只通过索引即可回答某些简单查询，在这种情况下称索引覆盖了查询，可以避免回表。</p>
+<h3 id="多列索引"><a href="#多列索引" class="headerlink" title="多列索引"></a>多列索引</h3><p>以上索引只将一个键映射到一个值，如果需要同时查询表的多个列，则需要多列索引。</p>
+<p>常用于的一次查询多列（比如地理空间数据的经度和纬度），要求同时满足在某个经度和纬度范围内的数据。</p>
+<h4 id="级联索引"><a href="#级联索引" class="headerlink" title="级联索引"></a>级联索引</h4><p>通过将一列追加到另一列，将几个字段简单地组合成一个键（索引的定义指定字段连接的顺序）。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> </span><br><span class="line"><span class="keyword">FROM</span> restaurants</span><br><span class="line"><span class="keyword">WHERE</span> latitude <span class="operator">&gt;</span> <span class="number">51.4946</span> <span class="keyword">AND</span> latitude <span class="operator">&lt;</span> <span class="number">51.5079</span></span><br><span class="line"><span class="keyword">AND</span> longitude <span class="operator">&gt;</span> <span class="number">-0.1162</span> <span class="keyword">AND</span> longitude <span class="operator">&lt;</span> <span class="number">-0.1004</span>;</span><br></pre></td></tr></table></figure>
+
+<p>多维索引：是使用空格填充曲线将二维位置转换为单个数字，然后使用常规的 B-tree 索引。</p>
+<h3 id="全文搜索和模糊索引"><a href="#全文搜索和模糊索引" class="headerlink" title="全文搜索和模糊索引"></a>全文搜索和模糊索引</h3><p>为了处理文档或查询中的拼写错误，搜索引擎（比如 Lucene）能够在某个编辑距离内搜索文本。</p>
+<p>Lucene 对其词典使用类似 SSTable 的结构：需要一个内存索引来告诉查询为了找到键需要排序文件中的哪个偏移量。</p>
+<p>在 LevelDB 中内存中的索引是一些键的稀疏集合，在 Lucene 中内存中的索引是键中的字符序列的有限状态自动机，类似字典树，自动机可以转换成 Levenshtein 自动机，支持在给定编辑距离内高效地搜索单词。</p>
+<h2 id="内存保存所有内容"><a href="#内存保存所有内容" class="headerlink" title="内存保存所有内容"></a>内存保存所有内容</h2><p>以上数据结构都是为了适应磁盘限制，与内存相比磁盘更难以处理。要获得良好的读写性能需要精心地安排磁盘上的数据布局：数据保存持久化，且成本比内存低很多。</p>
+<p>内存数据库：当数据集不太大，可以完全保留在内存，或者分布式的多台机器上。</p>
+<ul>
+<li><p>只要有足够的内存，基于磁盘的存储引擎也可以永远不需要从磁盘读取，因为操作系统将最近使用的磁盘块缓存在内存中。内存数据库可以更快是因为避免使用写磁盘的格式对内存数据结构编码的开销。</p>
+</li>
+<li><p>除了性能的提升，内存数据库还提供了基于磁盘索引难以实现的数据模型（比如 Redis 的多种数据结构）。</p>
+</li>
+</ul>
+<h3 id="应用实例"><a href="#应用实例" class="headerlink" title="应用实例"></a>应用实例</h3><p>一些键值存储（如 Memcached）用于缓存，可以容忍数据丢失，如果需要实现持久性，可以用特殊硬件或将变更记录或快照写入磁盘，便于故障恢复（Redis 和 Couchbase 通过异步写入提供较弱的持久性，RAMCloud 则是对内存和磁盘上的数据使用日志结构），也便于通过外部工具来执行备份、检查和分析。</p>
+<p>关系型内存数据库 VoltDB、MemSQL、Oracle TimesTen 移除了磁盘管理的开销以获得极大的性能提升。</p>
+<h3 id="反缓存架构"><a href="#反缓存架构" class="headerlink" title="反缓存架构"></a>反缓存架构</h3><p>内存数据库架构可扩展到支持远大于可用内存的数据集，不会导致以磁盘为中心架构的开销。反缓存：</p>
+<ul>
+<li><p>当没有足够的内存时，通过将最近最少使用的数据从内存写到磁盘，并在将来再次被访问时将其加载到内存。</p>
+</li>
+<li><p>与操作系统对虚拟内存和交换文件的操作类似，但数据库可以在记录级别（而不是整个内存页）的粒度工作，因而比操作系统更有效地管理内存。</p>
+</li>
+<li><p>这种方法仍然需要索引完全放入内存，参考 Bitcask。</p>
+</li>
+</ul>
+<h1 id="事务处理与分析处理"><a href="#事务处理与分析处理" class="headerlink" title="事务处理与分析处理"></a>事务处理与分析处理</h1><p>数据系统分为两大类：针对事务处理 OLTP 优化的架构和针对分析型 OLAP 优化的架构。</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>事务处理系统（OLTP）</th>
+<th>分析系统（OLAP）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>主要读特征</td>
+<td>基于键，每次查询返回少量的记录</td>
+<td>对大量记录进行汇总</td>
+</tr>
+<tr>
+<td>主要写特征</td>
+<td>随机访问，低延迟写入用户的输入</td>
+<td>批量导入（ETL）或事件流</td>
+</tr>
+<tr>
+<td>典型使用场景</td>
+<td>终端用户，通过网络应用程序</td>
+<td>内部分析师，为决策提供支持</td>
+</tr>
+<tr>
+<td>数据表征</td>
+<td>最新的数据状态（当前时间点）</td>
+<td>随着时间而变化的所有事件历史</td>
+</tr>
+<tr>
+<td>数据规模</td>
+<td>GB 到 TB</td>
+<td>TB 到 PB</td>
+</tr>
+</tbody></table>
+<h2 id="事务处理系统（OLTP）"><a href="#事务处理系统（OLTP）" class="headerlink" title="事务处理系统（OLTP）"></a>事务处理系统（OLTP）</h2><p>应用程序基于某种键来请求记录，而存储引擎使用索引来查找所请求键的数据。磁盘寻道时间往往是瓶颈。</p>
+<p>不建议在 OLTP 数据库上直接运行临时分析查询，这些查询要扫描大量数据集，这可能会损害并发执行事务的性能。</p>
+<h3 id="日志结构"><a href="#日志结构" class="headerlink" title="日志结构"></a>日志结构</h3><p>只允许追加式更新文件和删除过时的文件，但不会修改己写入的文件，其关键思想是系统地将磁盘上随机访问写入转为顺序写入，由千硬盘驱动器和SSD的性能特性，可以实现更高的写入吞吐量。</p>
+<p>BitCask 、SSTables、LSM-tree、LevelDB、Cassandra、HBase、Lucene 等属于此类。</p>
+<h3 id="原地更新"><a href="#原地更新" class="headerlink" title="原地更新"></a>原地更新</h3><p>将磁盘视为可以覆盖的一组固定大小的页。 B-Tree 是最典型代表，用于所有主要的关系数据库，以及大量的非关系数据库。</p>
+<h2 id="分析系统（OLAP）"><a href="#分析系统（OLAP）" class="headerlink" title="分析系统（OLAP）"></a>分析系统（OLAP）</h2><p>处理的查询请求数目远低于 OLTP 系统， 但每个查询通常要求非常苛刻，需要在短时间内扫描数百万条记录。磁盘带宽（非寻道时间）通常是瓶颈，而面向列的存储对于这种工作负载成为日益流行的解决方案。</p>
+<h3 id="数据仓库"><a href="#数据仓库" class="headerlink" title="数据仓库"></a>数据仓库</h3><p>单独的数据库，存储 OLTP 系统的只读副本：从 OLTP 数据库使用周期性数据转储或连续更新流中提取数据，转换为分析友好的模式、执行必要的清理，然后加载到数据仓库中（ETL）。</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/OLTP%20%E4%B8%8E%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93.png" alt="OLTP 与数据仓库"></p>
+<p>关系型 OLTP 与数据仓库都具备 SQL 接口，但针对不同的查询模式进行了各自优化、专注于支持事务处理或分析工作负载，但不能同时支持两者。</p>
+<h3 id="星型与雪花型模式"><a href="#星型与雪花型模式" class="headerlink" title="星型与雪花型模式"></a>星型与雪花型模式</h3><blockquote>
+<p>参考：<a href="https://yipwinghong.github.io/2020/02/15/DataWarehouse_design-basic/">https://yipwinghong.github.io/2020/02/15/DataWarehouse_design-basic/</a></p>
+</blockquote>
+<p>星型模式的中心是事实表（位于星型的正中间），每一行表示在特定时间发送的事件（如用户下单，或页面上的一次点击）。</p>
+<ul>
+<li><p>如果事实被捕获为小粒度、单独的事件，则对之后的分析具有最大灵活性，但表会非常庞大。</p>
+</li>
+<li><p>事实表的列为属性，可能引用其他表的外键，称为维度表：通常表示事件的对象、事件本身、地点、时间、方法、原因。</p>
+</li>
+</ul>
+<p>雪花型模式是对星型模式的规范化，维度进一步细分为子空间，比如订单的商品的品牌和类别可以有单独的表格、而不是直接存储在商品表中。</p>
+<p>在典型的数据仓库中，事实表、维度表（与分析相关的元数据）通常非常宽。</p>
+<h1 id="列式存储"><a href="#列式存储" class="headerlink" title="列式存储"></a>列式存储</h1><p>事实表一般非常大，适合利用列式存储实现高效存储和查询。</p>
+<ul>
+<li><p>如果事实表宽达过百列，而典型数据仓库查询往往一次只访问其中的四五列，如像 OLTP 数据库以面向行的方式存储（来自表的一行的所有值彼此相邻存储）则要把大量的行加载到内存解析、再过滤出不符合条件的行。</p>
+</li>
+<li><p>当查询需要在大量行中顺序扫描时，索引的关联性就会显著降低。最重要的是非常紧凑地编码数据、以尽量减少磁盘读取的数据量。<strong>面向列的存储</strong> 将每列中的所有值存储在一起。如果每个列存储在一个单独的文件中，查询只需要读取和解析在该查询中使用的列。</p>
+</li>
+</ul>
+<h2 id="列压缩"><a href="#列压缩" class="headerlink" title="列压缩"></a>列压缩</h2><p>面向列的存储适合通过压缩数据来进一步降低对磁盘吞吐量的要求：同一列中重复的值可以压缩。取决于列中具体数据模式，可以采用不同的压缩技术，比如位图编码：</p>
+<p>通常列中不同值的数量小于行数，使用 n 个不同值的列，并将其转换为 n 个单独的位图：一个位图对应每个不同的值，一个位对应一行（该行是列值是否为 x）。如果行具有该值，该位为 1 , 否则为 0。</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E4%BD%8D%E5%9B%BE%E7%BC%96%E7%A0%81%E5%8E%8B%E7%BC%A9.jpg" alt="位图编码压缩"></p>
+<p>在访问时，只需要加载位图、执行按为与/或操作即可。</p>
+<h3 id="列与列簇"><a href="#列与列簇" class="headerlink" title="列与列簇"></a>列与列簇</h3><p>Cassandra 和 HBase 都有列簇的概念，在每个列簇中， 它们将一行中的所有列与行主键一起保存，并且不使用列压缩。 因此 Bigtable 模型仍然主要是面向行。</p>
+<h3 id="矢量化处理"><a href="#矢量化处理" class="headerlink" title="矢量化处理"></a>矢量化处理</h3><p>对于需要扫描数百万行的数据仓库查询， 将数据从磁盘加载到内存的带宽是一大瓶颈。除此之外还要关系如何高效地将内存的带宽用于 CPU 缓存。</p>
+<p><strong>矢量化处理</strong>：除了减少需要从磁盘加载的数据量，面向列的存储布局也有利于高效利用 CPU 周期。查询引擎可以将一大块压缩列数据放入 CPU 的 Ll 缓存中，以紧凑循环（没有函数调用）进行迭代。对于每个被处理的记录，CPU 能比基于很多函数调用和条件判断的代码更快地执行这种循环。列压缩使得列中更多的行可以加载到 Ll 缓存。诸如先前描述的按位 AND 和 OR 的运算符，可被设计成直接对这样的列压缩数据块进行操作。</p>
+<h2 id="排序操作"><a href="#排序操作" class="headerlink" title="排序操作"></a>排序操作</h2><p>在列存储中行的存储顺序并不太重要。可以按插入顺序保存，插入一个新行只是追加到每个列文件。或者强制某个顺序（像 SSTable），并将其用作索引机制。</p>
+<ul>
+<li><p><strong>单独排序每列没有意义</strong>，因为这样无法知道列中的某一项属于哪一行（知道某列中的第 k 项和另一列的第 k 项一定属于同一行，可以重建一行）。</p>
+</li>
+<li><p>即使数据是按列存储的，它也需要一次排序整行。比如经常以时间范围查询，可以设置时间字段为第一个排序键，查询优化器只扫描某段时间内的行，比扫描所有行快得多（当第一列排序出现相同值时，可以指定第二列继续进行排序）。</p>
+</li>
+<li><p>排序可以 <strong>帮助进一步压缩列</strong>，如果主排序列上没有很多不同的值，在排序之后将出现一个非常长的序列，其中相同的值在一行中重复多次。</p>
+</li>
+<li><p>不同的查询可以在不同的排序方式中获益，因此可以 <strong>以不同方式排序存储多份冗余数据</strong>，在处理查询时选择最适合特定的排序版本（同时也提高可靠性）。</p>
+</li>
+<li><p>面向列的存储具有多个排序顺序，类似在面向行的存储中具有多个二级索引。区别在于面向行的存储将每一行都保存在一个位置（堆文件和聚簇索引），而二级索引只包含指向匹配行的指针。对千列存储， 通常没有任何指向别处数据的指针， 只有包含值的列。</p>
+</li>
+</ul>
+<h2 id="写操作"><a href="#写操作" class="headerlink" title="写操作"></a>写操作</h2><p>对于列式存储而言，写入操作比较困难。</p>
+<ul>
+<li><p>不可能像 B-tree 使用的原地更新方式，如果在排序表的中间插入一行，很可能不得不重写所有的列文件。</p>
+</li>
+<li><p>可以采用 LSM-tree 的解决方案：所有的写入首先进入内存存储区， 将其添加到已排序的结构中，接着再准备写人磁盘（这样就无关行存或列存了）。当累积足够的写入时，内存中的存储将与磁盘上的列文件合并，并批量写入新文件。</p>
+</li>
+<li><p>执行查询时，需要检查磁盘上的列数据和内存中最近的写入，并结合这两者（查询优化器对用户隐藏这些细节）。</p>
+</li>
+</ul>
+<h2 id="聚合：数据立方体与物化视图"><a href="#聚合：数据立方体与物化视图" class="headerlink" title="聚合：数据立方体与物化视图"></a>聚合：数据立方体与物化视图</h2><p>物化聚合：数据仓库查询通常涉及聚合函数，例如 SQL 中的 COUNT、SUM、AVG、MIN、MAX，可以利用物化视图创建这些缓存：</p>
+<ul>
+<li><p>作为查询结果的实际副本，并被写到磁盘，而虚拟视图只是用于编写查询的快捷方式。从虚拟视图中读取时，SQL 引擎将其动态地扩展到视图的底层查询，然后处理扩展查询。</p>
+</li>
+<li><p>当底层数据发生变化时， 物化视图也需要随之更新（这种更新方式影响写入性能，因此 OLTP 数据库不常使用）。</p>
+</li>
+</ul>
+<p>数据立方体：由不同维度分组的聚合网格，优点是某些查询会非常快，主要是它们已被预先计算出来（只需要直接查看对应维度的总和， 而不需要扫描数百万行）；缺点则是缺乏像查询原始数据那样的灵活性，数据仓库需要保留尽可能多的原始数据，仅当数据立方体可以对特定查询显著提升性能时， 才会采用多维数据聚合。</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E6%95%B0%E6%8D%AE%E7%AB%8B%E6%96%B9%E4%BD%93.jpg" alt="数据立方体"></p>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2020/12/19/DDIA_note-4/" title= "《DDIA》阅读笔记（四）：数据编码与演化">
+                    <div class="nextTitle">《DDIA》阅读笔记（四）：数据编码与演化</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2020/12/04/DDIA_note-2/" title= "《DDIA》阅读笔记（二）：数据模型与查询语言">
+                    <div class="prevTitle">《DDIA》阅读笔记（二）：数据模型与查询语言</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODYzMi8yNTEyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:yipwinghong@outlook.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yipwinghong" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/WeChat.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:100vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-number">1.</span> <span class="toc-text">数据结构</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%93%88%E5%B8%8C%E7%B4%A2%E5%BC%95"><span class="toc-number">1.1.</span> <span class="toc-text">哈希索引</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%BD%E5%8A%A0%E5%86%99%E5%85%A5"><span class="toc-number">1.1.1.</span> <span class="toc-text">追加写入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%81%8F%E7%A7%BB%E9%87%8F"><span class="toc-number">1.1.2.</span> <span class="toc-text">偏移量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E6%AE%B5%E5%8E%8B%E7%BC%A9"><span class="toc-number">1.1.3.</span> <span class="toc-text">分段压缩</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F"><span class="toc-number">1.1.4.</span> <span class="toc-text">文件格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%A0%E9%99%A4%E8%AE%B0%E5%BD%95"><span class="toc-number">1.1.5.</span> <span class="toc-text">删除记录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B4%A9%E6%BA%83%E6%81%A2%E5%A4%8D"><span class="toc-number">1.1.6.</span> <span class="toc-text">崩溃恢复</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%83%A8%E5%88%86%E5%86%99%E5%85%A5"><span class="toc-number">1.1.7.</span> <span class="toc-text">部分写入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6"><span class="toc-number">1.1.8.</span> <span class="toc-text">并发控制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B1%80%E9%99%90%E6%80%A7"><span class="toc-number">1.1.9.</span> <span class="toc-text">局限性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#LSM-Tree"><span class="toc-number">1.2.</span> <span class="toc-text">LSM-Tree</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9E%84%E5%BB%BA%E5%92%8C%E7%BB%B4%E6%8A%A4-SSTables"><span class="toc-number">1.2.1.</span> <span class="toc-text">构建和维护 SSTables</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%84%E7%90%86%E5%86%99%E8%AF%B7%E6%B1%82"><span class="toc-number">1.2.1.1.</span> <span class="toc-text">处理写请求</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%84%E7%90%86%E8%AF%BB%E8%AF%B7%E6%B1%82"><span class="toc-number">1.2.1.2.</span> <span class="toc-text">处理读请求</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%90%88%E5%B9%B6%E5%92%8C%E5%8E%8B%E7%BC%A9"><span class="toc-number">1.2.1.3.</span> <span class="toc-text">合并和压缩</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B4%A9%E6%BA%83%E6%81%A2%E5%A4%8D-1"><span class="toc-number">1.2.1.4.</span> <span class="toc-text">崩溃恢复</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LSM-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E"><span class="toc-number">1.2.2.</span> <span class="toc-text">LSM 存储引擎</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="toc-number">1.2.3.</span> <span class="toc-text">性能优化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8"><span class="toc-number">1.2.3.1.</span> <span class="toc-text">布隆过滤器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8E%8B%E7%BC%A9%E5%90%88%E5%B9%B6%E7%AD%96%E7%95%A5"><span class="toc-number">1.2.3.2.</span> <span class="toc-text">压缩合并策略</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%98%E5%8A%BF%E5%92%8C%E5%8A%A3%E5%8A%BF"><span class="toc-number">1.2.4.</span> <span class="toc-text">优势和劣势</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%99%E6%94%BE%E5%A4%A7"><span class="toc-number">1.2.4.1.</span> <span class="toc-text">写放大</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%99%E5%85%A5%E8%BE%83%E5%BF%AB"><span class="toc-number">1.2.4.2.</span> <span class="toc-text">写入较快</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%BB%E5%8F%96%E8%BE%83%E6%85%A2"><span class="toc-number">1.2.4.3.</span> <span class="toc-text">读取较慢</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%9B%B4%E5%A5%BD%E7%9A%84%E5%8E%8B%E7%BC%A9"><span class="toc-number">1.2.4.4.</span> <span class="toc-text">更好的压缩</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%99%E5%85%A5%E5%B8%A6%E5%AE%BD%E5%BC%80%E9%94%80"><span class="toc-number">1.2.4.5.</span> <span class="toc-text">写入带宽开销</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#B-Tree"><span class="toc-number">1.3.</span> <span class="toc-text">B-Tree</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E9%A1%B5%E8%AE%BE%E8%AE%A1"><span class="toc-number">1.3.1.</span> <span class="toc-text">分页设计</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%9F%A5%E6%89%BE%E6%93%8D%E4%BD%9C"><span class="toc-number">1.3.1.1.</span> <span class="toc-text">查找操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%9B%B4%E6%96%B0%E6%93%8D%E4%BD%9C"><span class="toc-number">1.3.1.2.</span> <span class="toc-text">更新操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8F%92%E5%85%A5%E6%93%8D%E4%BD%9C"><span class="toc-number">1.3.1.3.</span> <span class="toc-text">插入操作</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B6%E4%BB%96%E7%B4%A2%E5%BC%95%E7%BB%93%E6%9E%84"><span class="toc-number">1.4.</span> <span class="toc-text">其他索引结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%A8%E7%B4%A2%E5%BC%95%E4%B8%AD%E5%AD%98%E5%82%A8%E5%80%BC"><span class="toc-number">1.4.1.</span> <span class="toc-text">在索引中存储值</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A0%86%E6%96%87%E4%BB%B6"><span class="toc-number">1.4.1.1.</span> <span class="toc-text">堆文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95"><span class="toc-number">1.4.1.2.</span> <span class="toc-text">聚簇索引</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%9A%E5%88%97%E7%B4%A2%E5%BC%95"><span class="toc-number">1.4.2.</span> <span class="toc-text">多列索引</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BA%A7%E8%81%94%E7%B4%A2%E5%BC%95"><span class="toc-number">1.4.2.1.</span> <span class="toc-text">级联索引</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%A8%E6%96%87%E6%90%9C%E7%B4%A2%E5%92%8C%E6%A8%A1%E7%B3%8A%E7%B4%A2%E5%BC%95"><span class="toc-number">1.4.3.</span> <span class="toc-text">全文搜索和模糊索引</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E4%BF%9D%E5%AD%98%E6%89%80%E6%9C%89%E5%86%85%E5%AE%B9"><span class="toc-number">1.5.</span> <span class="toc-text">内存保存所有内容</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BA%94%E7%94%A8%E5%AE%9E%E4%BE%8B"><span class="toc-number">1.5.1.</span> <span class="toc-text">应用实例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%8D%E7%BC%93%E5%AD%98%E6%9E%B6%E6%9E%84"><span class="toc-number">1.5.2.</span> <span class="toc-text">反缓存架构</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8B%E5%8A%A1%E5%A4%84%E7%90%86%E4%B8%8E%E5%88%86%E6%9E%90%E5%A4%84%E7%90%86"><span class="toc-number">2.</span> <span class="toc-text">事务处理与分析处理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E5%8A%A1%E5%A4%84%E7%90%86%E7%B3%BB%E7%BB%9F%EF%BC%88OLTP%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">事务处理系统（OLTP）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84"><span class="toc-number">2.1.1.</span> <span class="toc-text">日志结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E5%9C%B0%E6%9B%B4%E6%96%B0"><span class="toc-number">2.1.2.</span> <span class="toc-text">原地更新</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E6%9E%90%E7%B3%BB%E7%BB%9F%EF%BC%88OLAP%EF%BC%89"><span class="toc-number">2.2.</span> <span class="toc-text">分析系统（OLAP）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93"><span class="toc-number">2.2.1.</span> <span class="toc-text">数据仓库</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%98%9F%E5%9E%8B%E4%B8%8E%E9%9B%AA%E8%8A%B1%E5%9E%8B%E6%A8%A1%E5%BC%8F"><span class="toc-number">2.2.2.</span> <span class="toc-text">星型与雪花型模式</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8"><span class="toc-number">3.</span> <span class="toc-text">列式存储</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%97%E5%8E%8B%E7%BC%A9"><span class="toc-number">3.1.</span> <span class="toc-text">列压缩</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%97%E4%B8%8E%E5%88%97%E7%B0%87"><span class="toc-number">3.1.1.</span> <span class="toc-text">列与列簇</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9F%A2%E9%87%8F%E5%8C%96%E5%A4%84%E7%90%86"><span class="toc-number">3.1.2.</span> <span class="toc-text">矢量化处理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%92%E5%BA%8F%E6%93%8D%E4%BD%9C"><span class="toc-number">3.2.</span> <span class="toc-text">排序操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%99%E6%93%8D%E4%BD%9C"><span class="toc-number">3.3.</span> <span class="toc-text">写操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%81%9A%E5%90%88%EF%BC%9A%E6%95%B0%E6%8D%AE%E7%AB%8B%E6%96%B9%E4%BD%93%E4%B8%8E%E7%89%A9%E5%8C%96%E8%A7%86%E5%9B%BE"><span class="toc-number">3.4.</span> <span class="toc-text">聚合：数据立方体与物化视图</span></a></li></ol></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 58
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span><a class="archive-post-title" href= "/2021/06/13/Go_cheat-sheet/" >Go Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/06</span><a class="archive-post-title" href= "/2021/06/06/2021-06-06_diary/" >Weekly Summary (2021-05-31_2021-06-06)</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/31</span><a class="archive-post-title" href= "/2021/05/31/2021-05-31_diary/" >2021 下半年工作学习安排</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/16</span><a class="archive-post-title" href= "/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/" >如何用图论解决 Secret Santa 问题？</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" >把 PostgreSQL 用作数据仓库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/" >SELECT * 对 SQL 性能不利的原因</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2021/02/24/DDIA_note-13/" >《DDIA》阅读笔记（九）：一致性与共识（共识问题）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/21</span><a class="archive-post-title" href= "/2021/02/21/2021-02-21_diary/" >近期工作学习规划</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/19</span><a class="archive-post-title" href= "/2021/02/19/DDIA_note-12/" >《DDIA》阅读笔记（九）：一致性与共识（顺序保证）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/13</span><a class="archive-post-title" href= "/2021/02/13/DDIA_note-11/" >《DDIA》阅读笔记（九）：一致性与共识（可线性化）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/06</span><a class="archive-post-title" href= "/2021/02/06/DDIA_note-10/" >《DDIA》阅读笔记（八）：分布式系统的挑战</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/27</span><a class="archive-post-title" href= "/2021/01/27/DDIA_note-9/" >《DDIA》阅读笔记（七）：事务</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/22</span><a class="archive-post-title" href= "/2021/01/22/DDIA_note-8/" >《DDIA》阅读笔记（六）：数据分区</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span><a class="archive-post-title" href= "/2021/01/21/DDIA_note-7/" >《DDIA》阅读笔记（五）：数据复制（无主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/20</span><a class="archive-post-title" href= "/2021/01/20/DDIA_note-6/" >《DDIA》阅读笔记（五）：数据复制（多主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/09</span><a class="archive-post-title" href= "/2021/01/09/DDIA_note-5/" >《DDIA》阅读笔记（五）：数据复制（单主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/01</span><a class="archive-post-title" href= "/2021/01/01/DB_tree-table-design-summary/" >树形表结构设计总结</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/19</span><a class="archive-post-title" href= "/2020/12/19/DDIA_note-4/" >《DDIA》阅读笔记（四）：数据编码与演化</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/13</span><a class="archive-post-title" href= "/2020/12/13/DDIA_note-3/" >《DDIA》阅读笔记（三）：数据存储与检索</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/04</span><a class="archive-post-title" href= "/2020/12/04/DDIA_note-2/" >《DDIA》阅读笔记（二）：数据模型与查询语言</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/02</span><a class="archive-post-title" href= "/2020/12/02/DDIA_note-1/" >《DDIA》阅读笔记（一）：可靠、可扩展与可维护的应用系统</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span><a class="archive-post-title" href= "/2020/10/08/Maven_external_dependencies_management/" >Maven 打包依赖外置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2020/10/04/JVM_prod-analysis-cmd/" >Java 应用常用调试分析方法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/30</span><a class="archive-post-title" href= "/2020/06/30/JVM_java-memory-area/" >Java 内存区域</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/28</span><a class="archive-post-title" href= "/2020/05/28/DB_data-warehouse-design-basic/" >数据仓库设计基础</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/08</span><a class="archive-post-title" href= "/2020/04/08/2020-04-08_diary/" >关于使用思维导图做笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/28</span><a class="archive-post-title" href= "/2020/03/28/Algorithm_leetcode-high-frequency-problems/" >LeetCode 高频面试题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2020/03/06/InfoSecty_personal-infomation-security-guide/" >個人信息安全保護指南</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/22</span><a class="archive-post-title" href= "/2020/02/22/2020-02-22_diary/" >免费 JetBrains 全家桶</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/16</span><a class="archive-post-title" href= "/2020/02/16/Nginx_cheat-sheet/" >Nginx Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Git_Cheat-Sheet/" >Git Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker&K8S_Cheat-Sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker_cheat-sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/03</span><a class="archive-post-title" href= "/2020/02/03/JVM_jstat-monitor-analysis/" >JVM jstat 监控分析</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/01</span><a class="archive-post-title" href= "/2020/02/01/JVM_GC-log-analysis/" >JVM GC 日志分析</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/01</span><a class="archive-post-title" href= "/2019/11/01/Design_design-patterns/" >设计模式与设计原则</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/30</span><a class="archive-post-title" href= "/2019/10/30/JVM_mindmap/" >Java 虚拟机与并发编程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_offset-reset/" >Kafka 位移重置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_dynamic-config/" >Kafka 动态配置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/20</span><a class="archive-post-title" href= "/2019/05/20/Kafka_common-scripts/" >Kafka 常用脚本</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/06</span><a class="archive-post-title" href= "/2019/05/06/Kafka_basic-conceptions/" >Kafka 基本概念</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2018/10/04/Python_async-programming/" >Python 异步编程总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/19</span><a class="archive-post-title" href= "/2018/09/19/Python_data-structure/" >Python 数据结构应用</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/13</span><a class="archive-post-title" href= "/2018/09/13/Python_decorator-basic-usage/" >Python 装饰器基本用法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/02</span><a class="archive-post-title" href= "/2018/09/02/JavaScript_ES6-grammar/" >ES6 语法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/30</span><a class="archive-post-title" href= "/2018/08/30/Vue_user-guide-4/" >Vue 学习笔记：前端路由、请求发送和状态管理</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/28</span><a class="archive-post-title" href= "/2018/08/28/JavaScript_cheat-sheet/" >JavaScript Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/24</span><a class="archive-post-title" href= "/2018/08/24/Vue_user-guide-3/" >Vue 学习笔记：组件</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/23</span><a class="archive-post-title" href= "/2018/08/23/Vue_user-guide-2/" >Vue 学习笔记（2）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/22</span><a class="archive-post-title" href= "/2018/08/22/Python_OOP-summary/" >Python 类与对象总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/20</span><a class="archive-post-title" href= "/2018/08/20/Vue_user-guide-1/" >Vue 学习笔记（1）</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="杂事"><span class="iconfont-archer">&#xe606;</span>杂事</span>
+    
+        <span class="sidebar-tag-name" data-tags="技术"><span class="iconfont-archer">&#xe606;</span>技术</span>
+    
+        <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
+    
+        <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
+    
+        <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
+    
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
+        <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
+    
+        <span class="sidebar-tag-name" data-tags="Maven"><span class="iconfont-archer">&#xe606;</span>Maven</span>
+    
+        <span class="sidebar-tag-name" data-tags="Nginx"><span class="iconfont-archer">&#xe606;</span>Nginx</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Vue"><span class="iconfont-archer">&#xe606;</span>Vue</span>
+    
+        <span class="sidebar-tag-name" data-tags="前端"><span class="iconfont-archer">&#xe606;</span>前端</span>
+    
+        <span class="sidebar-tag-name" data-tags="Git"><span class="iconfont-archer">&#xe606;</span>Git</span>
+    
+        <span class="sidebar-tag-name" data-tags="JavaScript"><span class="iconfont-archer">&#xe606;</span>JavaScript</span>
+    
+        <span class="sidebar-tag-name" data-tags="Go"><span class="iconfont-archer">&#xe606;</span>Go</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="《数据密集型应用系统设计》阅读笔记"><span class="iconfont-archer">&#xe60a;</span>《数据密集型应用系统设计》阅读笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Kylo Yip"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"live2d-widget-model-nietzsche"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>
+
+

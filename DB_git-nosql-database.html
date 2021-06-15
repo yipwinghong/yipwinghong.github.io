@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Kylo Yip">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Kylo Yip">
+    
+    <meta name="keywords" content="Kylo's Notebook,Kylo Yip">
+    
+    <meta name="description" content="">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>作为 NoSql 数据库的 Git · Kylo&#39;s Notebook</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Kylo's Notebook" type="application/atom+xml">
+</head>
+
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <a class="home-link" href=/>Kylo's Notebook</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+">
+    
+    <!-- 主页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <blockquote>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://tanelpoder.com/posts/reasons-why-select-star-is-bad-for-sql-performance">Reasons why SELECT * is bad for SQL performance</a></p>
+</blockquote>
+<h1 id="作为-NoSql-数据库的-Git"><a href="#作为-NoSql-数据库的-Git" class="headerlink" title="作为 NoSql 数据库的 Git"></a>作为 NoSql 数据库的 Git</h1><p>Git 的官方手册指出，它是一个愚蠢的内容跟踪器。Git 可能是世界上使用最广泛的版本控制系统，奇怪的是它没有将自己描述为源代码控制系统。</p>
+<p>而实际上使用 Git 可以跟踪任何类型的内容，例如创建一个基于 Git 的 NoSQL 数据库。</p>
+<p>官方手册说它“愚蠢”的原因是 Git 不对用户存储的内容做任何假设，底层的 Git 模型是相当基本的。本文打算探讨将 Git 用作 NoSQL 数据库（键值存储）的可能性，即可以将文件系统用作数据存储，然后使用 <code>git add</code> 和 <code>git commit</code> 来保存文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> saving a document</span> </span><br><span class="line">echo &#x27;&#123;&quot;id&quot;: 1, &quot;name&quot;: &quot;kenneth&quot;&#125;&#x27; &gt; 1.json </span><br><span class="line">git add 1.json </span><br><span class="line">git commit -m &quot;added a file&quot; </span><br><span class="line"><span class="meta">#</span><span class="bash"> reading a document</span> </span><br><span class="line">git show master:1.json =&gt; &#123;&quot;id&quot;: 1, &quot;name&quot;: &quot;kenneth&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p> 这样做效果很好，但现在这种做法是把文件系统作为数据库：路径是键，值是存储在其中的任何东西，其中有几个弊端：</p>
+<ul>
+<li>需要把所有的数据写到磁盘上，然后才能把它们保存到 Git 中。</li>
+<li>需要多次保存数据。</li>
+<li>文件存储没有被重复利用，失去 Git 提供的自动删除重复数据的优势。</li>
+<li>如果想同时在多个分支上工作，需要切换、创建多个目录。</li>
+</ul>
+<p>目标是得到一个裸仓库，其中没有任何文件存在于文件系统中，而只存在于 Git 数据库中。</p>
+<p>以下是 Git 的数据模型及其工作的管道命令。</p>
+<h2 id="作为-NoSql-数据库的-Git-1"><a href="#作为-NoSql-数据库的-Git-1" class="headerlink" title="作为 NoSql 数据库的 Git"></a>作为 NoSql 数据库的 Git</h2><p>Git 是一个内容可寻址的文件系统，这意味着它是一个简单的键值存储。每当向它插入内容，就会得到一个密钥，以便以后检索插入的内容。</p>
+<p>创建内容：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">Initialize a repository</span> </span><br><span class="line">mkdir MyRepo </span><br><span class="line">cd MyRepo git init </span><br><span class="line"><span class="meta">#</span><span class="bash"> Save some content</span> </span><br><span class="line">echo &#123;&quot;id&quot;: 1, &quot;name&quot;: &quot;kenneth&quot;&#125; | git hash-object -w --stdin da95f8264a0ffe3df10e94eed6371ea83aee9a4d</span><br></pre></td></tr></table></figure>
+
+<p>hash-object 是一个 git plumbing 命令，用于接收内容、将其存储在数据库中，并返回密钥。</p>
+<blockquote>
+<p>  -w 选项指定存储内容，否则只会计算哈希值。</p>
+<p>  -stdin 选项则要求 Git 从输入中读取内容（而不是从文件中）。</p>
+</blockquote>
+<p>该密钥是对内容执行 sha-1 加密生成的，如果运行上述命令，可以看到它返回完全相同的 sha-1 加密串。</p>
+<p>对于写入数据库的内容，执行以下命令可以把它读回来。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git cat-file -p da95f8264a0ffe3df10e94eed6371ea83aee9a4d </span><br><span class="line">&#123;&quot;id&quot;: 1, &quot;name&quot;: &quot;kenneth&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Git-Blobs"><a href="#Git-Blobs" class="headerlink" title="Git Blobs"></a>Git Blobs</h3><p>现在有一个键值存储，其中有一个对象，即 blob。</p>
+<p><img src="https://www.kenneth-truyers.net/content/images/2016/10/image.png" alt=""></p>
+<p>唯一的问题是无法对其进行更新，因为是以密钥为键，更新内容后密钥将会更改。这意味着对于文件的每个版本，都必须记住一个不同的密钥。</p>
+<p>而目标应该是指定自己的密钥，并使用该密钥来跟踪版本。</p>
+<h3 id="Git-Trees"><a href="#Git-Trees" class="headerlink" title="Git Trees"></a>Git Trees</h3><p>树解决了两个问题：</p>
+<ul>
+<li>需要记住对象的哈希值及其版本。 </li>
+<li>存储文件组。 </li>
+</ul>
+<p>可以把树看作文件系统中的一个目录，要创建树必须遵循两个步骤：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> Create and populate a staging area</span> </span><br><span class="line">git update-index --add --cacheinfo 100644 da95f8264a0ffe3df10e94eed6371ea83aee9a4d 1.json </span><br><span class="line"><span class="meta">#</span><span class="bash"> write the tree</span> </span><br><span class="line">git write-tree d6916d3e27baa9ef2742c2ba09696f22e41011a1</span><br></pre></td></tr></table></figure>
+
+<p>这会返回一个 sha 加密串，可用于读取该树。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git cat-file -p d6916d3e27baa9ef2742c2ba09696f22e41011a1 100644 blob </span><br><span class="line">da95f8264a0ffe3df10e94eed6371ea83aee9a4d 1.json</span><br></pre></td></tr></table></figure>
+
+<p>此时对象数据库状态如下：</p>
+<p><img src="https://www.kenneth-truyers.net/content/images/2016/10/image_thumb-6.png" alt=""></p>
+<p>要修改文件可遵循相同的步骤：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> Add a blob</span> </span><br><span class="line">echo &#123;&quot;id&quot;: 1, &quot;name&quot;: &quot;kenneth truyers&quot;&#125; | git hash-object -w --stdin 42d0d209ecf70a96666f5a4c8ed97f3fd2b75dda </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Create and populate a staging area</span> </span><br><span class="line">git update-index --add --cacheinfo 100644 42d0d209ecf70a96666f5a4c8ed97f3fd2b75dda 1.json </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Write the tree</span> </span><br><span class="line">git write-tree 2c59068b29c38db26eda42def74b7142de392212</span><br></pre></td></tr></table></figure>
+
+<p> 此时面临以下情况：</p>
+<p><img src="https://www.kenneth-truyers.net/content/images/2016/10/image_thumb-15.png" alt="Git Object Database: tree and blob"></p>
+<p>现在两棵树代表文件的两个状态，但这没有起到什么作用，仍然需要记住这些树的 sha-1 值来获取内容。</p>
+<h3 id="Git-Commits"><a href="#Git-Commits" class="headerlink" title="Git Commits"></a>Git Commits</h3><p>一个提交包含 5 个关键信息。</p>
+<ul>
+<li>作者</li>
+<li>创建日期</li>
+<li>创建原因（消息）</li>
+<li>它指向的单个树对象</li>
+<li>一个或多个先前的提交（目前仅考虑仅具有一个父提交的提交，具有多个父提交的提交是合并提交）。 </li>
+</ul>
+<p>要提交上述的树：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> Commit the first tree (without a parent)</span> </span><br><span class="line">echo &quot;commit 1st version&quot; | git commit-tree d6916d3 05c1cec5685bbb84e806886dba0de5e2f120ab2a </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Commit the second tree with the first commit as a parent</span> </span><br><span class="line">echo &quot;Commit 2nd version&quot; | git commit-tree 2c59068 -p 05c1cec5 </span><br><span class="line">9918e46dfc4241f0782265285970a7c16bf499e4</span><br></pre></td></tr></table></figure>
+
+<p>这将进入以下状态：</p>
+<p><img src="https://www.kenneth-truyers.net/content/images/2016/10/image_thumb-16.png" alt="Git Object Database: commit, tree and blob"></p>
+<p>现在已经为文件建立了一个完整的历史记录，可以用任何 git 客户端打开该仓库，可见 1.json 是如何被正确追踪的。</p>
+<p>为了证明这一点，运行 git log 有以下输出：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git log --stat 9918e46 9918e46dfc4241f0782265285970a7c16bf499e4 &quot;Commit 2nd version&quot;</span><br><span class="line">1.json | 1 + 1 file changed, 1 insertions(+) </span><br><span class="line">05c1cec5685bbb84e806886dba0de5e2f120ab2a &quot;Commit 1st version&quot; 1.json | 1 + 1 file changed, 1 insertion(+)</span><br></pre></td></tr></table></figure>
+
+<p>并获得最后一个提交的文件内容。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git show 9918e46:1.json </span><br><span class="line">&#123;&quot;id&quot;: 1, &quot;name&quot;: &quot;kenneth truyers&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但这样还是没有达到目的，因为必须记住上次提交的哈希值。</p>
+<p>到现在为止创建的所有对象都是 Git 对象数据库的一部分，该数据库的一个特点是它只存储不可变的对象。一旦写入一个 blob、一棵树或一个提交，就不能在不改变键的情况下修改它，并且不能删除它们（至少不能直接删除，git gc 命令会删除悬空的对象）。</p>
+<h3 id="Git-References"><a href="#Git-References" class="headerlink" title="Git References"></a>Git References</h3><p>另一个层次是 Git 引用。引用不是对象数据库的一部分，而是引用数据库的一部分，而且它是可变的。引用有不同的类型，如分支、标签和远程，它们在本质上是相似的，只是有一些小的区别。</p>
+<p>到目前为止只考虑分支，一个分支是一个指向提交的指针。要创建分支，可以把提交的哈希值写到文件系统中：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo 05c1cec5685bbb84e806886dba0de5e2f120ab2a &gt; .git/refs/heads/master</span><br></pre></td></tr></table></figure>
+
+<p>现在有一个主干分支，其指向第一次提交。为了移动这个分支，可执行以下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git update-ref refs/heads/master 9918e46</span><br></pre></td></tr></table></figure>
+
+<p>状态可见下图：</p>
+<p><img src="https://www.kenneth-truyers.net/content/images/2016/10/image_thumb-17.png" alt=""></p>
+<p>现在可以读取文件的当前状态： </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git show master:1.json </span><br><span class="line">&#123;&quot;id&quot;: 1, &quot;name&quot;: &quot;kenneth truyers&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>只要把分支指针移到最新的提交上，即使添加了新版本的文件和后续的树和提交，上面的命令也可以工作。</p>
+<p>对于一个简单的键值存储，以上这些内容都相当复杂。然而可以将这些东西抽象化，使客户端应用程序只需要指定分支和一个键（将在另一篇文章中再来讨论这个问题）。</p>
+<p>现在讨论将 Git 用作 NoSQL 数据库的潜在优势和缺点。</p>
+<h2 id="数据效率"><a href="#数据效率" class="headerlink" title="数据效率"></a>数据效率</h2><p>在存储数据方面，Git 是非常高效的。如前所述，由于哈希值的计算方式，相同内容的 blobs 只会被存储一次。可以在一个空的 Git 仓库中添加一大堆内容相同的文件，然后检查 .git 目录的大小与磁盘上的大小，可以发现 .git 目录小了不少。</p>
+<p>不止于此，Git 对树也有同样的作用。如果在一棵子树上修改了一个文件，Git 只会创建一个新的子树，而只是引用其他没有受到影响的树。</p>
+<p>下面的例子展示了一个指向有两个子目录的层次结构的提交。</p>
+<p><img src="https://www.kenneth-truyers.net/content/images/2016/10/image_thumb-18.png" alt="Git NoSQL Database: nested trees"></p>
+<p>现在如果想替换 blob 4658ea84，Git 只会替换那些被改变的项目，保留没有被改变的项目作为引用。</p>
+<p>在用不同的文件替换 blob 并提交更改后，图看起来如下（新对象用红色标记）。</p>
+<p><img src="https://www.kenneth-truyers.net/content/images/2016/10/image_thumb-19.png" alt="Git NoSQL Database: storage efficiency"></p>
+<p>如上，Git 只替换了必要的项目并引用了已经存在的项目。</p>
+<p>尽管 Git 在引用已有数据方面非常高效，但如果每一个小的修改都生成一个完整的拷贝，在一段时间后还是会得到一个巨大的版本库。</p>
+<p>为了缓解以上问题，引入了自动垃圾收集过程。git gc 命令运行时，它将查看所有的 Blobs，并在可能情况下删除 Blobs，转而存储基本数据的单一副本，以及 Blobs 每个版本的增量。因此 Git 仍然可以检索到 blob 的每个唯一版本，而不需要多次存储数据。</p>
+<h2 id="版本控制"><a href="#版本控制" class="headerlink" title="版本控制"></a>版本控制</h2><p>Git 可作为一个完全的版本系统。有了版本控制，也就有了（永远）不必删除数据的优势。</p>
+<p>在 SQL 数据库中有这样的例子：</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">id | <span class="type">name</span> | <span class="type">deleted</span> <span class="number">1</span> | <span class="type">kenneth</span> | <span class="type">1</span></span><br></pre></td></tr></table></figure>
+
+<p>一般这样的简单记录即可保存数据（但通常不是），数据本身可能依赖于其他数据（无论实现细节上它们是否为外键），当要还原数据时很可能无法孤立地进行操作。而使用 Git 只需将分支指向另一个提交即可回到数据库级别（而不是记录级别）的正确状态。</p>
+<p>另一种做法：</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">id | <span class="type">street</span> | <span class="type">lastUpdate</span> <span class="number">1</span> | <span class="type">town</span> rd | <span class="type">20161012</span></span><br></pre></td></tr></table></figure>
+
+<p> 这种做法将更少机会用到：已知该数据已被更新，却没有待更新的内容以及更新前的状态信息。 每当更新数据时，实际上就是在删除数据并插入新数据，旧数据将永远丢失。 </p>
+<p>使用 Git 可以在任何文件上运行 git log 查看更改的内容、对象，时间和原因。 </p>
+<h2 id="Git-工具"><a href="#Git-工具" class="headerlink" title="Git 工具"></a>Git 工具</h2><p>Git 拥有丰富的工具集，可用于检索和处理数据。虽然大多数记录都集中在代码上，但并不意味着不能用它们来处理其他数据。</p>
+<p>基本的 Git 命令：</p>
+<ul>
+<li>使用 git diff 查找两个提交/ 分支/ 标签/ 的变化差异。</li>
+<li>使用 git bisect 找出由于数据变化而停止工作的情况。</li>
+<li>使用 git hooks 获取自动变更通知，建立全文索引，更新缓存，发布数据，…</li>
+<li>还原、分支、合并，…</li>
+</ul>
+<p>还有一些外部工具：</p>
+<ul>
+<li>使用 Git 客户端实现数据可视化以便浏览 。</li>
+<li>使用 pull requests 在合并之前检查数据更改。</li>
+<li>Gitinspector：Git 存储库的统计分析。</li>
+</ul>
+<h2 id="NoSQL"><a href="#NoSQL" class="headerlink" title="NoSQL"></a>NoSQL</h2><p>由于它是一个键值存储，Git 具备一般 NoSQL 存储的优势：比如无模式的数据库，可以存储任何内容，它甚至不一定是 JSON。</p>
+<h2 id="连接性"><a href="#连接性" class="headerlink" title="连接性"></a>连接性</h2><p>Git 可以在分区网络中工作，可以将所有内容放在 USB 存储上，在不连接网络时保存数据，然后在重新联机时推送并合并。这在开发代码时的常用做法相同。在某些场景中这可以节省时间。</p>
+<h2 id="事务"><a href="#事务" class="headerlink" title="事务"></a>事务</h2><p>上面的例子是提交了对一个文件的每一个改动，但有时不一定要这样做，还可以把各种变化作为一个提交，这样做可以方便以后原子化地回滚这些改动。</p>
+<p>长时间的事务：创建一个分支，向其提交几个改动然后合并或丢弃它。</p>
+<h2 id="备份与副本"><a href="#备份与副本" class="headerlink" title="备份与副本"></a>备份与副本</h2><p>对于传统的数据库，通常要为完整的备份和增量的备份建立一个调度计划，但这是相当麻烦的。由于 Git 已经存储了所有历史记录，所以永远不需要做完整的备份。</p>
+<p>此外备份仅仅是执行 Git 推送，而可以推送到任何地方，GitHub、BitBucket 或自我托管的 Git 服务器。</p>
+<p>复制也同样简单，使用 git 钩子设置一个触发器，在每次提交后运行 Git 推送，比如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git remote add replica git@replica.server.com:app.git </span><br><span class="line">cat .git/hooks/post-commit </span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">!/bin/sh</span> </span><br><span class="line">git push replica</span><br></pre></td></tr></table></figure>
+
+<p>上述是 Git 作为数据库的优点，然而还有以下缺点。</p>
+<h2 id="查询"><a href="#查询" class="headerlink" title="查询"></a>查询</h2><p>只支持按键查询，唯一的好处是可以将数据在目录中组织，这样就可以轻易地通过前缀获得内容。任何其他的查询都是不支持的，除非执行完整的递归搜索。</p>
+<p>唯一的做法是建立专门用于查询的索引。如果不需要过时，可以按调度计划维护索引，或者可以在提交发生后立即使用 git hook 更新索引。 </p>
+<h2 id="并发"><a href="#并发" class="headerlink" title="并发"></a>并发</h2><p>如果只是在编写 Blob，那么不必担心并发问题。但当开始编写提交并更新分支时，就会出现问题了。</p>
+<p>下图中两个进程同时尝试创建提交： </p>
+<p><img src="https://www.kenneth-truyers.net/content/images/2016/10/image55_thumb.png" alt="Git NoSQL Database: concurrency"></p>
+<p>在上图中可见，当第二个进程修改树的副本时，它实际上是在一棵过期的树上工作。当提交时它将失去第一个进程所做的修改。</p>
+<p>同样的情况也适用于移动分支头。在提交和更新分支头之间可能会有另一个提交，因此有可能将分支头更新为错误的提交。这种问题唯一的解决方法是锁定从读取当前树副本到更新分支头之间的任何写操作。</p>
+<h2 id="速度"><a href="#速度" class="headerlink" title="速度"></a>速度</h2><p>在创建分支时 Git 的速度很快，但当考虑到每秒提交次数时，它实际上就很慢了，因为需要一直向磁盘写入。</p>
+<p>通常在写代码时不会注意到这点，因为每秒不会做很多提交。</p>
+<p>在本地机器上进行一些测试，可见极限时每秒 110 次。虽然 110 次/秒的提交量对很多应用来说是足够的，但不能满足所有的情况。这是本地开发机器上的理论最大值，而其他因素都会影响速度。</p>
+<h3 id="树的大小"><a href="#树的大小" class="headerlink" title="树的大小"></a>树的大小</h3><p>一般来说，用户倾向于使用很多子目录，而不是把所有的文件放在同一个目录中，这将使写入速度尽可能地接近最大值。原因是每次创建一个新的提交时都必须复制树，再对其进行修改，然后保存修改后的树。运行 git gc 会确保将其保存为一个 delta，而不是两个不同的树。</p>
+<p>在第一种情况下，根目录下存储有 10.000 个 blobs。当添加一个文件时会复制包含 10.000 个项目的树，添加一个并保存它。由于树的大小，这可能是一个冗长的操作。</p>
+<p><img src="https://www.kenneth-truyers.net/content/images/2016/10/image_thumb-20.png" alt="Git NoSQL Database: large trees"></p>
+<p>在第二个示例下有 4 层树，每层有 10 个子树，最后一层有 10 个 blobs（10<em>10*10 \</em> 10  = 10.000 个文件）。</p>
+<p><img src="https://www.kenneth-truyers.net/content/images/2016/10/image_thumb-21.png" alt="Git NoSQL Database: nested trees"></p>
+<p>在这种情况下，如果想添加一个 blob，不需要复制整个层次结构，而只复制引导 blob 的分支（下图显示了必须要复制和修改的树）。</p>
+<p><img src="https://www.kenneth-truyers.net/content/images/2016/10/image_thumb-22.png" alt="Git NoSQL Database: nested tree modifications"></p>
+<p>因此通过使用子目录，可以复制 5 棵有 10 个条目的树，这将提高了速度。而当数据增长得越多，就越希望使用子目录。</p>
+<h2 id="在事务中合并值"><a href="#在事务中合并值" class="headerlink" title="在事务中合并值"></a>在事务中合并值</h2><p>如果需要以每秒 100 次以上的速度进行提交，那么也许不必地单独回滚。在这种情况下，可以不提交每个改动，而是在一次提交中合并提交多个改动。由于可以同时写 Blobs，所以可以同时写 1000 个文件到磁盘，然后做一次提交，把它们保存到版本库中。但这也有缺点，如果你想获得原始的速度，这是个好办法。</p>
+<p>解决这个问题的方法是给 git增加一个不同的后端，它不会立即把内容刷到磁盘上，而是先写到内存数据库中，然后再异步刷到磁盘。不过，实现这一点并不那么容易。当我使用libgit2sharp连接到版本库来测试这个解决方案时，我尝试使用Voron后端（它可以作为开源版本，以及使用ElasticSearch的变体）。这使速度提高了不少，但你失去了能用任何标准的git工具检查数据的好处。</p>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+        </li>
+        <li class="previous">
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODYzMi8yNTEyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:yipwinghong@outlook.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yipwinghong" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/WeChat.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 58
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span><a class="archive-post-title" href= "/2021/06/13/Go_cheat-sheet/" >Go Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/06</span><a class="archive-post-title" href= "/2021/06/06/2021-06-06_diary/" >Weekly Summary (2021-05-31_2021-06-06)</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/31</span><a class="archive-post-title" href= "/2021/05/31/2021-05-31_diary/" >2021 下半年工作学习安排</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/16</span><a class="archive-post-title" href= "/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/" >如何用图论解决 Secret Santa 问题？</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" >把 PostgreSQL 用作数据仓库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/" >SELECT * 对 SQL 性能不利的原因</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2021/02/24/DDIA_note-13/" >《DDIA》阅读笔记（九）：一致性与共识（共识问题）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/21</span><a class="archive-post-title" href= "/2021/02/21/2021-02-21_diary/" >近期工作学习规划</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/19</span><a class="archive-post-title" href= "/2021/02/19/DDIA_note-12/" >《DDIA》阅读笔记（九）：一致性与共识（顺序保证）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/13</span><a class="archive-post-title" href= "/2021/02/13/DDIA_note-11/" >《DDIA》阅读笔记（九）：一致性与共识（可线性化）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/06</span><a class="archive-post-title" href= "/2021/02/06/DDIA_note-10/" >《DDIA》阅读笔记（八）：分布式系统的挑战</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/27</span><a class="archive-post-title" href= "/2021/01/27/DDIA_note-9/" >《DDIA》阅读笔记（七）：事务</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/22</span><a class="archive-post-title" href= "/2021/01/22/DDIA_note-8/" >《DDIA》阅读笔记（六）：数据分区</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span><a class="archive-post-title" href= "/2021/01/21/DDIA_note-7/" >《DDIA》阅读笔记（五）：数据复制（无主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/20</span><a class="archive-post-title" href= "/2021/01/20/DDIA_note-6/" >《DDIA》阅读笔记（五）：数据复制（多主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/09</span><a class="archive-post-title" href= "/2021/01/09/DDIA_note-5/" >《DDIA》阅读笔记（五）：数据复制（单主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/01</span><a class="archive-post-title" href= "/2021/01/01/DB_tree-table-design-summary/" >树形表结构设计总结</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/19</span><a class="archive-post-title" href= "/2020/12/19/DDIA_note-4/" >《DDIA》阅读笔记（四）：数据编码与演化</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/13</span><a class="archive-post-title" href= "/2020/12/13/DDIA_note-3/" >《DDIA》阅读笔记（三）：数据存储与检索</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/04</span><a class="archive-post-title" href= "/2020/12/04/DDIA_note-2/" >《DDIA》阅读笔记（二）：数据模型与查询语言</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/02</span><a class="archive-post-title" href= "/2020/12/02/DDIA_note-1/" >《DDIA》阅读笔记（一）：可靠、可扩展与可维护的应用系统</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span><a class="archive-post-title" href= "/2020/10/08/Maven_external_dependencies_management/" >Maven 打包依赖外置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2020/10/04/JVM_prod-analysis-cmd/" >Java 应用常用调试分析方法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/30</span><a class="archive-post-title" href= "/2020/06/30/JVM_java-memory-area/" >Java 内存区域</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/28</span><a class="archive-post-title" href= "/2020/05/28/DB_data-warehouse-design-basic/" >数据仓库设计基础</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/08</span><a class="archive-post-title" href= "/2020/04/08/2020-04-08_diary/" >关于使用思维导图做笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/28</span><a class="archive-post-title" href= "/2020/03/28/Algorithm_leetcode-high-frequency-problems/" >LeetCode 高频面试题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2020/03/06/InfoSecty_personal-infomation-security-guide/" >個人信息安全保護指南</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/22</span><a class="archive-post-title" href= "/2020/02/22/2020-02-22_diary/" >免费 JetBrains 全家桶</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/16</span><a class="archive-post-title" href= "/2020/02/16/Nginx_cheat-sheet/" >Nginx Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Git_Cheat-Sheet/" >Git Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker&K8S_Cheat-Sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker_cheat-sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/03</span><a class="archive-post-title" href= "/2020/02/03/JVM_jstat-monitor-analysis/" >JVM jstat 监控分析</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/01</span><a class="archive-post-title" href= "/2020/02/01/JVM_GC-log-analysis/" >JVM GC 日志分析</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/01</span><a class="archive-post-title" href= "/2019/11/01/Design_design-patterns/" >设计模式与设计原则</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/30</span><a class="archive-post-title" href= "/2019/10/30/JVM_mindmap/" >Java 虚拟机与并发编程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_offset-reset/" >Kafka 位移重置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_dynamic-config/" >Kafka 动态配置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/20</span><a class="archive-post-title" href= "/2019/05/20/Kafka_common-scripts/" >Kafka 常用脚本</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/06</span><a class="archive-post-title" href= "/2019/05/06/Kafka_basic-conceptions/" >Kafka 基本概念</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2018/10/04/Python_async-programming/" >Python 异步编程总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/19</span><a class="archive-post-title" href= "/2018/09/19/Python_data-structure/" >Python 数据结构应用</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/13</span><a class="archive-post-title" href= "/2018/09/13/Python_decorator-basic-usage/" >Python 装饰器基本用法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/02</span><a class="archive-post-title" href= "/2018/09/02/JavaScript_ES6-grammar/" >ES6 语法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/30</span><a class="archive-post-title" href= "/2018/08/30/Vue_user-guide-4/" >Vue 学习笔记：前端路由、请求发送和状态管理</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/28</span><a class="archive-post-title" href= "/2018/08/28/JavaScript_cheat-sheet/" >JavaScript Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/24</span><a class="archive-post-title" href= "/2018/08/24/Vue_user-guide-3/" >Vue 学习笔记：组件</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/23</span><a class="archive-post-title" href= "/2018/08/23/Vue_user-guide-2/" >Vue 学习笔记（2）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/22</span><a class="archive-post-title" href= "/2018/08/22/Python_OOP-summary/" >Python 类与对象总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/20</span><a class="archive-post-title" href= "/2018/08/20/Vue_user-guide-1/" >Vue 学习笔记（1）</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="杂事"><span class="iconfont-archer">&#xe606;</span>杂事</span>
+    
+        <span class="sidebar-tag-name" data-tags="技术"><span class="iconfont-archer">&#xe606;</span>技术</span>
+    
+        <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
+    
+        <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
+    
+        <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
+    
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
+        <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
+    
+        <span class="sidebar-tag-name" data-tags="Maven"><span class="iconfont-archer">&#xe606;</span>Maven</span>
+    
+        <span class="sidebar-tag-name" data-tags="Nginx"><span class="iconfont-archer">&#xe606;</span>Nginx</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Vue"><span class="iconfont-archer">&#xe606;</span>Vue</span>
+    
+        <span class="sidebar-tag-name" data-tags="前端"><span class="iconfont-archer">&#xe606;</span>前端</span>
+    
+        <span class="sidebar-tag-name" data-tags="Git"><span class="iconfont-archer">&#xe606;</span>Git</span>
+    
+        <span class="sidebar-tag-name" data-tags="JavaScript"><span class="iconfont-archer">&#xe606;</span>JavaScript</span>
+    
+        <span class="sidebar-tag-name" data-tags="Go"><span class="iconfont-archer">&#xe606;</span>Go</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="《数据密集型应用系统设计》阅读笔记"><span class="iconfont-archer">&#xe60a;</span>《数据密集型应用系统设计》阅读笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Kylo Yip"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+     
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"live2d-widget-model-nietzsche"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>
+
+

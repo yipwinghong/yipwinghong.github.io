@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Kylo Yip">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Kylo Yip">
+    
+    <meta name="keywords" content="Kylo's Notebook,Kylo Yip">
+    
+    <meta name="description" content="">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>Java 应用常用调试分析方法总结 · Kylo&#39;s Notebook</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Kylo's Notebook" type="application/atom+xml">
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >Kylo&#39;s Notebook</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">Java 应用常用调试分析方法总结</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>Kylo's Notebook</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:100vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(https://api.ixiaowai.cn/mcapi/mcapi.php)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            Java 应用常用调试分析方法总结
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "技术">技术</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Java">Java</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">4.3k</span>Reading time: <span class="post-count reading-time">19 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2020/10/04</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="日志配置"><a href="#日志配置" class="headerlink" title="日志配置"></a>日志配置</h1><p>要在生产环境部署 Java 应用，配置日志输出是必备的预备工作。</p>
+<h2 id="应用日志"><a href="#应用日志" class="headerlink" title="应用日志"></a>应用日志</h2><p>以 Spring Boot 应用为例，其 Starter 包已经引入了 logback、log4j 等应用框架，因此应用程序常用的配置项可以在 <code>application.yml</code> 进行设定。</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">logging:</span></span><br><span class="line">  <span class="attr">group:</span></span><br><span class="line">    <span class="attr">tomcat:</span> <span class="string">org.apache.catalina,</span> <span class="string">org.apache.tomcat</span></span><br><span class="line">    <span class="attr">spring:</span> <span class="string">org.springframework,</span> <span class="string">springfox</span></span><br><span class="line">    <span class="attr">swagger:</span> <span class="string">io.swagger</span></span><br><span class="line">    <span class="attr">kafka:</span> <span class="string">org.apache.kafka</span></span><br><span class="line">    <span class="attr">es:</span> <span class="string">org.elasticsearch</span></span><br><span class="line">  <span class="attr">level:</span></span><br><span class="line">    <span class="attr">kafka:</span> <span class="string">warn</span></span><br><span class="line">    <span class="attr">tomcat:</span> <span class="string">warn</span></span><br><span class="line">    <span class="attr">swagger:</span> <span class="string">error</span></span><br><span class="line">    <span class="attr">spring:</span> <span class="string">warn</span></span><br><span class="line">    <span class="attr">es:</span> <span class="string">warn</span></span><br><span class="line">  <span class="attr">file:</span></span><br><span class="line">    <span class="attr">max-size:</span> <span class="string">5MB</span></span><br><span class="line"><span class="comment">#    path: logs</span></span><br><span class="line">    <span class="attr">max-history:</span> <span class="number">7</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">logs/$&#123;spring.application.name&#125;.log</span></span><br><span class="line">  <span class="attr">pattern:</span></span><br><span class="line">    <span class="attr">rolling-file-name:</span> <span class="string">logs/$&#123;spring.application.name&#125;.%d&#123;yyyy-MM-dd&#125;.%i.gz</span></span><br></pre></td></tr></table></figure>
+
+<p>值得注意的是：</p>
+<ul>
+<li><p>严格管理日志级别，避免在生产环境输出开发测试阶段的调试信息，以免对业务系统造成压力。</p>
+</li>
+<li><p>复杂的配置项可以通过 xml 文件进行定义（如 <code>classpath:log4j.xml</code>），在 <code>application.yml</code> 引入即可。</p>
+</li>
+</ul>
+<h2 id="JVM-日志"><a href="#JVM-日志" class="headerlink" title="JVM 日志"></a>JVM 日志</h2><p>一般情况下 JVM 层面的事故出现时，将来不及使用 <code>jstat</code> 等命令查看事发原因，因此需要保留现场，把进程快照、堆栈快照等信息保存下来以供后续排查问题使用。以下是比较通用的 JVM 参数配置：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> JDK 8</span></span><br><span class="line">LOG_DIR=&quot;/tmp/logs&quot;</span><br><span class="line">JAVA_OPT_LOG=&quot; -verbose:gc&quot;</span><br><span class="line">JAVA_OPT_LOG=&quot;$&#123;JAVA_OPT_LOG&#125; -XX:+PrintGCDetails&quot;</span><br><span class="line">JAVA_OPT_LOG=&quot;$&#123;JAVA_OPT_LOG&#125; -XX:+PrintGCDateStamps&quot;</span><br><span class="line">JAVA_OPT_LOG=&quot;$&#123;JAVA_OPT_LOG&#125; -XX:+PrintGCApplicationStoppedTime&quot;</span><br><span class="line">JAVA_OPT_LOG=&quot;$&#123;JAVA_OPT_LOG&#125; -XX:+PrintTenuringDistribution&quot;</span><br><span class="line">JAVA_OPT_LOG=&quot;$&#123;JAVA_OPT_LOG&#125; -Xloggc:$&#123;LOG_DIR&#125;/gc_%p.log&quot;</span><br><span class="line">JAVA_OPT_OOM=&quot; -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$&#123;LOG_DIR&#125; -XX:ErrorFile=$&#123;LOG_DIR&#125;/hs_error_pid%p.log &quot;</span><br><span class="line">JAVA_OPT=&quot;$&#123;JAVA_OPT_LOG&#125; $&#123;JAVA_OPT_OOM&#125;&quot;</span><br><span class="line">JAVA_OPT=&quot;$&#123;JAVA_OPT&#125; -XX:-OmitStackTraceInFastThrow&quot;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> JDK 8+</span></span><br><span class="line">LOG_DIR=&quot;/tmp/logs&quot;</span><br><span class="line">JAVA_OPT_LOG=&quot; -verbose:gc&quot;</span><br><span class="line">JAVA_OPT_LOG=&quot;$&#123;JAVA_OPT_LOG&#125; -Xlog:gc,gc+ref=debug,gc+heap=debug,gc+age=trace:file=$&#123;LOG_DIR&#125;/gc_%p.log:tags,uptime,time,level&quot;</span><br><span class="line">JAVA_OPT_LOG=&quot;$&#123;JAVA_OPT_LOG&#125; -Xlog:safepoint:file=$&#123;LOG_DIR&#125;/safepoint_%p.log:tags,uptime,time,level&quot;</span><br><span class="line">JAVA_OPT_OOM=&quot; -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$&#123;LOG_DIR&#125; -XX:ErrorFile=$&#123;LOG_DIR&#125;/hs_error_pid%p.log &quot;</span><br><span class="line">JAVA_OPT=&quot;$&#123;JAVA_OPT_LOG&#125; $&#123;JAVA_OPT_OOM&#125;&quot;</span><br><span class="line">JAVA_OPT=&quot;$&#123;JAVA_OPT&#125; -XX:-OmitStackTraceInFastThrow&quot;</span><br></pre></td></tr></table></figure>
+
+<p>可以总结为以下几个方面：</p>
+<ul>
+<li><p>GC 日志：时间戳、STW 时间，对象年龄分布等。</p>
+</li>
+<li><p>Safe Point 日志（便于分析线程阻塞等问题）。</p>
+</li>
+<li><p>发生 OOM 时导出堆转储文件以及错误日志。</p>
+</li>
+<li><p>……</p>
+</li>
+</ul>
+<p>输入日志如下：</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/GC%20%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90.jpg" alt="GC 日志分析"></p>
+<ul>
+<li><p>1 表示 GC 发生的时间，一般使用可读的方式打印；</p>
+</li>
+<li><p>2 表示日志表明是 G1 的“转移暂停: 混合模式”，停顿了约 223ms；</p>
+</li>
+<li><p>3 表明由 8 个 Worker 线程并行执行，消耗了 214ms；</p>
+</li>
+<li><p>4 表示 Diff 越小越好，说明每个工作线程的速度都很均匀；</p>
+</li>
+<li><p>5 表示外部根区扫描，外部根是堆外区。JNI 引用，JVM 系统目录，Classloaders 等；</p>
+</li>
+<li><p>6 表示更新 RSet 的时间信息；</p>
+</li>
+<li><p>7 表示该任务主要是对 CSet 中存活对象进行转移（复制）；</p>
+</li>
+<li><p>8 表示花在 GC 之外的工作线程的时间；</p>
+</li>
+<li><p>9 表示并行阶段的 GC 总时间；</p>
+</li>
+<li><p>10 表示其他清理活动；</p>
+</li>
+<li><p>11表示收集结果统计；</p>
+</li>
+<li><p>12 表示时间花费统计。</p>
+</li>
+</ul>
+<h2 id="系统日志"><a href="#系统日志" class="headerlink" title="系统日志"></a>系统日志</h2><p>如果 Java 程序还配置了 Systemd，还可以通过 journalctl 系列命令查看日志（如 <code>journalctl -u test-svc.service -f</code> 筛选出特定服务的日志）。</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">journalctl <span class="literal">-u</span> <span class="built_in">test-svc</span>.service <span class="operator">-f</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight dns"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">-- Logs begin at Thu <span class="number">2020-09-17</span> <span class="number">14</span>:<span class="number">56</span>:<span class="number">01</span> CST. --</span><br><span class="line">Oct <span class="number">04 23:35:04</span> ecs<span class="number">20200311</span>-<span class="number">0002</span> systemd[<span class="number">1</span>]: Started test-svc.</span><br><span class="line">Oct <span class="number">04 23:35:04</span> ecs<span class="number">20200311</span>-<span class="number">0002</span> test-svc-svc[<span class="number">3214</span>]: test-svc is running, pid: [<span class="number">23613</span>]</span><br><span class="line">Oct <span class="number">04 23:35:05</span> ecs<span class="number">20200311</span>-<span class="number">0002</span> test-svc-svc[<span class="number">3218</span>]: test-svc stop successfully!</span><br></pre></td></tr></table></figure>
+
+<p>另一方面，有时 Java 进程会毫无预兆的退出，且没有任何遗言输出（比如由系统 oom-killer 在系统内存耗尽时被选择性杀死），此时可以使用 <code>dmesg -T</code> 查看：</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/dmesg%20%E6%97%A5%E5%BF%97.jpg" alt="dmesg 日志"></p>
+<p>无论由于何种原因退出，都能从以上方法中找到一些线索，但前提是不要为自己挖坑（比如在代码中加入 <code>System.exit();</code> 等命令）。</p>
+<h1 id="保留现场"><a href="#保留现场" class="headerlink" title="保留现场"></a>保留现场</h1><p>哪怕生产环境往往配备了监控系统，但其保留的信息未必能有针对性地为服务排查问题。因此在服务出现故障前，我们可以使用自动化方式将必要的信息保存下来，一般用到以下信息：</p>
+<ul>
+<li><p>瞬时态：lsof、heap 这些没有时间序列概念的混杂信息，体积都比较大，无法进入监控系统产生有用价值，只能在某些时刻查看分析（线程、堆、网络快照）。</p>
+</li>
+<li><p>历史态：CPU、内存，这些数据可以体现出趋势性的问题，这些数据需要监控系统的协作（系统监控、业务监控、GC 日志数据采集等）。</p>
+</li>
+</ul>
+<h2 id="服务器"><a href="#服务器" class="headerlink" title="服务器"></a>服务器</h2><h3 id="网络"><a href="#网络" class="headerlink" title="网络"></a>网络</h3><p>保留当前网络连接，使得后续可查看梳理各种网络连接状态，排查 TIME_WAIT、CLOSE_WAIT 或者其他连接过高的问题，比如连接没有主动关闭）：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ss -antp &gt; $DUMP_DIR/ss.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+<p>保留网络状态（按照各个协议进行统计输出）：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -s &gt; $DUMP_DIR/netstat-s.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+<p>对于一些速度非常高得模块，比如 Kafka、Redis 经常出现跑满网卡的情况，容易挤占 Java 程序的资源，使用以下命令保留网络流量：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sar -n DEV 1 2 &gt; $DUMP_DIR/sar-traffic.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<h3 id="进程"><a href="#进程" class="headerlink" title="进程"></a>进程</h3><p>比如通过查看进程，看到打开了哪些文件，以进程的维度来查看整个资源的使用情况，包括每条网络连接、每个打开的文件句柄。同时也很容易看到连接到了哪些服务器、使用了哪些资源。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof -p $PID &gt; $DUMP_DIR/lsof-$PID.dump</span><br></pre></td></tr></table></figure>
+
+<h3 id="CPU"><a href="#CPU" class="headerlink" title="CPU"></a>CPU</h3><p>输出当前系统的 CPU 和负载（与上述信息有部分重合）：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mpstat &gt; $DUMP_DIR/mpstat.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">vmstat</span> <span class="number">1</span> <span class="number">3</span> &gt; $DUMP_DIR/vmstat.dump <span class="number">2</span>&gt;&amp;<span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">sar</span> -p <span class="literal">ALL</span> &gt; $DUMP_DIR/sar-cpu.dump <span class="number">2</span>&gt;&amp;<span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">uptime &gt; $DUMP_DIR/uptime.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<h3 id="磁盘"><a href="#磁盘" class="headerlink" title="磁盘"></a>磁盘</h3><p>一般以计算为主的服务节点，I/O 资源会比较正常，但有时也会发生问题，比如：日志输出过多，或者磁盘本身出现问题等。此命令可以输出每块磁盘的基本性能信息，用来排查 I/O 问题。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iostat -x &gt; $DUMP_DIR/iostat.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<h3 id="内存"><a href="#内存" class="headerlink" title="内存"></a>内存</h3><p>大体展现操作系统的内存概况，比如 SWAP 影响了 GC，SLAB 区挤占了 JVM 的内存。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">free -h &gt; $DUMP_DIR/free.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>包括系统日志、内核参数等。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps -ef &gt; $DUMP_DIR/ps.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg &gt; $DUMP_DIR/dmesg.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sysctl -a &gt; $DUMP_DIR/sysctl.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<h2 id="JVM"><a href="#JVM" class="headerlink" title="JVM"></a>JVM</h2><h3 id="进程快照"><a href="#进程快照" class="headerlink" title="进程快照"></a>进程快照</h3><p>即进程最后的“遗言”。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jinfo $PID &gt; $DUMP_DIR/jinfo.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<h3 id="堆快照"><a href="#堆快照" class="headerlink" title="堆快照"></a>堆快照</h3><p>jstat 将输出当前的 GC 信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">jstat -gcutil $PID &gt; jstat-gcutil.dump 2&gt;&amp;1</span><br><span class="line">jstat -gccapacity $PID &gt; jstat-gccapacity.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+<p>可借助 jmap 来进行分析。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">jmap $PID &gt; jmap.dump 2&gt;&amp;1</span><br><span class="line">jmap -heap $PID &gt; jmap-heap.dump 2&gt;&amp;1</span><br><span class="line">jmap -histo $PID &gt; jmap-histo.dump 2&gt;&amp;1</span><br><span class="line">jmap -dump:format=b,file=heap.bin $PID &gt; /dev/null 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<p>jmap 命令在 9 版本里被移除了，取而代之的是 jhsdb。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">jhsdb jmap --heap --pid $PID</span><br><span class="line">jhsdb jmap --pid $PID</span><br><span class="line">jhsdb jmap --histo --pid $PID</span><br><span class="line">jhsdb jmap --binaryheap --pid $PID</span><br></pre></td></tr></table></figure>
+
+<p>对于 jmap 无法执行的情况，可以使用 gcore 生成 core 文件、再生成 dump。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gcore -o core $PID</span><br><span class="line">jhsdb jmap --exe java --core core --binaryheap</span><br></pre></td></tr></table></figure>
+
+
+<p>dump 文件一般需要下载到本地，使用 MAT 等工具分析内存泄漏等问题。</p>
+<h3 id="栈快照"><a href="#栈快照" class="headerlink" title="栈快照"></a>栈快照</h3><p>jstack 将会获取当时的执行栈，一般取一次即可，能还原 Java 进程中的线程情况。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jstack $PID &gt; jstack.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+<p>如果需要更精细的信息，可以结合 top：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">top -Hp $PID -b -n 1 -c &gt; top-$PID.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<p>有时 jstack 并不能够运行（比如 Java 进程几乎不响应）。可以尝试向进程发送 kill -3 信号打印 jstack 的 trace 信息到日志文件中，是 jstack 的一个替补方案。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kill -3 $PID</span><br></pre></td></tr></table></figure>
+
+<p>把以上数据导出写成脚本，运行可生成 <a target="_blank" rel="noopener" href="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/dump-20201005142811.tar.gz">日志</a> ：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line">: $&#123;1?&quot;Usage: &#x27;$0 \$pid&#x27; should supply a PID&quot;&#125;</span><br><span class="line"></span><br><span class="line">PID=$1</span><br><span class="line">DUMP_DATE=`date +%Y%m%d%H%M%S`</span><br><span class="line">DUMP_DIR=`hostname`&quot;-&quot;$DUMP_DATE</span><br><span class="line"></span><br><span class="line">if [ ! -d $DUMP_DIR ]; then</span><br><span class="line">    mkdir $DUMP_DIR</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">echo &quot;Dumping $PID to the $DUMP_DIR...&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> resource (yum install -y iostat sysstat)</span></span><br><span class="line">lsof -p $PID &gt; $DUMP_DIR/lsof-$PID.dump</span><br><span class="line">ss -antp &gt; $DUMP_DIR/ss.dump 2&gt;&amp;1</span><br><span class="line">netstat -s &gt; $DUMP_DIR/netstat-s.dump 2&gt;&amp;1</span><br><span class="line">iostat -x &gt; $DUMP_DIR/iostat.dump 2&gt;&amp;1</span><br><span class="line">mpstat &gt; $DUMP_DIR/mpstat.dump 2&gt;&amp;1</span><br><span class="line">vmstat 1 3 &gt; $DUMP_DIR/vmstat.dump 2&gt;&amp;1</span><br><span class="line">free -h &gt; $DUMP_DIR/free.dump 2&gt;&amp;1</span><br><span class="line">sar -n DEV 1 2 &gt; $DUMP_DIR/sar-traffic.dump 2&gt;&amp;1</span><br><span class="line">sar -p ALL  &gt; $DUMP_DIR/sar-cpu.dump  2&gt;&amp;1</span><br><span class="line">sysctl -a &gt; $DUMP_DIR/sysctl.dump 2&gt;&amp;1</span><br><span class="line">uptime &gt; $DUMP_DIR/uptime.dump 2&gt;&amp;1</span><br><span class="line">ps -ef &gt; $DUMP_DIR/ps.dump 2&gt;&amp;1</span><br><span class="line">dmesg &gt; $DUMP_DIR/dmesg.dump 2&gt;&amp;1</span><br><span class="line">top -Hp $PID -b -n 1 -c &gt;  $DUMP_DIR/top-$PID.dump 2&gt;&amp;1</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> java</span></span><br><span class="line">kill -3 $PID</span><br><span class="line">jinfo $PID &gt; $DUMP_DIR/jinfo.dump 2&gt;&amp;1</span><br><span class="line">jstack $PID &gt; $DUMP_DIR/jstack.dump 2&gt;&amp;1</span><br><span class="line">jstat -gcutil $PID &gt; $DUMP_DIR/jstat-gcutil.dump 2&gt;&amp;1</span><br><span class="line">jstat -gccapacity $PID &gt; $DUMP_DIR/jstat-gccapacity.dump 2&gt;&amp;1</span><br><span class="line">jmap $PID &gt; $DUMP_DIR/jmap.dump 2&gt;&amp;1</span><br><span class="line">jmap -heap $PID &gt; $DUMP_DIR/jmap-heap.dump 2&gt;&amp;1</span><br><span class="line">jmap -histo $PID &gt; $DUMP_DIR/jmap-histo.dump 2&gt;&amp;1</span><br><span class="line">jmap -dump:format=b,file=$DUMP_DIR/heap.bin $PID &gt; /dev/null  2&gt;&amp;1</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> advance</span></span><br><span class="line">if [ ! -f  $DUMP_DIR/jmap-heap.dump ]; then</span><br><span class="line">	gcore -o $DUMP_DIR/core $PID</span><br><span class="line"><span class="meta">	#</span><span class="bash">jhsdb jmap --exe <span class="variable">$&#123;JDK&#125;</span>java  --core <span class="variable">$DUMP_DIR</span>/core --binaryheap</span></span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">tar -zcvf $&#123;DUMP_DIR&#125;.tar.gz $&#123;DUMP_DIR&#125;</span><br><span class="line">echo &quot;OK!&quot;</span><br><span class="line">echo &quot;DUMP: $&#123;DUMP_DIR&#125;.tar.gz&quot;</span><br><span class="line"></span><br><span class="line">rm -rf $&#123;DUMP_DIR&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="问题排查"><a href="#问题排查" class="headerlink" title="问题排查"></a>问题排查</h1><h2 id="定位异常线程"><a href="#定位异常线程" class="headerlink" title="定位异常线程"></a>定位异常线程</h2><p>有时某些线上应用在运行一段时间后 CPU 使用率飙升，可能的原因是某些业务逻辑计算量太大或陷入死循环，也可能是 GC 的问题，此时就需要找出具体是由哪个线程触发的。</p>
+<p>首先查看进程信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">top</span><br><span class="line"><span class="meta">#</span><span class="bash"> Shift + P 快捷键按 CPU 的使用率进行排序</span></span><br></pre></td></tr></table></figure>
+<p>查看某个进程中占用 CPU 最多的线程：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">top -Hp $pid</span><br></pre></td></tr></table></figure>
+<p>把线程 id 转换成十六进制表示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">printf %x $tid</span><br></pre></td></tr></table></figure>
+<p>查看 Java 进程的栈信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jstack $pid &gt; $pid.log</span><br></pre></td></tr></table></figure>
+<p>查看生成的文件，找到十六进制表示的线程 id，找到发生问题的线程上下文：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">less $pid.log</span><br></pre></td></tr></table></figure>
+
+<p>比如：<br><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/GC%20%E9%97%AE%E9%A2%98%E5%AF%BC%E8%87%B4%20CPU%20%E5%8D%87%E9%AB%98%E5%BA%94%E7%94%A8%E5%81%87%E6%AD%BB.jpg" alt="GC 问题导致 CPU 升高应用假死"></p>
+<p>堆被填满但又没有发生 OOM，于是 GC 进程就一直执行回收，但回收效果不好、造成 CPU 升高应用假死。</p>
+<p>此时要进一步对问题成因进行分析，就需要把内存信息导出到本地，使用其他工具进行分析。</p>
+<h2 id="内存泄漏现象"><a href="#内存泄漏现象" class="headerlink" title="内存泄漏现象"></a>内存泄漏现象</h2><p>这里尤其指的是堆内存泄漏，堆外内存泄漏比较复杂，在其他章节再总结分析过程。</p>
+<p>使用 jmap 命令可以看到大体的内存布局，以及每个区域中的内存使用情况。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jmap -heap $PID &gt; jmap-heap.dump 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/jmap%20%E8%BE%93%E5%87%BA%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80.jpg" alt="jmap 输出内存布局"></p>
+<p>另一方面需要关心的是堆中每种类型的对象占据内存的大小。比如某个对象数量很小，但占用的空间很大，这就说明存在大对象。</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/jmap%20%E8%BE%93%E5%87%BA%E6%AF%8F%E7%A7%8D%E7%B1%BB%E5%9E%8B%E5%8D%A0%E7%94%A8%E7%A9%BA%E9%97%B4.jpg" alt="jmap 输出每种类型占用空间"></p>
+<p>一般内存溢出的表现形式就是老年代占用持续上升，即使经过了多轮 FGC 也没有明显改善。内存泄漏是其中一种原因，其本质就有些对象并没有切断和 GC Roots 的关系。</p>
+<p>以上方法只能大致看到一些统计信息，要作进一步排查可通过 VisualVM、MAT 等工具分析它们的联系（需要导出二进制格式的堆转储快照）。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">jmap -dump:format=b,file=heap.bin $PID    # JDK 8</span><br><span class="line">jhsdb jmap --binaryheap --pid $PID        # JDK 8+</span><br></pre></td></tr></table></figure>
+
+<h2 id="直接内存溢出"><a href="#直接内存溢出" class="headerlink" title="直接内存溢出"></a>直接内存溢出</h2><p>以下述描述场景为例。</p>
+<h3 id="现象描述"><a href="#现象描述" class="headerlink" title="现象描述"></a>现象描述</h3><p>有一次发现某个服务占用的内存不断增长，直到虚拟机分配的内存上限，但是不会 OOM。如果开启了 SWAP，会发现被不断占用。</p>
+<ul>
+<li><p>内存增长可以通过 top 命令去观察（RES 列的数值）；如果使用 jmap 命令去看内存占用，得到的只是堆的大小，只是很小的一部分。</p>
+</li>
+<li><p>使用 <code>ps -p pid -o rss,vsz</code> 可以观测到除了虚拟内存比较高，实际使用的内存 RSS 也非常高，超过 <code>-Xmx</code> 的设定。</p>
+</li>
+<li><p>使用 <code>jps -v</code> 查看启动参数、使用 <code>java -XX:+PrintFlagsFinal 2&gt;&amp;1 | grep MaxHeapSize</code> 查看默认值，可发现实际内存使用远远超出最大内存设定。</p>
+</li>
+</ul>
+<p>要追踪 Native 内存的使用情况，可在启动参数上加入 <code>-XX:NativeMemoryTracking=detail</code> 即可启用，在运行状态下使用 jcmd：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jcmd $PID VM.native_memory summary</span><br></pre></td></tr></table></figure>
+
+<p>即使 NMT 能看到堆内内存、Code 区域或者使用 unsafe.allocateMemory 和 DirectByteBuffer 申请的堆外内存，但仍然不能解决问题。</p>
+<h3 id="Pmap"><a href="#Pmap" class="headerlink" title="Pmap"></a>Pmap</h3><p>使用 pmap 命令查看进程的内存分配，通过 RSS 升序序排列，可以发现除了大块的堆内存以外，还有数量非常多的小块堆外内存，还有巨量小的物理内存块映射到不同的虚拟内存段上。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pmap -x 2154 | sort -n -k3</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Address           Kbytes     RSS   Dirty Mode  Mapping</span><br><span class="line"><span class="params">----------------</span> <span class="params">-------</span> <span class="params">-------</span> <span class="params">-------</span></span><br><span class="line">0000000100080000 1048064       0       0 <span class="params">-----</span>   [ anon ]</span><br><span class="line">00007f2d4fff1000      60       0       0 <span class="params">-----</span>   [ anon ]</span><br><span class="line">00007f2d537fb000    8212       0       0 <span class="params">-----</span>   [ anon ]</span><br><span class="line">00007f2d57ff1000      60       0       0 <span class="params">-----</span>   [ anon ]</span><br><span class="line"><span class="string">...</span>省略 N 行</span><br><span class="line">00007f2e3c000000   65524   22064   22064 rw<span class="params">---</span>   [ anon ]</span><br><span class="line">00007f2e00000000   65476   22068   22068 rw<span class="params">---</span>   [ anon ]</span><br><span class="line">00007f2e18000000   65476   22072   22072 rw<span class="params">---</span>   [ anon ]</span><br><span class="line">00007f2e30000000   65476   22076   22076 rw<span class="params">---</span>   [ anon ]</span><br><span class="line">00007f2dc0000000   65520   22080   22080 rw<span class="params">---</span>   [ anon ]</span><br><span class="line">00007f2dd8000000   65520   22080   22080 rw<span class="params">---</span>   [ anon ]</span><br><span class="line">00007f2da8000000   65524   22088   22088 rw<span class="params">---</span>   [ anon ]</span><br><span class="line">00007f2e8c000000   65528   22088   22088 rw<span class="params">---</span>   [ anon ]</span><br></pre></td></tr></table></figure>
+
+<h3 id="GDB"><a href="#GDB" class="headerlink" title="GDB"></a>GDB</h3><p>可以通过 gdb 工具将堆外内存 dump 出来：读取 /proc 目录下的 maps 文件，能精准地知晓目前进程的内存分布。</p>
+<p>以下脚本通过传入进程 id，能够将所关联的内存（加载到内存中的 class 文件、堆文件一块给 dump 下来）全部 dump 到文件中。这个命令会影响服务，要慎用。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pid=$1;grep rw-p /proc/$PID/maps | sed -n &#x27;s/^\([0-9a-f]*\)-\([0-9a-f]*\) .*$/\1 \2/p&#x27; | while read start stop; do gdb --batch --pid $pid -ex &quot;dump memory $1-$start-$stop.dump 0x$start 0x$stop&quot;; done</span><br></pre></td></tr></table></figure>
+<figure class="highlight gradle"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">[Thread debugging using libthread_db enabled]</span><br><span class="line">Using host libthread_db library <span class="string">&quot;/lib64/libthread_db.so.1&quot;</span></span><br><span class="line"><span class="number">0</span>x00007f2ed432afd7 in pthread_join () <span class="keyword">from</span> <span class="regexp">/lib64/</span>libthread.so.<span class="number">0</span></span><br><span class="line">[<span class="keyword">New</span> LWP <span class="number">2277</span>]</span><br><span class="line">[<span class="keyword">New</span> LWP <span class="number">2163</span>]</span><br><span class="line">[<span class="keyword">New</span> LWP <span class="number">2162</span>]</span><br><span class="line">[<span class="keyword">New</span> LWP <span class="number">2161</span>]</span><br><span class="line">[<span class="keyword">New</span> LWP <span class="number">2160</span>]</span><br><span class="line">[<span class="keyword">New</span> LWP <span class="number">2159</span>]</span><br><span class="line">[<span class="keyword">New</span> LWP <span class="number">2158</span>]</span><br><span class="line">[<span class="keyword">New</span> LWP <span class="number">2157</span>]</span><br><span class="line">[<span class="keyword">New</span> LWP <span class="number">2156</span>]</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>更多时候只需要 dump 一部分内存就可以。这个操作会影响服务，注意 dump 的内存块大小，线上要慎用。</p>
+<p>复制 pman 的一块 64M 内存，比如 00007f2d70000000，然后去掉前面的 0，使用下面代码得到内存块的开始和结束地址。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /proc/$PID/maps | grep 7f2d70000000</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">7f2d6fff1000</span>-<span class="number">7</span>f<span class="number">2</span>d<span class="number">70000000</span> ---p <span class="number">00000000</span> <span class="number">00</span>:<span class="number">00</span> <span class="number">0</span> <span class="number">7</span>f<span class="number">2</span>d<span class="number">70000000</span>-<span class="number">7</span>f<span class="number">2</span>d<span class="number">73</span>ffc<span class="number">000</span> rw-p <span class="number">00000000</span> <span class="number">00</span>:<span class="number">00</span> <span class="number">0</span></span><br></pre></td></tr></table></figure>
+
+<p>dump 出这 64MB 的内存。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gdb --batch --pid $PID -ex &quot;dump memory a.dump 0x7f2d70000000 0x7f2d73ffc000&quot;</span><br><span class="line">du -h a.dump</span><br></pre></td></tr></table></figure>
+
+<p>使用 strings 查看打印的内容（一些类似编码解码的操作）。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">strings -10 a.dump</span><br></pre></td></tr></table></figure>
+<figure class="highlight gcode"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0</span>R<span class="number">4</span>f<span class="number">1</span>Qej<span class="number">1</span>ty<span class="number">5</span><span class="keyword">GT</span><span class="number">8</span>V<span class="number">1</span>R<span class="number">8</span><span class="symbol">no6</span>T<span class="number">44564</span>wz<span class="number">499</span>E<span class="number">6</span>Y<span class="number">582</span>q<span class="number">2</span>R<span class="number">9</span>h<span class="number">8</span>CC<span class="number">175</span>GJ<span class="number">3</span>yeJ<span class="number">1</span>Q<span class="number">3</span>P<span class="number">5</span>Vt<span class="number">757</span>Mcf<span class="number">6378</span>k<span class="name">M36</span>hxZ<span class="number">5</span>U<span class="number">8</span>uh<span class="name">g2</span>A<span class="number">26</span>T<span class="number">5</span>l<span class="number">7</span>f<span class="number">68719</span>WQK<span class="number">6</span>vZ<span class="number">2</span>BOdH<span class="number">9</span>lH<span class="number">5</span>C<span class="number">7838</span>qf<span class="number">1</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>可以发现一些原本应该存在于堆的内容使用了额外的内存进行分配，只可能是 Native 程序对堆外内存的操作。</p>
+<h3 id="Perf"><a href="#Perf" class="headerlink" title="Perf"></a>Perf</h3><p>Perf 除了能够进行一些性能分析，还能帮助我们找到相应的 Native 调用。首先开启监控栈函数调用。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">perf record -g -p $PID</span><br></pre></td></tr></table></figure>
+
+<p>访问服务器的 8888 端口，将会把内存使用的阈值增加到 85%，程序会逐渐把这部分内存占满。</p>
+<p>perf 运行一段时间后 Ctrl+C 结束会生成一个文件 perf.data，查看分析报告。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">perf report -i perf.data</span><br></pre></td></tr></table></figure>
+
+<p>一般第三方 JNI 程序或者 JDK 内的模块，都会调用相应的本地函数。在 Linux 上这些函数库的后缀都是 so，比如 libzip.so、libpthread-2.17.so 等：</p>
+<figure class="highlight prolog"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">Samples</span>: <span class="number">26</span><span class="symbol">K</span> of event <span class="string">&#x27;cpu-clock&#x27;</span>, <span class="symbol">Event</span> count (approx.): <span class="number">6583500000</span></span><br><span class="line">  <span class="symbol">Children</span>    <span class="symbol">Self</span>    <span class="symbol">Command</span>    <span class="symbol">Shared</span> <span class="symbol">Object</span>        <span class="symbol">Symblo</span></span><br><span class="line">+ <span class="number">19.02</span><span class="comment">%      0.35%   java       libc-2.17.so         [.] __GI___libc_read</span></span><br><span class="line">+ <span class="number">18.93</span><span class="comment">%      1.25%   java       libpthread-2.17.so   [.] pthread_cond_timewait@...</span></span><br><span class="line">+ <span class="number">7.43</span><span class="comment">%       0.06%   java       libzip.so        [.] Java_java_util_zip_Inflater_inflateBytes</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>其中 libzip.so 占据大量 CPU，查看 JDK 代码，发现 bzip 包使用了大量 native 方法 <code>java.util.zip.Inflater#inflateBytesBytes</code>，即大量的内存申请和销毁实在堆外发生的。</p>
+<p>进程调用了申请了内存却没有调用 Deflater 释放内存。与 pmap 内存地址相比对，确实是 zip 造成的，应该检查业务代码中 zip 相关的操作。</p>
+<h3 id="GPerftools"><a href="#GPerftools" class="headerlink" title="GPerftools"></a>GPerftools</h3><p>还可以利用 GPerftools 的 Heap Profiler 功能定位 Native 函数。安装成功后输出两个环境变量：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /opt/test </span><br><span class="line">export LD_PRELOAD=/usr/lib64/libtcmalloc.so </span><br><span class="line">export HEAPPROFILE=/opt/test/heap</span><br></pre></td></tr></table></figure>
+<p>在同一个终端启动应用程序，可见申请内存的动作都被记录到 /opt/test：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">java -jar ...</span><br><span class="line">...</span><br><span class="line">Dumping heap profile to /opt/test/heap.0001.heap (100MB currently in use)</span><br><span class="line">Dumping heap profile to /opt/test/heap.0002.heap (100MB currently in use)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>再使用 pprof 分析这些文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /opt/test</span><br><span class="line">pprof -text *heap | head -n 200</span><br></pre></td></tr></table></figure>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Total</span>: <span class="number">25205</span>.<span class="number">3</span> MB</span><br><span class="line"> <span class="attribute">20559</span>.<span class="number">2</span>  <span class="number">81</span>.<span class="number">6</span>%  <span class="number">81</span>.<span class="number">6</span>%  <span class="number">20559</span>.<span class="number">2</span>  <span class="number">81</span>.<span class="number">6</span>% inflateBackEnd</span><br><span class="line">  <span class="attribute">4487</span>.<span class="number">3</span>  <span class="number">17</span>.<span class="number">8</span>%  <span class="number">99</span>.<span class="number">4</span>%   <span class="number">4487</span>.<span class="number">3</span>  <span class="number">17</span>.<span class="number">8</span>% inflateInit<span class="number">2</span>_</span><br><span class="line">    <span class="attribute">75</span>.<span class="number">7</span>   <span class="number">0</span>.<span class="number">3</span>%  <span class="number">99</span>.<span class="number">7</span>%     <span class="number">75</span>.<span class="number">7</span>   <span class="number">0</span>.<span class="number">3</span>% os::malloc@<span class="number">8</span>bbaa<span class="number">0</span></span><br><span class="line">    <span class="attribute">70</span>.<span class="number">3</span>   <span class="number">0</span>.<span class="number">3</span>%  <span class="number">99</span>.<span class="number">9</span>%   <span class="number">4557</span>.<span class="number">6</span>  <span class="number">18</span>.<span class="number">1</span>% Java_java_util_zip_Inflater_init</span><br><span class="line">     <span class="attribute">7</span>.<span class="number">1</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">7</span>.<span class="number">1</span>   <span class="number">0</span>.<span class="number">0</span>% readCEN</span><br><span class="line">     <span class="attribute">3</span>.<span class="number">9</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">3</span>.<span class="number">9</span>   <span class="number">0</span>.<span class="number">0</span>% init</span><br><span class="line">     <span class="attribute">1</span>.<span class="number">1</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">1</span>.<span class="number">1</span>   <span class="number">0</span>.<span class="number">0</span>% os::malloc@<span class="number">8</span>bb<span class="number">8</span>d<span class="number">0</span></span><br><span class="line">     <span class="attribute">0</span>.<span class="number">2</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">0</span>.<span class="number">2</span>   <span class="number">0</span>.<span class="number">0</span>% _dl_new_object</span><br><span class="line">     <span class="attribute">0</span>.<span class="number">1</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">0</span>.<span class="number">1</span>   <span class="number">0</span>.<span class="number">0</span>% __GI__dl_allocate_tls</span><br><span class="line">     <span class="attribute">0</span>.<span class="number">1</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">0</span>.<span class="number">1</span>   <span class="number">0</span>.<span class="number">0</span>% _nl_intern_locale_data</span><br><span class="line">     <span class="attribute">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% _dl_check_map_versions</span><br><span class="line">     <span class="attribute">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% __GI___strdup</span><br><span class="line">     <span class="attribute">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">0</span>.<span class="number">1</span>   <span class="number">0</span>.<span class="number">0</span>% _dl_map_object_deps</span><br><span class="line">     <span class="attribute">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% nss_parse_service_list</span><br><span class="line">     <span class="attribute">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% __new_exitfn</span><br><span class="line">     <span class="attribute">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% getpwuid</span><br><span class="line">     <span class="attribute">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% <span class="number">100</span>.<span class="number">0</span>%      <span class="number">0</span>.<span class="number">0</span>   <span class="number">0</span>.<span class="number">0</span>% expand_dynamic_string_token</span><br></pre></td></tr></table></figure>
+
+<p>也可以追踪到申请内存最多的函数 <code>java.util.zip.Inflater#init</code>。</p>
+<p>未完待续。</p>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2020/10/08/Maven_external_dependencies_management/" title= "Maven 打包依赖外置">
+                    <div class="nextTitle">Maven 打包依赖外置</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2020/09/24/Kafka_prod-env-assess/" title= "Kafka 生产环境资源评估">
+                    <div class="prevTitle">Kafka 生产环境资源评估</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODYzMi8yNTEyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:yipwinghong@outlook.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yipwinghong" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/WeChat.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:100vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%97%A5%E5%BF%97%E9%85%8D%E7%BD%AE"><span class="toc-number">1.</span> <span class="toc-text">日志配置</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BA%94%E7%94%A8%E6%97%A5%E5%BF%97"><span class="toc-number">1.1.</span> <span class="toc-text">应用日志</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JVM-%E6%97%A5%E5%BF%97"><span class="toc-number">1.2.</span> <span class="toc-text">JVM 日志</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9F%E6%97%A5%E5%BF%97"><span class="toc-number">1.3.</span> <span class="toc-text">系统日志</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BF%9D%E7%95%99%E7%8E%B0%E5%9C%BA"><span class="toc-number">2.</span> <span class="toc-text">保留现场</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="toc-number">2.1.</span> <span class="toc-text">服务器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BD%91%E7%BB%9C"><span class="toc-number">2.1.1.</span> <span class="toc-text">网络</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B"><span class="toc-number">2.1.2.</span> <span class="toc-text">进程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CPU"><span class="toc-number">2.1.3.</span> <span class="toc-text">CPU</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A3%81%E7%9B%98"><span class="toc-number">2.1.4.</span> <span class="toc-text">磁盘</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98"><span class="toc-number">2.1.5.</span> <span class="toc-text">内存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B6%E4%BB%96"><span class="toc-number">2.1.6.</span> <span class="toc-text">其他</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JVM"><span class="toc-number">2.2.</span> <span class="toc-text">JVM</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E5%BF%AB%E7%85%A7"><span class="toc-number">2.2.1.</span> <span class="toc-text">进程快照</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A0%86%E5%BF%AB%E7%85%A7"><span class="toc-number">2.2.2.</span> <span class="toc-text">堆快照</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%88%E5%BF%AB%E7%85%A7"><span class="toc-number">2.2.3.</span> <span class="toc-text">栈快照</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5"><span class="toc-number">3.</span> <span class="toc-text">问题排查</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9A%E4%BD%8D%E5%BC%82%E5%B8%B8%E7%BA%BF%E7%A8%8B"><span class="toc-number">3.1.</span> <span class="toc-text">定位异常线程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E7%8E%B0%E8%B1%A1"><span class="toc-number">3.2.</span> <span class="toc-text">内存泄漏现象</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%B4%E6%8E%A5%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA"><span class="toc-number">3.3.</span> <span class="toc-text">直接内存溢出</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%8E%B0%E8%B1%A1%E6%8F%8F%E8%BF%B0"><span class="toc-number">3.3.1.</span> <span class="toc-text">现象描述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Pmap"><span class="toc-number">3.3.2.</span> <span class="toc-text">Pmap</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GDB"><span class="toc-number">3.3.3.</span> <span class="toc-text">GDB</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Perf"><span class="toc-number">3.3.4.</span> <span class="toc-text">Perf</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GPerftools"><span class="toc-number">3.3.5.</span> <span class="toc-text">GPerftools</span></a></li></ol></li></ol></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 58
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span><a class="archive-post-title" href= "/2021/06/13/Go_cheat-sheet/" >Go Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/06</span><a class="archive-post-title" href= "/2021/06/06/2021-06-06_diary/" >Weekly Summary (2021-05-31_2021-06-06)</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/31</span><a class="archive-post-title" href= "/2021/05/31/2021-05-31_diary/" >2021 下半年工作学习安排</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/16</span><a class="archive-post-title" href= "/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/" >如何用图论解决 Secret Santa 问题？</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" >把 PostgreSQL 用作数据仓库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/" >SELECT * 对 SQL 性能不利的原因</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2021/02/24/DDIA_note-13/" >《DDIA》阅读笔记（九）：一致性与共识（共识问题）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/21</span><a class="archive-post-title" href= "/2021/02/21/2021-02-21_diary/" >近期工作学习规划</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/19</span><a class="archive-post-title" href= "/2021/02/19/DDIA_note-12/" >《DDIA》阅读笔记（九）：一致性与共识（顺序保证）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/13</span><a class="archive-post-title" href= "/2021/02/13/DDIA_note-11/" >《DDIA》阅读笔记（九）：一致性与共识（可线性化）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/06</span><a class="archive-post-title" href= "/2021/02/06/DDIA_note-10/" >《DDIA》阅读笔记（八）：分布式系统的挑战</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/27</span><a class="archive-post-title" href= "/2021/01/27/DDIA_note-9/" >《DDIA》阅读笔记（七）：事务</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/22</span><a class="archive-post-title" href= "/2021/01/22/DDIA_note-8/" >《DDIA》阅读笔记（六）：数据分区</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span><a class="archive-post-title" href= "/2021/01/21/DDIA_note-7/" >《DDIA》阅读笔记（五）：数据复制（无主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/20</span><a class="archive-post-title" href= "/2021/01/20/DDIA_note-6/" >《DDIA》阅读笔记（五）：数据复制（多主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/09</span><a class="archive-post-title" href= "/2021/01/09/DDIA_note-5/" >《DDIA》阅读笔记（五）：数据复制（单主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/01</span><a class="archive-post-title" href= "/2021/01/01/DB_tree-table-design-summary/" >树形表结构设计总结</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/19</span><a class="archive-post-title" href= "/2020/12/19/DDIA_note-4/" >《DDIA》阅读笔记（四）：数据编码与演化</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/13</span><a class="archive-post-title" href= "/2020/12/13/DDIA_note-3/" >《DDIA》阅读笔记（三）：数据存储与检索</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/04</span><a class="archive-post-title" href= "/2020/12/04/DDIA_note-2/" >《DDIA》阅读笔记（二）：数据模型与查询语言</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/02</span><a class="archive-post-title" href= "/2020/12/02/DDIA_note-1/" >《DDIA》阅读笔记（一）：可靠、可扩展与可维护的应用系统</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span><a class="archive-post-title" href= "/2020/10/08/Maven_external_dependencies_management/" >Maven 打包依赖外置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2020/10/04/JVM_prod-analysis-cmd/" >Java 应用常用调试分析方法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/30</span><a class="archive-post-title" href= "/2020/06/30/JVM_java-memory-area/" >Java 内存区域</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/28</span><a class="archive-post-title" href= "/2020/05/28/DB_data-warehouse-design-basic/" >数据仓库设计基础</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/08</span><a class="archive-post-title" href= "/2020/04/08/2020-04-08_diary/" >关于使用思维导图做笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/28</span><a class="archive-post-title" href= "/2020/03/28/Algorithm_leetcode-high-frequency-problems/" >LeetCode 高频面试题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2020/03/06/InfoSecty_personal-infomation-security-guide/" >個人信息安全保護指南</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/22</span><a class="archive-post-title" href= "/2020/02/22/2020-02-22_diary/" >免费 JetBrains 全家桶</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/16</span><a class="archive-post-title" href= "/2020/02/16/Nginx_cheat-sheet/" >Nginx Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Git_Cheat-Sheet/" >Git Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker&K8S_Cheat-Sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker_cheat-sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/03</span><a class="archive-post-title" href= "/2020/02/03/JVM_jstat-monitor-analysis/" >JVM jstat 监控分析</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/01</span><a class="archive-post-title" href= "/2020/02/01/JVM_GC-log-analysis/" >JVM GC 日志分析</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/01</span><a class="archive-post-title" href= "/2019/11/01/Design_design-patterns/" >设计模式与设计原则</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/30</span><a class="archive-post-title" href= "/2019/10/30/JVM_mindmap/" >Java 虚拟机与并发编程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_offset-reset/" >Kafka 位移重置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_dynamic-config/" >Kafka 动态配置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/20</span><a class="archive-post-title" href= "/2019/05/20/Kafka_common-scripts/" >Kafka 常用脚本</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/06</span><a class="archive-post-title" href= "/2019/05/06/Kafka_basic-conceptions/" >Kafka 基本概念</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2018/10/04/Python_async-programming/" >Python 异步编程总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/19</span><a class="archive-post-title" href= "/2018/09/19/Python_data-structure/" >Python 数据结构应用</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/13</span><a class="archive-post-title" href= "/2018/09/13/Python_decorator-basic-usage/" >Python 装饰器基本用法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/02</span><a class="archive-post-title" href= "/2018/09/02/JavaScript_ES6-grammar/" >ES6 语法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/30</span><a class="archive-post-title" href= "/2018/08/30/Vue_user-guide-4/" >Vue 学习笔记：前端路由、请求发送和状态管理</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/28</span><a class="archive-post-title" href= "/2018/08/28/JavaScript_cheat-sheet/" >JavaScript Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/24</span><a class="archive-post-title" href= "/2018/08/24/Vue_user-guide-3/" >Vue 学习笔记：组件</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/23</span><a class="archive-post-title" href= "/2018/08/23/Vue_user-guide-2/" >Vue 学习笔记（2）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/22</span><a class="archive-post-title" href= "/2018/08/22/Python_OOP-summary/" >Python 类与对象总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/20</span><a class="archive-post-title" href= "/2018/08/20/Vue_user-guide-1/" >Vue 学习笔记（1）</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="杂事"><span class="iconfont-archer">&#xe606;</span>杂事</span>
+    
+        <span class="sidebar-tag-name" data-tags="技术"><span class="iconfont-archer">&#xe606;</span>技术</span>
+    
+        <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
+    
+        <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
+    
+        <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
+    
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
+        <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
+    
+        <span class="sidebar-tag-name" data-tags="Maven"><span class="iconfont-archer">&#xe606;</span>Maven</span>
+    
+        <span class="sidebar-tag-name" data-tags="Nginx"><span class="iconfont-archer">&#xe606;</span>Nginx</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Vue"><span class="iconfont-archer">&#xe606;</span>Vue</span>
+    
+        <span class="sidebar-tag-name" data-tags="前端"><span class="iconfont-archer">&#xe606;</span>前端</span>
+    
+        <span class="sidebar-tag-name" data-tags="Git"><span class="iconfont-archer">&#xe606;</span>Git</span>
+    
+        <span class="sidebar-tag-name" data-tags="JavaScript"><span class="iconfont-archer">&#xe606;</span>JavaScript</span>
+    
+        <span class="sidebar-tag-name" data-tags="Go"><span class="iconfont-archer">&#xe606;</span>Go</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="《数据密集型应用系统设计》阅读笔记"><span class="iconfont-archer">&#xe60a;</span>《数据密集型应用系统设计》阅读笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Kylo Yip"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"live2d-widget-model-nietzsche"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>
+
+

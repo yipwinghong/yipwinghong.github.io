@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Kylo&#39;s Notebook</title>
+  
+  <subtitle>Be Geek, My Friend.</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="https://yipwinghong.github.io/"/>
+  <updated>2021-06-15T10:48:24.012Z</updated>
+  <id>https://yipwinghong.github.io/</id>
+  
+  <author>
+    <name>Kylo Yip</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Go Cheat Sheet</title>
+    <link href="https://yipwinghong.github.io/2021/06/13/Go_cheat-sheet/"/>
+    <id>https://yipwinghong.github.io/2021/06/13/Go_cheat-sheet/</id>
+    <published>2021-06-13T06:42:39.000Z</published>
+    <updated>2021-06-15T10:48:24.012Z</updated>
+    
+    <summary type="html">
+    
+      参考：https://github.com/a8m/golang-cheat-sheet
+    
+    </summary>
+    
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="Go" scheme="https://yipwinghong.github.io/tags/Go/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Weekly Summary (2021-05-31_2021-06-06)</title>
+    <link href="https://yipwinghong.github.io/2021/06/06/2021-06-06_diary/"/>
+    <id>https://yipwinghong.github.io/2021/06/06/2021-06-06_diary/</id>
+    <published>2021-06-06T14:27:51.000Z</published>
+    <updated>2021-06-15T01:47:54.306Z</updated>
+    
+    <summary type="html">
+    
+      It hasn&#39;t been an easy time during the first week...= =
+    
+    </summary>
+    
+    
+    
+      <category term="杂事" scheme="https://yipwinghong.github.io/tags/%E6%9D%82%E4%BA%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Java 程序员的 C++：不再恐惧</title>
+    <link href="https://yipwinghong.github.io/2021/06/05/Java_cpp-for-java-programmers/"/>
+    <id>https://yipwinghong.github.io/2021/06/05/Java_cpp-for-java-programmers/</id>
+    <published>2021-06-05T08:41:00.000Z</published>
+    <updated>2021-06-15T01:47:54.326Z</updated>
+    
+    <summary type="html">
+    
+      原文链接：https://blog.scottlogic.com/2021/04/22/losing-the-fear.html
+    
+    </summary>
+    
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="C++" scheme="https://yipwinghong.github.io/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>2021 下半年工作学习安排</title>
+    <link href="https://yipwinghong.github.io/2021/05/31/2021-05-31_diary/"/>
+    <id>https://yipwinghong.github.io/2021/05/31/2021-05-31_diary/</id>
+    <published>2021-05-31T15:48:57.000Z</published>
+    <updated>2021-06-15T01:47:54.306Z</updated>
+    
+    <summary type="html">
+    
+      不给你看！
+    
+    </summary>
+    
+    
+    
+      <category term="杂事" scheme="https://yipwinghong.github.io/tags/%E6%9D%82%E4%BA%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>如何用图论解决 Secret Santa 问题？</title>
+    <link href="https://yipwinghong.github.io/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/"/>
+    <id>https://yipwinghong.github.io/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/</id>
+    <published>2021-05-16T03:29:21.000Z</published>
+    <updated>2021-06-15T01:47:54.306Z</updated>
+    
+    <summary type="html">
+    
+      原文链接：https://medium.com/pragmatic-computer-science/how-to-solve-the-secret-santa-problem-using-graph-theory-a6b216ccc622
+    
+    </summary>
+    
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="算法" scheme="https://yipwinghong.github.io/tags/%E7%AE%97%E6%B3%95/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>把 PostgreSQL 用作数据仓库</title>
+    <link href="https://yipwinghong.github.io/2021/05/12/DB_using-postgresql-as-a-data-warehouse/"/>
+    <id>https://yipwinghong.github.io/2021/05/12/DB_using-postgresql-as-a-data-warehouse/</id>
+    <published>2021-05-12T10:59:41.000Z</published>
+    <updated>2021-06-15T01:47:54.316Z</updated>
+    
+    <summary type="html">
+    
+      原文链接：https://www.narrator.ai/blog/using-postgresql-as-a-data-warehouse
+    
+    </summary>
+    
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="数据库" scheme="https://yipwinghong.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>一致性哈希</title>
+    <link href="https://yipwinghong.github.io/2021/04/12/Algorithm_consistent-hashing/"/>
+    <id>https://yipwinghong.github.io/2021/04/12/Algorithm_consistent-hashing/</id>
+    <published>2021-04-12T15:37:00.000Z</published>
+    <updated>2021-06-15T01:47:54.306Z</updated>
+    
+    <summary type="html">
+    
+      原文链接：http://tom-e-white.com/2007/11/consistent-hashing.html
+    
+    </summary>
+    
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="算法" scheme="https://yipwinghong.github.io/tags/%E7%AE%97%E6%B3%95/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>基于记忆规律的学习方法</title>
+    <link href="https://yipwinghong.github.io/2021/03/17/2021-03-17_diary/"/>
+    <id>https://yipwinghong.github.io/2021/03/17/2021-03-17_diary/</id>
+    <published>2021-03-17T13:46:57.000Z</published>
+    <updated>2021-06-15T01:47:54.306Z</updated>
+    
+    <summary type="html">
+    
+      《考试脑科学》阅读笔记
+    
+    </summary>
+    
+    
+    
+      <category term="杂事" scheme="https://yipwinghong.github.io/tags/%E6%9D%82%E4%BA%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>SELECT * 对 SQL 性能不利的原因</title>
+    <link href="https://yipwinghong.github.io/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/"/>
+    <id>https://yipwinghong.github.io/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/</id>
+    <published>2021-03-12T08:41:00.000Z</published>
+    <updated>2021-06-15T01:47:54.316Z</updated>
+    
+    <summary type="html">
+    
+      原文链接：https://tanelpoder.com/posts/reasons-why-select-star-is-bad-for-sql-performance
+    
+    </summary>
+    
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="数据库" scheme="https://yipwinghong.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>选择合适的数据库</title>
+    <link href="https://yipwinghong.github.io/2021/03/12/DB_right-database/"/>
+    <id>https://yipwinghong.github.io/2021/03/12/DB_right-database/</id>
+    <published>2021-03-12T08:41:00.000Z</published>
+    <updated>2021-06-15T01:47:54.316Z</updated>
+    
+    <summary type="html">
+    
+      原文链接：https://blog.andyet.com/2014/10/01/right-database
+    
+    </summary>
+    
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="数据库" scheme="https://yipwinghong.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Arthas Cheat Sheet</title>
+    <link href="https://yipwinghong.github.io/2021/03/06/Arthas_Cheat-Sheet/"/>
+    <id>https://yipwinghong.github.io/2021/03/06/Arthas_Cheat-Sheet/</id>
+    <published>2021-03-06T13:45:17.000Z</published>
+    <updated>2021-06-15T01:47:54.306Z</updated>
+    
+    <summary type="html">
+    
+      Alibaba 开源的 Java 诊断工具
+    
+    </summary>
+    
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="Java" scheme="https://yipwinghong.github.io/tags/Java/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《DDIA》阅读笔记（九）：一致性与共识（共识问题）</title>
+    <link href="https://yipwinghong.github.io/2021/02/24/DDIA_note-13/"/>
+    <id>https://yipwinghong.github.io/2021/02/24/DDIA_note-13/</id>
+    <published>2021-02-24T13:21:22.000Z</published>
+    <updated>2021-06-15T01:47:54.316Z</updated>
+    
+    <summary type="html">
+    
+      《DDIA》阅读笔记（九）：一致性与共识（共识问题）
+    
+    </summary>
+    
+    
+      <category term="《数据密集型应用系统设计》阅读笔记" scheme="https://yipwinghong.github.io/categories/%E3%80%8A%E6%95%B0%E6%8D%AE%E5%AF%86%E9%9B%86%E5%9E%8B%E5%BA%94%E7%94%A8%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E3%80%8B%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="设计" scheme="https://yipwinghong.github.io/tags/%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>近期工作学习规划</title>
+    <link href="https://yipwinghong.github.io/2021/02/21/2021-02-21_diary/"/>
+    <id>https://yipwinghong.github.io/2021/02/21/2021-02-21_diary/</id>
+    <published>2021-02-21T15:59:57.000Z</published>
+    <updated>2021-06-15T01:47:54.306Z</updated>
+    
+    <summary type="html">
+    
+      不给你看！
+    
+    </summary>
+    
+    
+    
+      <category term="杂事" scheme="https://yipwinghong.github.io/tags/%E6%9D%82%E4%BA%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《DDIA》阅读笔记（九）：一致性与共识（顺序保证）</title>
+    <link href="https://yipwinghong.github.io/2021/02/19/DDIA_note-12/"/>
+    <id>https://yipwinghong.github.io/2021/02/19/DDIA_note-12/</id>
+    <published>2021-02-19T15:45:58.000Z</published>
+    <updated>2021-06-15T01:47:54.316Z</updated>
+    
+    <summary type="html">
+    
+      《DDIA》阅读笔记（九）：一致性与共识（顺序保证）
+    
+    </summary>
+    
+    
+      <category term="《数据密集型应用系统设计》阅读笔记" scheme="https://yipwinghong.github.io/categories/%E3%80%8A%E6%95%B0%E6%8D%AE%E5%AF%86%E9%9B%86%E5%9E%8B%E5%BA%94%E7%94%A8%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E3%80%8B%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="设计" scheme="https://yipwinghong.github.io/tags/%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《DDIA》阅读笔记（九）：一致性与共识（可线性化）</title>
+    <link href="https://yipwinghong.github.io/2021/02/13/DDIA_note-11/"/>
+    <id>https://yipwinghong.github.io/2021/02/13/DDIA_note-11/</id>
+    <published>2021-02-13T12:11:55.000Z</published>
+    <updated>2021-06-15T01:47:54.316Z</updated>
+    
+    <summary type="html">
+    
+      《DDIA》阅读笔记（九）：一致性与共识（可线性化）
+    
+    </summary>
+    
+    
+      <category term="《数据密集型应用系统设计》阅读笔记" scheme="https://yipwinghong.github.io/categories/%E3%80%8A%E6%95%B0%E6%8D%AE%E5%AF%86%E9%9B%86%E5%9E%8B%E5%BA%94%E7%94%A8%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E3%80%8B%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="设计" scheme="https://yipwinghong.github.io/tags/%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《DDIA》阅读笔记（八）：分布式系统的挑战</title>
+    <link href="https://yipwinghong.github.io/2021/02/06/DDIA_note-10/"/>
+    <id>https://yipwinghong.github.io/2021/02/06/DDIA_note-10/</id>
+    <published>2021-02-06T13:19:01.000Z</published>
+    <updated>2021-06-15T01:47:54.316Z</updated>
+    
+    <summary type="html">
+    
+      《DDIA》阅读笔记（八）：分布式系统的挑战
+    
+    </summary>
+    
+    
+      <category term="《数据密集型应用系统设计》阅读笔记" scheme="https://yipwinghong.github.io/categories/%E3%80%8A%E6%95%B0%E6%8D%AE%E5%AF%86%E9%9B%86%E5%9E%8B%E5%BA%94%E7%94%A8%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E3%80%8B%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="设计" scheme="https://yipwinghong.github.io/tags/%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《DDIA》阅读笔记（七）：事务</title>
+    <link href="https://yipwinghong.github.io/2021/01/27/DDIA_note-9/"/>
+    <id>https://yipwinghong.github.io/2021/01/27/DDIA_note-9/</id>
+    <published>2021-01-27T13:06:01.000Z</published>
+    <updated>2021-06-15T01:47:54.316Z</updated>
+    
+    <summary type="html">
+    
+      《DDIA》阅读笔记（七）：事务
+    
+    </summary>
+    
+    
+      <category term="《数据密集型应用系统设计》阅读笔记" scheme="https://yipwinghong.github.io/categories/%E3%80%8A%E6%95%B0%E6%8D%AE%E5%AF%86%E9%9B%86%E5%9E%8B%E5%BA%94%E7%94%A8%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E3%80%8B%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="设计" scheme="https://yipwinghong.github.io/tags/%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《DDIA》阅读笔记（六）：数据分区</title>
+    <link href="https://yipwinghong.github.io/2021/01/22/DDIA_note-8/"/>
+    <id>https://yipwinghong.github.io/2021/01/22/DDIA_note-8/</id>
+    <published>2021-01-22T15:11:01.000Z</published>
+    <updated>2021-06-15T01:47:54.316Z</updated>
+    
+    <summary type="html">
+    
+      《DDIA》阅读笔记（六）：数据分区
+    
+    </summary>
+    
+    
+      <category term="《数据密集型应用系统设计》阅读笔记" scheme="https://yipwinghong.github.io/categories/%E3%80%8A%E6%95%B0%E6%8D%AE%E5%AF%86%E9%9B%86%E5%9E%8B%E5%BA%94%E7%94%A8%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E3%80%8B%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="设计" scheme="https://yipwinghong.github.io/tags/%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《DDIA》阅读笔记（五）：数据复制（无主节点）</title>
+    <link href="https://yipwinghong.github.io/2021/01/21/DDIA_note-7/"/>
+    <id>https://yipwinghong.github.io/2021/01/21/DDIA_note-7/</id>
+    <published>2021-01-21T11:37:00.000Z</published>
+    <updated>2021-06-15T01:47:54.316Z</updated>
+    
+    <summary type="html">
+    
+      《DDIA》阅读笔记（五）：数据复制（无主节点）
+    
+    </summary>
+    
+    
+      <category term="《数据密集型应用系统设计》阅读笔记" scheme="https://yipwinghong.github.io/categories/%E3%80%8A%E6%95%B0%E6%8D%AE%E5%AF%86%E9%9B%86%E5%9E%8B%E5%BA%94%E7%94%A8%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E3%80%8B%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="设计" scheme="https://yipwinghong.github.io/tags/%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《DDIA》阅读笔记（五）：数据复制（多主节点）</title>
+    <link href="https://yipwinghong.github.io/2021/01/20/DDIA_note-6/"/>
+    <id>https://yipwinghong.github.io/2021/01/20/DDIA_note-6/</id>
+    <published>2021-01-20T15:11:27.000Z</published>
+    <updated>2021-06-15T01:47:54.316Z</updated>
+    
+    <summary type="html">
+    
+      《DDIA》阅读笔记（五）：数据复制（多主节点）
+    
+    </summary>
+    
+    
+      <category term="《数据密集型应用系统设计》阅读笔记" scheme="https://yipwinghong.github.io/categories/%E3%80%8A%E6%95%B0%E6%8D%AE%E5%AF%86%E9%9B%86%E5%9E%8B%E5%BA%94%E7%94%A8%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E3%80%8B%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="设计" scheme="https://yipwinghong.github.io/tags/%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
+  
+</feed>

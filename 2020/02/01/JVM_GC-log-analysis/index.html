@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Kylo Yip">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Kylo Yip">
+    
+    <meta name="keywords" content="Kylo's Notebook,Kylo Yip">
+    
+    <meta name="description" content="">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>JVM GC 日志分析 · Kylo&#39;s Notebook</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Kylo's Notebook" type="application/atom+xml">
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >Kylo&#39;s Notebook</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">JVM GC 日志分析</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>Kylo's Notebook</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:100vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(https://api.ixiaowai.cn/mcapi/mcapi.php)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            JVM GC 日志分析
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "技术">技术</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Java">Java</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">3.2k</span>Reading time: <span class="post-count reading-time">15 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2020/02/01</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <blockquote>
+<p>写于肺炎疫情爆发、宅在家 10 天后的二月第一天，顺便纪念第三个被炸的微博号，Fuck you Sina Weibo!</p>
+</blockquote>
+<h1 id="Young-GC：GC-后对象进入-Survivor"><a href="#Young-GC：GC-后对象进入-Survivor" class="headerlink" title="Young GC：GC 后对象进入 Survivor"></a>Young GC：GC 后对象进入 Survivor</h1><p>当为对象分配内存时 Eden 不足，触发 Young GC，清理垃圾并把存活对象迁入 To Survivor。</p>
+<h2 id="JVM-参数"><a href="#JVM-参数" class="headerlink" title="JVM 参数"></a>JVM 参数</h2><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>参数</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>-XX:NewSize=5242880<br />-XX:MaxNewSize=5242880</td>
+<td>新生代初始值和最大值：5MB</td>
+</tr>
+<tr>
+<td>2</td>
+<td>-XX:InitialHeapSize=10485760<br />-XX:MaxHeapSize=10485760</td>
+<td>堆初始值和最大值：10MB</td>
+</tr>
+<tr>
+<td>3</td>
+<td>-XX:PretenureSizeThreshold=10485760</td>
+<td>进入老年代的对象内存阈值：10MB</td>
+</tr>
+<tr>
+<td>4</td>
+<td>-XX:SurvivorRatio=8</td>
+<td>新生代 Eden 占比（Eden 80% 即 4MB，Survivor 各 10% 即 0.5 MB）</td>
+</tr>
+<tr>
+<td>5</td>
+<td>-XX:+UseParNewGC</td>
+<td>使用 ParNew 收集器（新生代）</td>
+</tr>
+<tr>
+<td>6</td>
+<td>-XX:+UseConcMarkSweepGC</td>
+<td>使用 CMS 收集器</td>
+</tr>
+<tr>
+<td>7</td>
+<td>-XX:+PrintGCDetails<br />-XX:+PrintGCTimeStamps<br />-Xloggc:gc.log</td>
+<td>输出日志</td>
+</tr>
+</tbody></table>
+<h2 id="测试代码"><a href="#测试代码" class="headerlink" title="测试代码"></a>测试代码</h2><p>分配三个 byte 数组，每个都是 1024 * 1024 byte == 1MB，再分配一个 2MB 的数组</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Demo</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Integer MB = <span class="number">1024</span> * <span class="number">1024</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 分配三个数组，每个都是 1MB，并置为 null</span></span><br><span class="line">        <span class="keyword">byte</span>[] array1 = <span class="keyword">new</span> <span class="keyword">byte</span>[MB];</span><br><span class="line">        array1 = <span class="keyword">new</span> <span class="keyword">byte</span>[MB];</span><br><span class="line">        array1 = <span class="keyword">new</span> <span class="keyword">byte</span>[MB];</span><br><span class="line">        array1 = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 此时前三个已经变成垃圾，Eden 剩余 4 - 3 == 1MB，无法存放 2MB 对象，触发 Young GC</span></span><br><span class="line">        <span class="keyword">byte</span>[] array2 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * MB];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先分配三个数组（array1），每个都是 1MB，并置为 null（在下次 GC 时会被清理）。</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/ygc-log-01.png?x-oss-process=image/resize,p_50" alt=""></p>
+<p>当为 array2 分配 2MB 内存时，Eden 区不足，先触发 Young GC：</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/ygc-log-02.png?x-oss-process=image/resize,p_50" alt="image-20200202120351560"></p>
+<p>最后：</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/ygc-log-03.png?x-oss-process=image/resize,p_50" alt="image-20200202120520819"></p>
+<p>运行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar -XX:NewSize=5242880 -XX:MaxNewSize=5242880 -XX:InitialHeapSize=10485760 -XX:MaxHeapSize=10485760 -XX:SurvivorRatio=8 -XX:PretenureSizeThreshold=10485760 -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.log Demo.jar</span><br></pre></td></tr></table></figure>
+
+<h2 id="日志解析"><a href="#日志解析" class="headerlink" title="日志解析"></a>日志解析</h2><p>输出日志如下：</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Java</span> HotSpot(TM) <span class="number">64</span>-Bit Server VM (<span class="number">25</span>.<span class="number">181</span>-b<span class="number">13</span>) for windows-amd<span class="number">64</span> JRE (<span class="number">1</span>.<span class="number">8</span>.<span class="number">0</span>_<span class="number">181</span>-b<span class="number">13</span>), built <span class="literal">on</span> Jul  <span class="number">7</span> <span class="number">2018</span> <span class="number">04</span>:<span class="number">01</span>:<span class="number">33</span> by <span class="string">&quot;java_re&quot;</span> with MS VC++ <span class="number">10</span>.<span class="number">0</span> (VS<span class="number">2010</span>)</span><br><span class="line"><span class="attribute">Memory</span>: <span class="number">4</span>k page, physical <span class="number">16658532</span>k(<span class="number">7782036</span>k free), swap <span class="number">17707108</span>k(<span class="number">3801772</span>k free)</span><br><span class="line"><span class="attribute">CommandLine</span> flags: -XX:InitialHeapSize=<span class="number">10485760</span> -XX:MaxHeapSize=<span class="number">10485760</span> -XX:MaxNewSize=<span class="number">5242880</span> -XX:NewSize=<span class="number">5242880</span> -XX:OldPLABSize=<span class="number">16</span> -XX:PretenureSizeThreshold=<span class="number">10485760</span> -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:SurvivorRatio=<span class="number">8</span> -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:-UseLargePagesIndividualAllocation -XX:+UseParNewGC </span><br><span class="line"><span class="attribute">0</span>.<span class="number">113</span>:<span class="meta"> [GC (Allocation Failure) 0.114: [ParNew: 3892K-&gt;440K(4608K), 0.0011414 secs] 3892K-&gt;1466K(9728K), 0.0018413 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] </span></span><br><span class="line"><span class="meta">Heap</span></span><br><span class="line"><span class="meta"> par new generation   total 4608K, used 3674K [0x00000000ff600000, 0x00000000ffb00000, 0x00000000ffb00000)</span></span><br><span class="line"><span class="meta">  eden space 4096K,  78% used [0x00000000ff600000, 0x00000000ff928650, 0x00000000ffa00000)</span></span><br><span class="line"><span class="meta">  from space 512K,  86% used [0x00000000ffa80000, 0x00000000ffaee310, 0x00000000ffb00000)</span></span><br><span class="line"><span class="meta">  to   space 512K,   0% used [0x00000000ffa00000, 0x00000000ffa00000, 0x00000000ffa80000)</span></span><br><span class="line"><span class="meta"> concurrent mark-sweep generation total 5120K, used 1026K [0x00000000ffb00000, 0x0000000100000000, 0x0000000100000000)</span></span><br><span class="line"><span class="meta"> Metaspace       used 3322K, capacity 4496K, committed 4864K, reserved 1056768K</span></span><br><span class="line"><span class="meta">  class space    used 365K, capacity 388K, committed 512K, reserved 1048576K</span></span><br></pre></td></tr></table></figure>
+
+<p>以上日志分为三个部分：</p>
+<p>第一部分为 JVM 的基本信息，包括 JVM 版本，JRE 版本，发行时间，运行的平台、页大小、物理内存、交换空间的最大值和空闲值等。</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Java</span> HotSpot(TM) <span class="number">64</span>-Bit Server VM (<span class="number">25</span>.<span class="number">181</span>-b<span class="number">13</span>) for windows-amd<span class="number">64</span> JRE (<span class="number">1</span>.<span class="number">8</span>.<span class="number">0</span>_<span class="number">181</span>-b<span class="number">13</span>), built <span class="literal">on</span> Jul  <span class="number">7</span> <span class="number">2018</span> <span class="number">04</span>:<span class="number">01</span>:<span class="number">33</span> by <span class="string">&quot;java_re&quot;</span> with MS VC++ <span class="number">10</span>.<span class="number">0</span> (VS<span class="number">2010</span>)</span><br><span class="line"><span class="attribute">Memory</span>: <span class="number">4</span>k page, physical <span class="number">16658532</span>k(<span class="number">7782036</span>k free), swap <span class="number">17707108</span>k(<span class="number">3801772</span>k free)</span><br></pre></td></tr></table></figure>
+
+<p>第二部分为 JVM 的配置参数，在上一节已有说明。</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CommandLine flags: -XX:<span class="attribute">InitialHeapSize</span>=10485760 -XX:<span class="attribute">MaxHeapSize</span>=10485760 -XX:<span class="attribute">MaxNewSize</span>=5242880 -XX:<span class="attribute">NewSize</span>=5242880 -XX:<span class="attribute">OldPLABSize</span>=16 -XX:<span class="attribute">PretenureSizeThreshold</span>=10485760 -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:<span class="attribute">SurvivorRatio</span>=8 -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:-UseLargePagesIndividualAllocation -XX:+UseParNewGC </span><br></pre></td></tr></table></figure>
+
+<p>第三部分提示堆内存分配失败（Allocation Failure）、触发 GC：</p>
+<ul>
+<li><p>系统运行了 0.113s 后 Eden 分配失败，触发 Young GC，需要使用 ParNew 收集器回收新生代代；</p>
+</li>
+<li><p>新生代代可用空间为 4608KB（即 Eden + From Survivor 的空间，共 4.5MB）；</p>
+</li>
+<li><p>GC 前占用 3892K，GC 后剩余 440K 对象存活，被迁入 To Survivor；</p>
+</li>
+<li><p>本次 GC 耗费 0.0011414s，回收前堆占用 3892K，回收后堆占用 1466K，总可用空间 9728K（包括新生代代 4.5MB + 老年代 5MB）；</p>
+</li>
+<li><p>最后提示本次 GC 消耗的时间：用户态 CPU 时间 0.00、内核态 CPU 时间 0.00、墙钟时间 0.00（包括各种非运算的等待耗时，如 IO 等待、线程阻塞）。</p>
+</li>
+</ul>
+<p>需要注意的是代码中分配 3MB的数组（即 3072KB），实际占用 3892KB，因为除了存储数组还附带其他元信息，以及一些“其他对象”（将会被迁到 To Survivor）。</p>
+<figure class="highlight mathematica"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0.113</span><span class="operator">:</span> <span class="punctuation">[</span><span class="variable">GC</span> <span class="punctuation">(</span><span class="variable">Allocation</span> <span class="built_in">Failure</span><span class="punctuation">)</span> <span class="number">0.114</span><span class="operator">:</span> <span class="punctuation">[</span><span class="variable">ParNew</span><span class="operator">:</span> <span class="number">3892</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">440</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">4608</span><span class="built_in">K</span><span class="punctuation">)</span><span class="operator">,</span> <span class="number">0.0011414</span> <span class="variable">secs</span><span class="punctuation">]</span> <span class="number">3892</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">1466</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">9728</span><span class="built_in">K</span><span class="punctuation">)</span><span class="operator">,</span> <span class="number">0.0018413</span> <span class="variable">secs</span><span class="punctuation">]</span> <span class="punctuation">[</span><span class="built_in">Times</span><span class="operator">:</span> <span class="variable">user</span><span class="operator">=</span><span class="number">0.00</span> <span class="variable">sys</span><span class="operator">=</span><span class="number">0.00</span><span class="operator">,</span> <span class="variable">real</span><span class="operator">=</span><span class="number">0.00</span> <span class="variable">secs</span><span class="punctuation">]</span> </span><br></pre></td></tr></table></figure>
+
+<p>第四部分是 JVM 退出前堆具体使用情况：</p>
+<ul>
+<li><p>新生代代共 4608KB 可用内存，使用了 3674 KB；</p>
+</li>
+<li><p>Eden、From Survivor、To Survivor 占用空间与内存地址</p>
+</li>
+<li><p>使用 CMS 收集器，管理老年代共 5120KB，此时使用 1026KB；</p>
+</li>
+<li><p>元空间与类空间（存放类信息、常量池等）的使用情况，总容量、使用内存等。</p>
+</li>
+</ul>
+<figure class="highlight mathematica"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">Heap</span></span><br><span class="line"> <span class="variable">par</span> <span class="variable">new</span> <span class="variable">generation</span>   <span class="variable">total</span> <span class="number">4608</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">used</span> <span class="number">3674</span><span class="built_in">K</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ff600000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ffb00000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ffb00000</span><span class="punctuation">)</span></span><br><span class="line">  <span class="variable">eden</span> <span class="variable">space</span> <span class="number">4096</span><span class="built_in">K</span><span class="operator">,</span>  <span class="number">78</span><span class="operator">%</span> <span class="variable">used</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ff600000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff928650</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ffa00000</span><span class="punctuation">)</span></span><br><span class="line">  <span class="variable">from</span> <span class="variable">space</span> <span class="number">512</span><span class="built_in">K</span><span class="operator">,</span>  <span class="number">86</span><span class="operator">%</span> <span class="variable">used</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ffa80000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ffaee310</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ffb00000</span><span class="punctuation">)</span></span><br><span class="line">  <span class="variable">to</span>   <span class="variable">space</span> <span class="number">512</span><span class="built_in">K</span><span class="operator">,</span>   <span class="number">0</span><span class="operator">%</span> <span class="variable">used</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ffa00000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ffa00000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ffa80000</span><span class="punctuation">)</span></span><br><span class="line"> <span class="variable">concurrent</span> <span class="variable">mark</span><span class="operator">-</span><span class="variable">sweep</span> <span class="variable">generation</span> <span class="variable">total</span> <span class="number">5120</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">used</span> <span class="number">1026</span><span class="built_in">K</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ffb00000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x0000000100000000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x0000000100000000</span><span class="punctuation">)</span></span><br><span class="line"> <span class="variable">Metaspace</span>       <span class="variable">used</span> <span class="number">3322</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">capacity</span> <span class="number">4496</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">committed</span> <span class="number">4864</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">reserved</span> <span class="number">1056768</span><span class="built_in">K</span></span><br><span class="line">  <span class="variable">class</span> <span class="variable">space</span>    <span class="variable">used</span> <span class="number">365</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">capacity</span> <span class="number">388</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">committed</span> <span class="number">512</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">reserved</span> <span class="number">1048576</span><span class="built_in">K</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Young-GC：GC-后进入老年代"><a href="#Young-GC：GC-后进入老年代" class="headerlink" title="Young GC：GC 后进入老年代"></a>Young GC：GC 后进入老年代</h1><p>触发 Young GC 清理垃圾，对于存活时间足够长的对象迁入老年代。</p>
+<h2 id="JVM-参数-1"><a href="#JVM-参数-1" class="headerlink" title="JVM 参数"></a>JVM 参数</h2><p>参考上面章节，其中有以下改动：</p>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>参数</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>-XX:NewSize=10485760<br />-XX:MaxNewSize=10485760</td>
+<td>新生代初始值和最大值：10MB</td>
+</tr>
+<tr>
+<td>2</td>
+<td>-XX:InitialHeapSize=20971520<br />-XX:MaxHeapSize=20971520</td>
+<td>堆初始值和最大值：20MB</td>
+</tr>
+<tr>
+<td>3</td>
+<td>-XX:PretenureSizeThreshold=10485760</td>
+<td>进入老年代的对象内存阈值：10MB</td>
+</tr>
+<tr>
+<td>4</td>
+<td>-XX:MaxTenuringThreshold=15</td>
+<td>进入老年代的对象年龄阈值：15</td>
+</tr>
+</tbody></table>
+<p>因此 Eden 改为 8MB，Survivor 各 1MB，老年代 10MB，堆共 20MB。</p>
+<h2 id="测试代码-1"><a href="#测试代码-1" class="headerlink" title="测试代码 1"></a>测试代码 1</h2><p>分配三个 byte 数组，每个都是 2MB，再分配一个 128KB 的数组、一个 2MB 的数组。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Demo</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 分配三个数组，每个都是 2MB</span></span><br><span class="line">        <span class="keyword">byte</span>[] array1 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array1 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array1 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array1 = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">byte</span>[] array2 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">128</span> * <span class="number">1024</span>];</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 由于以上代码已占用 Eden 区 6.125MB，不足与再为 array3 分配内存，因此触发 GC</span></span><br><span class="line">        <span class="keyword">byte</span>[] array3 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先分配三个数组（array1），每个都是 2MB，并置为 null（在下次 GC 时会被清理），再分配一个 128KB 的数组（array2）。</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/ygc-log-04.png?x-oss-process=image/resize,p_50" alt="image-20200202122156522"></p>
+<p>当为 array3 分配 2MB 内存时，Eden 区不足，先触发 Young GC：</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/ygc-log-05.png?x-oss-process=image/resize,p_50" alt="image-20200202122457076"></p>
+<p>最后：</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/ygc-log-06.png?x-oss-process=image/resize,p_50" alt="image-20200202122707703"></p>
+<p>运行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar -XX:NewSize=10485760 -XX:MaxNewSize=10485760 -XX:InitialHeapSize=20971520 -XX:MaxHeapSize=20971520 -XX:SurvivorRatio=8 -XX:PretenureSizeThreshold=10485760 -XX:MaxTenuringThreshold=15 -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.log Demo.jar</span><br></pre></td></tr></table></figure>
+
+<h2 id="日志解析-1"><a href="#日志解析-1" class="headerlink" title="日志解析 1"></a>日志解析 1</h2><p>输出日志如下（省略部分）：</p>
+<figure class="highlight mathematica"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0.387</span><span class="operator">:</span> <span class="punctuation">[</span><span class="variable">GC</span> <span class="punctuation">(</span><span class="variable">Allocation</span> <span class="built_in">Failure</span><span class="punctuation">)</span> <span class="number">0.387</span><span class="operator">:</span> <span class="punctuation">[</span><span class="variable">ParNew</span><span class="operator">:</span> <span class="number">7690</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">537</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">9216</span><span class="built_in">K</span><span class="punctuation">)</span><span class="operator">,</span> <span class="number">0.0013235</span> <span class="variable">secs</span><span class="punctuation">]</span> <span class="number">7690</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">537</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">19456</span><span class="built_in">K</span><span class="punctuation">)</span><span class="operator">,</span> <span class="number">0.0015702</span> <span class="variable">secs</span><span class="punctuation">]</span> <span class="punctuation">[</span><span class="built_in">Times</span><span class="operator">:</span> <span class="variable">user</span><span class="operator">=</span><span class="number">0.00</span> <span class="variable">sys</span><span class="operator">=</span><span class="number">0.00</span><span class="operator">,</span> <span class="variable">real</span><span class="operator">=</span><span class="number">0.00</span> <span class="variable">secs</span><span class="punctuation">]</span> </span><br><span class="line"><span class="variable">Heap</span></span><br><span class="line"> <span class="variable">par</span> <span class="variable">new</span> <span class="variable">generation</span>   <span class="variable">total</span> <span class="number">9216</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">used</span> <span class="number">2749</span><span class="built_in">K</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000fec00000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff600000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff600000</span><span class="punctuation">)</span></span><br><span class="line">  <span class="variable">eden</span> <span class="variable">space</span> <span class="number">8192</span><span class="built_in">K</span><span class="operator">,</span>  <span class="number">27</span><span class="operator">%</span> <span class="variable">used</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000fec00000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000fee290e0</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff400000</span><span class="punctuation">)</span></span><br><span class="line">  <span class="variable">from</span> <span class="variable">space</span> <span class="number">1024</span><span class="built_in">K</span><span class="operator">,</span>  <span class="number">52</span><span class="operator">%</span> <span class="variable">used</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ff500000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff586528</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff600000</span><span class="punctuation">)</span></span><br><span class="line">  <span class="variable">to</span>   <span class="variable">space</span> <span class="number">1024</span><span class="built_in">K</span><span class="operator">,</span>   <span class="number">0</span><span class="operator">%</span> <span class="variable">used</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ff400000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff400000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff500000</span><span class="punctuation">)</span></span><br><span class="line"> <span class="variable">concurrent</span> <span class="variable">mark</span><span class="operator">-</span><span class="variable">sweep</span> <span class="variable">generation</span> <span class="variable">total</span> <span class="number">10240</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">used</span> <span class="number">0</span><span class="built_in">K</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ff600000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x0000000100000000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x0000000100000000</span><span class="punctuation">)</span></span><br><span class="line"> <span class="variable">Metaspace</span>       <span class="variable">used</span> <span class="number">3000</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">capacity</span> <span class="number">4496</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">committed</span> <span class="number">4864</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">reserved</span> <span class="number">1056768</span><span class="built_in">K</span></span><br><span class="line">  <span class="variable">class</span> <span class="variable">space</span>    <span class="variable">used</span> <span class="number">333</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">capacity</span> <span class="number">388</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">committed</span> <span class="number">512</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">reserved</span> <span class="number">1048576</span><span class="built_in">K</span></span><br></pre></td></tr></table></figure>
+
+<p>先从代码的角度分析：</p>
+<ul>
+<li><p>array1 的创建与三次赋值，在 Eden 区创建了三个 2MB 的数组，最后设置为 null，因此 Eden 此时占用 6MB、空闲 2MB；</p>
+</li>
+<li><p>创建 array2 占用 128KB，此时 Eden 占用 6.125MB，空闲 1.875MB；</p>
+</li>
+<li><p>创建 array3 占用 2MB，Eden 区空间不足，此时触发 Young GC。</p>
+</li>
+</ul>
+<p>在 GC 之前新生代代占用 7690KB，即 array1 + array2 + “其他对象”，清理后剩余 537KB（即新生代代最初创建的“其他对象”，再加上 128KB 的 array2）。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[ParNew: <span class="number">7690</span>K-&gt;<span class="number">537</span>K(<span class="number">9216</span>K), <span class="number">0.0013235</span> secs]</span><br></pre></td></tr></table></figure>
+
+<p>此时剩余 From Survivor 占用 52%，经历一次 Young GC 后存活的 array2 和“其他对象”，此时他们 1 岁。</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">from space 1024K,  <span class="number">52</span>% used [<span class="number">0x00000000ff500000</span>, <span class="number">0x00000000ff586528</span>, <span class="number">0x00000000ff600000</span>)</span><br></pre></td></tr></table></figure>
+
+<p>此时 Eden 区占用 27% 约 2MB，即经历 Young GC 后分配的 array3。</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eden space 8192K,  <span class="number">27</span>% used [<span class="number">0x00000000fec00000</span>, <span class="number">0x00000000fee290e0</span>, <span class="number">0x00000000ff400000</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="测试代码-2"><a href="#测试代码-2" class="headerlink" title="测试代码 2"></a>测试代码 2</h2><p>补充代码：在上述基础上，再继续分配内存，再让 array3 指向 null；当为 array4 分配 2MB 内存时将 Eden 会不足，触发 GC。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Demo</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">byte</span>[] array1 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array1 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array1 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array1 = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">byte</span>[] array2 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">128</span> * <span class="number">1024</span>];</span><br><span class="line">        <span class="keyword">byte</span>[] array3 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line"></span><br><span class="line">        array3 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array3 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array3 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">128</span> * <span class="number">1024</span>];</span><br><span class="line">        array3 = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 此时分配一个 2MB 的数组失败，触发第二次 Young GC</span></span><br><span class="line">        <span class="keyword">byte</span>[] array4 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于为 array3 继续分配 2MB 数组与前面图示相同，此处不再赘述。</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/ygc-log-07.png?x-oss-process=image/resize,p_50" alt="image-20200202124135125"></p>
+<p>创建 array4 前发现空间不足，触发 Young GC：由于 array2 和“其他对象”都“太老了”，被迁入老年代：</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/ygc-log-09.png?x-oss-process=image/resize,p_50" alt="image-20200202124847257"></p>
+<p>最后：</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/ygc-log-08.png?x-oss-process=image/resize,p_50" alt="image-20200202125055198"></p>
+<h2 id="日志解析-2"><a href="#日志解析-2" class="headerlink" title="日志解析 2"></a>日志解析 2</h2><p>输出日志如下（省略部分）：</p>
+<figure class="highlight mathematica"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0.118</span><span class="operator">:</span> <span class="punctuation">[</span><span class="variable">GC</span> <span class="punctuation">(</span><span class="variable">Allocation</span> <span class="built_in">Failure</span><span class="punctuation">)</span> <span class="number">0.118</span><span class="operator">:</span> <span class="punctuation">[</span><span class="variable">ParNew</span><span class="operator">:</span> <span class="number">8185</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">606</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">9216</span><span class="built_in">K</span><span class="punctuation">)</span><span class="operator">,</span> <span class="number">0.0005936</span> <span class="variable">secs</span><span class="punctuation">]</span> <span class="number">8185</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">606</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">19456</span><span class="built_in">K</span><span class="punctuation">)</span><span class="operator">,</span> <span class="number">0.0007441</span> <span class="variable">secs</span><span class="punctuation">]</span> <span class="punctuation">[</span><span class="built_in">Times</span><span class="operator">:</span> <span class="variable">user</span><span class="operator">=</span><span class="number">0.00</span> <span class="variable">sys</span><span class="operator">=</span><span class="number">0.00</span><span class="operator">,</span> <span class="variable">real</span><span class="operator">=</span><span class="number">0.00</span> <span class="variable">secs</span><span class="punctuation">]</span> </span><br><span class="line"><span class="number">0.119</span><span class="operator">:</span> <span class="punctuation">[</span><span class="variable">GC</span> <span class="punctuation">(</span><span class="variable">Allocation</span> <span class="built_in">Failure</span><span class="punctuation">)</span> <span class="number">0.119</span><span class="operator">:</span> <span class="punctuation">[</span><span class="variable">ParNew</span><span class="operator">:</span> <span class="number">6907</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">0</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">9216</span><span class="built_in">K</span><span class="punctuation">)</span><span class="operator">,</span> <span class="number">0.0021618</span> <span class="variable">secs</span><span class="punctuation">]</span> <span class="number">6907</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">570</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">19456</span><span class="built_in">K</span><span class="punctuation">)</span><span class="operator">,</span> <span class="number">0.0022048</span> <span class="variable">secs</span><span class="punctuation">]</span> <span class="punctuation">[</span><span class="built_in">Times</span><span class="operator">:</span> <span class="variable">user</span><span class="operator">=</span><span class="number">0.03</span> <span class="variable">sys</span><span class="operator">=</span><span class="number">0.00</span><span class="operator">,</span> <span class="variable">real</span><span class="operator">=</span><span class="number">0.00</span> <span class="variable">secs</span><span class="punctuation">]</span> </span><br><span class="line"><span class="variable">Heap</span></span><br><span class="line"> <span class="variable">par</span> <span class="variable">new</span> <span class="variable">generation</span>   <span class="variable">total</span> <span class="number">9216</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">used</span> <span class="number">2130</span><span class="built_in">K</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000fec00000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff600000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff600000</span><span class="punctuation">)</span></span><br><span class="line">  <span class="variable">eden</span> <span class="variable">space</span> <span class="number">8192</span><span class="built_in">K</span><span class="operator">,</span>  <span class="number">26</span><span class="operator">%</span> <span class="variable">used</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000fec00000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000fee14930</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff400000</span><span class="punctuation">)</span></span><br><span class="line">  <span class="variable">from</span> <span class="variable">space</span> <span class="number">1024</span><span class="built_in">K</span><span class="operator">,</span>   <span class="number">0</span><span class="operator">%</span> <span class="variable">used</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ff400000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff400000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff500000</span><span class="punctuation">)</span></span><br><span class="line">  <span class="variable">to</span>   <span class="variable">space</span> <span class="number">1024</span><span class="built_in">K</span><span class="operator">,</span>   <span class="number">0</span><span class="operator">%</span> <span class="variable">used</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ff500000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff500000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff600000</span><span class="punctuation">)</span></span><br><span class="line"> <span class="variable">concurrent</span> <span class="variable">mark</span><span class="operator">-</span><span class="variable">sweep</span> <span class="variable">generation</span> <span class="variable">total</span> <span class="number">10240</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">used</span> <span class="number">570</span><span class="built_in">K</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ff600000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x0000000100000000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x0000000100000000</span><span class="punctuation">)</span></span><br><span class="line"> <span class="variable">Metaspace</span>       <span class="variable">used</span> <span class="number">3344</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">capacity</span> <span class="number">4496</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">committed</span> <span class="number">4864</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">reserved</span> <span class="number">1056768</span><span class="built_in">K</span></span><br><span class="line">  <span class="variable">class</span> <span class="variable">space</span>    <span class="variable">used</span> <span class="number">369</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">capacity</span> <span class="number">388</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">committed</span> <span class="number">512</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">reserved</span> <span class="number">1048576</span><span class="built_in">K</span></span><br></pre></td></tr></table></figure>
+
+<p>第一次 GC 分析同上，重点看第二次 GC 日志：经过一次 Young GC 后，Eden 区被清理完。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[ParNew: <span class="number">6907</span>K-&gt;<span class="number">0</span>K(<span class="number">9216</span>K), <span class="number">0.0021618</span> secs]</span><br></pre></td></tr></table></figure>
+
+<p>由于年龄 1 + 年龄 2 +…+ 年龄 n 的对象总大小超过了 Survivor 区的 50%，年龄 n 以上就会进入老年代</p>
+<p>此处总大小超过 50% 的年龄 1 对象（array2、“其他对象”）会直接进入老年代。</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">concurrent</span> mark-sweep generation total <span class="number">10240</span>K, used <span class="number">570</span>K<span class="meta"> [0x00000000ff600000, 0x0000000100000000, 0x0000000100000000)</span></span><br></pre></td></tr></table></figure>
+
+<p>由于 GC 过后对象被迁入老年代，所以两个 Survivor 都是空的：</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">from space 1024K,   <span class="number">0</span>% used [<span class="number">0x00000000ff400000</span>, <span class="number">0x00000000ff400000</span>, <span class="number">0x00000000ff500000</span>)</span><br><span class="line">to   space 1024K,   <span class="number">0</span>% used [<span class="number">0x00000000ff500000</span>, <span class="number">0x00000000ff500000</span>, <span class="number">0x00000000ff600000</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="Full-GC：GC-后对象进入老年代"><a href="#Full-GC：GC-后对象进入老年代" class="headerlink" title="Full GC：GC 后对象进入老年代"></a>Full GC：GC 后对象进入老年代</h1><h2 id="JVM-参数-2"><a href="#JVM-参数-2" class="headerlink" title="JVM 参数"></a>JVM 参数</h2><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>参数</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>-XX:NewSize=10485760<br />-XX:MaxNewSize=10485760</td>
+<td>新生代初始值和最大值：10MB</td>
+</tr>
+<tr>
+<td>2</td>
+<td>-XX:InitialHeapSize=20971520<br />-XX:MaxHeapSize=20971520</td>
+<td>堆初始值和最大值：20MB</td>
+</tr>
+<tr>
+<td>3</td>
+<td>-XX:PretenureSizeThreshold=3145728</td>
+<td>进入老年代的对象内存阈值：3MB</td>
+</tr>
+<tr>
+<td>4</td>
+<td>-XX:MaxTenuringThreshold=15</td>
+<td>进入老年代的对象年龄阈值：15</td>
+</tr>
+<tr>
+<td>4</td>
+<td>-XX:SurvivorRatio=8</td>
+<td>新生代 Eden 占比（Eden 80% 即 4MB，Survivor 各 10% 即 0.5 MB）</td>
+</tr>
+<tr>
+<td>5</td>
+<td>-XX:+UseParNewGC</td>
+<td>使用 ParNew 收集器（新生代）</td>
+</tr>
+<tr>
+<td>6</td>
+<td>-XX:+UseConcMarkSweepGC</td>
+<td>使用 CMS 收集器</td>
+</tr>
+<tr>
+<td>7</td>
+<td>-XX:+PrintGCDetails<br />-XX:+PrintGCTimeStamps<br />-Xloggc:gc.log</td>
+<td>输出日志</td>
+</tr>
+</tbody></table>
+<p>主要是降低进入老年代的对象内存阈值，使超过 3MB 的对象直接进入老年代。</p>
+<h2 id="测试代码-1"><a href="#测试代码-1" class="headerlink" title="测试代码"></a>测试代码</h2><p>创建多个数组（其中 array1 为 4MB，被认为是大对象）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Demo</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">byte</span>[] array1 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">4</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        array1 = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">byte</span>[] array2 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        <span class="keyword">byte</span>[] array3 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        <span class="keyword">byte</span>[] array4 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">        <span class="keyword">byte</span>[] array5 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">128</span> * <span class="number">1024</span>];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">byte</span>[] array6 = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">2</span> * <span class="number">1024</span> * <span class="number">1024</span>];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>创建 array1，由于占用内存大于阈值，直接分配到老年代：</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/fgc-log-01.png?x-oss-process=image/resize,p_50" alt="image-20200202125424292"></p>
+<p>（注意此处 array1 已经置为 null，忘记改成虚线了）创建 array2 ~ array5，直接在 Eden 区分配内存：</p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/fgc-log-02.png?x-oss-process=image/resize,p_50" alt="image-20200202125744738"></p>
+<p>创建 array6 时 Eden 不足，触发 Young GC。但由于 Survivor 不足、老年代也不足，因此还需要触发 Full GC。</p>
+<ul>
+<li><p>首先在 Young GC 会把两个 2MB 数组迁入老年代；</p>
+</li>
+<li><p>无法继续往迁入一个 2MB、一个 128KB 的数组，因此触发 Full GC（清理 4MB 数组）；</p>
+</li>
+<li><p>最后在 Eden 为 array6 分配内存。</p>
+</li>
+</ul>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/fgc-log-03.png?x-oss-process=image/resize,p_50" alt="image-20200202131029766"></p>
+<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/blog/fgc-log-04.png?x-oss-process=image/resize,p_50" alt="image-20200202131229114"></p>
+<p>运行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar -XX:NewSize=10485760 -XX:MaxNewSize=10485760 -XX:InitialHeapSize=20971520 -XX:MaxHeapSize=20971520 -XX:SurvivorRatio=8 -XX:MaxTenuringThreshold=15 -XX:PretenureSizeThreshold=3145728 -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:gc.log Demo.jar</span><br></pre></td></tr></table></figure>
+
+<h2 id="日志解析-1"><a href="#日志解析-1" class="headerlink" title="日志解析"></a>日志解析</h2><p>输出日志如下（省略部分）：</p>
+<figure class="highlight mathematica"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0.114</span><span class="operator">:</span> <span class="punctuation">[</span><span class="variable">GC</span> <span class="punctuation">(</span><span class="variable">Allocation</span> <span class="built_in">Failure</span><span class="punctuation">)</span> <span class="number">0.114</span><span class="operator">:</span> <span class="punctuation">[</span><span class="variable">ParNew</span> <span class="punctuation">(</span><span class="variable">promotion</span> <span class="variable">failed</span><span class="punctuation">)</span><span class="operator">:</span> <span class="number">8185</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">8752</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">9216</span><span class="built_in">K</span><span class="punctuation">)</span><span class="operator">,</span> <span class="number">0.0037134</span> <span class="variable">secs</span><span class="punctuation">]</span><span class="number">0.118</span><span class="operator">:</span> <span class="punctuation">[</span><span class="variable">CMS</span><span class="operator">:</span> <span class="number">8194</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">6680</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">10240</span><span class="built_in">K</span><span class="punctuation">)</span><span class="operator">,</span> <span class="number">0.0030624</span> <span class="variable">secs</span><span class="punctuation">]</span> <span class="number">12281</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">6680</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">19456</span><span class="built_in">K</span><span class="punctuation">)</span><span class="operator">,</span> <span class="punctuation">[</span><span class="variable">Metaspace</span><span class="operator">:</span> <span class="number">3323</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">3323</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">1056768</span><span class="built_in">K</span><span class="punctuation">)</span><span class="punctuation">]</span><span class="operator">,</span> <span class="number">0.0071795</span> <span class="variable">secs</span><span class="punctuation">]</span> <span class="punctuation">[</span><span class="built_in">Times</span><span class="operator">:</span> <span class="variable">user</span><span class="operator">=</span><span class="number">0.01</span> <span class="variable">sys</span><span class="operator">=</span><span class="number">0.00</span><span class="operator">,</span> <span class="variable">real</span><span class="operator">=</span><span class="number">0.01</span> <span class="variable">secs</span><span class="punctuation">]</span> </span><br><span class="line"><span class="variable">Heap</span></span><br><span class="line"> <span class="variable">par</span> <span class="variable">new</span> <span class="variable">generation</span>   <span class="variable">total</span> <span class="number">9216</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">used</span> <span class="number">2213</span><span class="built_in">K</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000fec00000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff600000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff600000</span><span class="punctuation">)</span></span><br><span class="line">  <span class="variable">eden</span> <span class="variable">space</span> <span class="number">8192</span><span class="built_in">K</span><span class="operator">,</span>  <span class="number">27</span><span class="operator">%</span> <span class="variable">used</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000fec00000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000fee297a8</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff400000</span><span class="punctuation">)</span></span><br><span class="line">  <span class="variable">from</span> <span class="variable">space</span> <span class="number">1024</span><span class="built_in">K</span><span class="operator">,</span>   <span class="number">0</span><span class="operator">%</span> <span class="variable">used</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ff500000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff500000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff600000</span><span class="punctuation">)</span></span><br><span class="line">  <span class="variable">to</span>   <span class="variable">space</span> <span class="number">1024</span><span class="built_in">K</span><span class="operator">,</span>   <span class="number">0</span><span class="operator">%</span> <span class="variable">used</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ff400000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff400000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x00000000ff500000</span><span class="punctuation">)</span></span><br><span class="line"> <span class="variable">concurrent</span> <span class="variable">mark</span><span class="operator">-</span><span class="variable">sweep</span> <span class="variable">generation</span> <span class="variable">total</span> <span class="number">10240</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">used</span> <span class="number">6680</span><span class="built_in">K</span> <span class="punctuation">[</span><span class="number">0</span><span class="variable">x00000000ff600000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x0000000100000000</span><span class="operator">,</span> <span class="number">0</span><span class="variable">x0000000100000000</span><span class="punctuation">)</span></span><br><span class="line"> <span class="variable">Metaspace</span>       <span class="variable">used</span> <span class="number">3344</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">capacity</span> <span class="number">4496</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">committed</span> <span class="number">4864</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">reserved</span> <span class="number">1056768</span><span class="built_in">K</span></span><br><span class="line">  <span class="variable">class</span> <span class="variable">space</span>    <span class="variable">used</span> <span class="number">369</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">capacity</span> <span class="number">388</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">committed</span> <span class="number">512</span><span class="built_in">K</span><span class="operator">,</span> <span class="variable">reserved</span> <span class="number">1048576</span><span class="built_in">K</span></span><br></pre></td></tr></table></figure>
+
+<p>首先为 array1 分配了 4MB 的数组，被认为是大对象、直接进入老年代（剩余 10 - 4 == 6MB），随后不再引用；</p>
+<p>再连续分配 4 个数组 array2 ~ array5 到 Eden 区，Eden 区占用 6.125MB、剩余 1.875MB；由于剩余空间不足以为 array6 分配 2MB 内存，此时触发 Young GC。</p>
+<p>可见 GC 后 Eden 占用不降反升，因为几个对象全部都被引用，无法回收。</p>
+<figure class="highlight clojure"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[ParNew (<span class="name">promotion</span> failed): <span class="number">8185</span>K-&gt;8752K(<span class="number">9216</span>K), <span class="number">0.0037134</span> secs]</span><br></pre></td></tr></table></figure>
+
+<p>此时无法直接把这些对象（3 个 2MB、1 个 128KB）迁入老年代（剩余 6MB），因此触发 Full GC：</p>
+<ul>
+<li><p>先往老年代迁入 2 个 2MB 数组，剩余空间不足；</p>
+</li>
+<li><p>触发 Full GC，回收前面已经置为 null 的 array1；</p>
+</li>
+<li><p>迁入剩余 1 个 2MB 数组和 1个 128KB 数组（因此从回收前的 8MB 变成 6MB）。</p>
+</li>
+</ul>
+<figure class="highlight mathematica"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span><span class="variable">CMS</span><span class="operator">:</span> <span class="number">8194</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">6680</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">10240</span><span class="built_in">K</span><span class="punctuation">)</span><span class="operator">,</span> <span class="number">0.0030624</span> <span class="variable">secs</span><span class="punctuation">]</span> <span class="number">12281</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">6680</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">19456</span><span class="built_in">K</span><span class="punctuation">)</span></span><br></pre></td></tr></table></figure>
+
+<p>并触发一次元空间的 GC：</p>
+<figure class="highlight mathematica"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">[</span><span class="variable">Metaspace</span><span class="operator">:</span> <span class="number">3323</span><span class="built_in">K</span><span class="operator">-&gt;</span><span class="number">3323</span><span class="built_in">K</span><span class="punctuation">(</span><span class="number">1056768</span><span class="built_in">K</span><span class="punctuation">)</span><span class="punctuation">]</span></span><br></pre></td></tr></table></figure>
+
+<p>由于 Full GC 后新生代代对象已迁入老年代，最后在 Eden 为 array6 分配 2MB。</p>
+<figure class="highlight x86asm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eden space 8192K,  <span class="number">27</span>% used [<span class="number">0x00000000fec00000</span>, <span class="number">0x00000000fee297a8</span>, <span class="number">0x00000000ff400000</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>以上。</p>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2020/02/03/JVM_jstat-monitor-analysis/" title= "JVM jstat 监控分析">
+                    <div class="nextTitle">JVM jstat 监控分析</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2019/11/01/Design_design-patterns/" title= "设计模式与设计原则">
+                    <div class="prevTitle">设计模式与设计原则</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODYzMi8yNTEyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:yipwinghong@outlook.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yipwinghong" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/WeChat.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:100vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Young-GC%EF%BC%9AGC-%E5%90%8E%E5%AF%B9%E8%B1%A1%E8%BF%9B%E5%85%A5-Survivor"><span class="toc-number">1.</span> <span class="toc-text">Young GC：GC 后对象进入 Survivor</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#JVM-%E5%8F%82%E6%95%B0"><span class="toc-number">1.1.</span> <span class="toc-text">JVM 参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%8B%E8%AF%95%E4%BB%A3%E7%A0%81"><span class="toc-number">1.2.</span> <span class="toc-text">测试代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%A5%E5%BF%97%E8%A7%A3%E6%9E%90"><span class="toc-number">1.3.</span> <span class="toc-text">日志解析</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Young-GC%EF%BC%9AGC-%E5%90%8E%E8%BF%9B%E5%85%A5%E8%80%81%E5%B9%B4%E4%BB%A3"><span class="toc-number">2.</span> <span class="toc-text">Young GC：GC 后进入老年代</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#JVM-%E5%8F%82%E6%95%B0-1"><span class="toc-number">2.1.</span> <span class="toc-text">JVM 参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%8B%E8%AF%95%E4%BB%A3%E7%A0%81-1"><span class="toc-number">2.2.</span> <span class="toc-text">测试代码 1</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%A5%E5%BF%97%E8%A7%A3%E6%9E%90-1"><span class="toc-number">2.3.</span> <span class="toc-text">日志解析 1</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%8B%E8%AF%95%E4%BB%A3%E7%A0%81-2"><span class="toc-number">2.4.</span> <span class="toc-text">测试代码 2</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%A5%E5%BF%97%E8%A7%A3%E6%9E%90-2"><span class="toc-number">2.5.</span> <span class="toc-text">日志解析 2</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Full-GC%EF%BC%9AGC-%E5%90%8E%E5%AF%B9%E8%B1%A1%E8%BF%9B%E5%85%A5%E8%80%81%E5%B9%B4%E4%BB%A3"><span class="toc-number">3.</span> <span class="toc-text">Full GC：GC 后对象进入老年代</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#JVM-%E5%8F%82%E6%95%B0-2"><span class="toc-number">3.1.</span> <span class="toc-text">JVM 参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B5%8B%E8%AF%95%E4%BB%A3%E7%A0%81-1"><span class="toc-number">3.2.</span> <span class="toc-text">测试代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%A5%E5%BF%97%E8%A7%A3%E6%9E%90-1"><span class="toc-number">3.3.</span> <span class="toc-text">日志解析</span></a></li></ol></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 58
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span><a class="archive-post-title" href= "/2021/06/13/Go_cheat-sheet/" >Go Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/06</span><a class="archive-post-title" href= "/2021/06/06/2021-06-06_diary/" >Weekly Summary (2021-05-31_2021-06-06)</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/31</span><a class="archive-post-title" href= "/2021/05/31/2021-05-31_diary/" >2021 下半年工作学习安排</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/16</span><a class="archive-post-title" href= "/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/" >如何用图论解决 Secret Santa 问题？</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" >把 PostgreSQL 用作数据仓库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/" >SELECT * 对 SQL 性能不利的原因</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2021/02/24/DDIA_note-13/" >《DDIA》阅读笔记（九）：一致性与共识（共识问题）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/21</span><a class="archive-post-title" href= "/2021/02/21/2021-02-21_diary/" >近期工作学习规划</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/19</span><a class="archive-post-title" href= "/2021/02/19/DDIA_note-12/" >《DDIA》阅读笔记（九）：一致性与共识（顺序保证）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/13</span><a class="archive-post-title" href= "/2021/02/13/DDIA_note-11/" >《DDIA》阅读笔记（九）：一致性与共识（可线性化）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/06</span><a class="archive-post-title" href= "/2021/02/06/DDIA_note-10/" >《DDIA》阅读笔记（八）：分布式系统的挑战</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/27</span><a class="archive-post-title" href= "/2021/01/27/DDIA_note-9/" >《DDIA》阅读笔记（七）：事务</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/22</span><a class="archive-post-title" href= "/2021/01/22/DDIA_note-8/" >《DDIA》阅读笔记（六）：数据分区</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span><a class="archive-post-title" href= "/2021/01/21/DDIA_note-7/" >《DDIA》阅读笔记（五）：数据复制（无主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/20</span><a class="archive-post-title" href= "/2021/01/20/DDIA_note-6/" >《DDIA》阅读笔记（五）：数据复制（多主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/09</span><a class="archive-post-title" href= "/2021/01/09/DDIA_note-5/" >《DDIA》阅读笔记（五）：数据复制（单主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/01</span><a class="archive-post-title" href= "/2021/01/01/DB_tree-table-design-summary/" >树形表结构设计总结</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/19</span><a class="archive-post-title" href= "/2020/12/19/DDIA_note-4/" >《DDIA》阅读笔记（四）：数据编码与演化</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/13</span><a class="archive-post-title" href= "/2020/12/13/DDIA_note-3/" >《DDIA》阅读笔记（三）：数据存储与检索</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/04</span><a class="archive-post-title" href= "/2020/12/04/DDIA_note-2/" >《DDIA》阅读笔记（二）：数据模型与查询语言</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/02</span><a class="archive-post-title" href= "/2020/12/02/DDIA_note-1/" >《DDIA》阅读笔记（一）：可靠、可扩展与可维护的应用系统</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span><a class="archive-post-title" href= "/2020/10/08/Maven_external_dependencies_management/" >Maven 打包依赖外置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2020/10/04/JVM_prod-analysis-cmd/" >Java 应用常用调试分析方法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/30</span><a class="archive-post-title" href= "/2020/06/30/JVM_java-memory-area/" >Java 内存区域</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/28</span><a class="archive-post-title" href= "/2020/05/28/DB_data-warehouse-design-basic/" >数据仓库设计基础</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/08</span><a class="archive-post-title" href= "/2020/04/08/2020-04-08_diary/" >关于使用思维导图做笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/28</span><a class="archive-post-title" href= "/2020/03/28/Algorithm_leetcode-high-frequency-problems/" >LeetCode 高频面试题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2020/03/06/InfoSecty_personal-infomation-security-guide/" >個人信息安全保護指南</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/22</span><a class="archive-post-title" href= "/2020/02/22/2020-02-22_diary/" >免费 JetBrains 全家桶</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/16</span><a class="archive-post-title" href= "/2020/02/16/Nginx_cheat-sheet/" >Nginx Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Git_Cheat-Sheet/" >Git Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker&K8S_Cheat-Sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker_cheat-sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/03</span><a class="archive-post-title" href= "/2020/02/03/JVM_jstat-monitor-analysis/" >JVM jstat 监控分析</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/01</span><a class="archive-post-title" href= "/2020/02/01/JVM_GC-log-analysis/" >JVM GC 日志分析</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/01</span><a class="archive-post-title" href= "/2019/11/01/Design_design-patterns/" >设计模式与设计原则</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/30</span><a class="archive-post-title" href= "/2019/10/30/JVM_mindmap/" >Java 虚拟机与并发编程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_offset-reset/" >Kafka 位移重置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_dynamic-config/" >Kafka 动态配置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/20</span><a class="archive-post-title" href= "/2019/05/20/Kafka_common-scripts/" >Kafka 常用脚本</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/06</span><a class="archive-post-title" href= "/2019/05/06/Kafka_basic-conceptions/" >Kafka 基本概念</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2018/10/04/Python_async-programming/" >Python 异步编程总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/19</span><a class="archive-post-title" href= "/2018/09/19/Python_data-structure/" >Python 数据结构应用</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/13</span><a class="archive-post-title" href= "/2018/09/13/Python_decorator-basic-usage/" >Python 装饰器基本用法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/02</span><a class="archive-post-title" href= "/2018/09/02/JavaScript_ES6-grammar/" >ES6 语法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/30</span><a class="archive-post-title" href= "/2018/08/30/Vue_user-guide-4/" >Vue 学习笔记：前端路由、请求发送和状态管理</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/28</span><a class="archive-post-title" href= "/2018/08/28/JavaScript_cheat-sheet/" >JavaScript Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/24</span><a class="archive-post-title" href= "/2018/08/24/Vue_user-guide-3/" >Vue 学习笔记：组件</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/23</span><a class="archive-post-title" href= "/2018/08/23/Vue_user-guide-2/" >Vue 学习笔记（2）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/22</span><a class="archive-post-title" href= "/2018/08/22/Python_OOP-summary/" >Python 类与对象总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/20</span><a class="archive-post-title" href= "/2018/08/20/Vue_user-guide-1/" >Vue 学习笔记（1）</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="杂事"><span class="iconfont-archer">&#xe606;</span>杂事</span>
+    
+        <span class="sidebar-tag-name" data-tags="技术"><span class="iconfont-archer">&#xe606;</span>技术</span>
+    
+        <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
+    
+        <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
+    
+        <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
+    
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
+        <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
+    
+        <span class="sidebar-tag-name" data-tags="Maven"><span class="iconfont-archer">&#xe606;</span>Maven</span>
+    
+        <span class="sidebar-tag-name" data-tags="Nginx"><span class="iconfont-archer">&#xe606;</span>Nginx</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Vue"><span class="iconfont-archer">&#xe606;</span>Vue</span>
+    
+        <span class="sidebar-tag-name" data-tags="前端"><span class="iconfont-archer">&#xe606;</span>前端</span>
+    
+        <span class="sidebar-tag-name" data-tags="Git"><span class="iconfont-archer">&#xe606;</span>Git</span>
+    
+        <span class="sidebar-tag-name" data-tags="JavaScript"><span class="iconfont-archer">&#xe606;</span>JavaScript</span>
+    
+        <span class="sidebar-tag-name" data-tags="Go"><span class="iconfont-archer">&#xe606;</span>Go</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="《数据密集型应用系统设计》阅读笔记"><span class="iconfont-archer">&#xe60a;</span>《数据密集型应用系统设计》阅读笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Kylo Yip"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"live2d-widget-model-nietzsche"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>
+
+

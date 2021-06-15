@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Kylo Yip">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Kylo Yip">
+    
+    <meta name="keywords" content="Kylo's Notebook,Kylo Yip">
+    
+    <meta name="description" content="">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>SELECT * 对 SQL 性能不利的原因 · Kylo&#39;s Notebook</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Kylo's Notebook" type="application/atom+xml">
+</head>
+
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <a class="home-link" href=/>Kylo's Notebook</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+">
+    
+    <!-- 主页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <blockquote>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://tanelpoder.com/posts/reasons-why-select-star-is-bad-for-sql-performance">Reasons why SELECT * is bad for SQL performance</a></p>
+</blockquote>
+<h1 id="SELECT-对-SQL-性能不利的原因"><a href="#SELECT-对-SQL-性能不利的原因" class="headerlink" title="SELECT * 对 SQL 性能不利的原因"></a>SELECT * 对 SQL 性能不利的原因</h1><p>假设应用程序不需要访问表中的所有列，则使用 SELECT * 是不利于 SQL 性能，下文将给出具体原因。在编写生产代码的时候，不仅出于性能方面的考量，还会为了确保应用程序可靠在 select-list（映射）中明确指定关注的列。例如当添加新列或表中的列顺序发生更改时，应用程序的数据处理程序是否会突然崩溃。本文仅关注 SQL 性能，使用 Oracle 作为例证，而大多数的推理也适用于其它现代关系型数据库。 </p>
+<h2 id="增大网络流量开销"><a href="#增大网络流量开销" class="headerlink" title="增大网络流量开销"></a>增大网络流量开销</h2><p>这是最明显的效果。如果从每行返回 800 列而不是 8 列，每次查询执行都会在网络上发送 100 倍以上的数据量（实际开销可能会因各列的长度不同而有所不同）。网络上传输更多字节意味着发送了更多的数据包，并且取决于 RDBMS 实现，也意味着应用程序与数据库之间有更多的网络往返。</p>
+<p>在突发的请求中，Oracle 可以将多个连续 SQL * Net 数据包中的单个访存调用结果数据，以流式传输到客户端，而无需客户端应用程序逐个确认先前的数据包。这种突发的吞吐量取决于 TCP 发送缓冲区的大小，以及网络链路带宽和延迟（参考 <a target="_blank" rel="noopener" href="https://tanelpoder.com/2008/02/10/sqlnet-message-to-client-vs-sqlnet-more-data-to-client/">SQL*Net message to client vs SQL*Net more data to client | Tanel Poder Consulting</a>）。 </p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SQL</span>&gt; <span class="keyword">SET</span> AUTOT TRACE STAT</span><br><span class="line"><span class="keyword">SQL</span>&gt; <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> soe_small.customers;</span><br><span class="line"></span><br><span class="line"><span class="number">1699260</span> <span class="keyword">rows</span> selected.</span><br><span class="line"></span><br><span class="line">Elapsed: <span class="number">00</span>:<span class="number">01</span>:<span class="number">35.82</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">Statistics</span></span><br><span class="line"><span class="comment">----------------------------------------------------------</span></span><br><span class="line">          <span class="number">0</span>  <span class="keyword">recursive</span> calls</span><br><span class="line">          <span class="number">0</span>  db block gets</span><br><span class="line">      <span class="number">45201</span>  consistent gets</span><br><span class="line">          <span class="number">0</span>  physical reads</span><br><span class="line">          <span class="number">0</span>  redo size</span><br><span class="line">  <span class="number">169926130</span>  bytes sent via <span class="keyword">SQL</span>*Net <span class="keyword">to</span> client</span><br><span class="line">     <span class="number">187267</span>  bytes received via <span class="keyword">SQL</span>*Net <span class="keyword">from</span> client</span><br><span class="line">      <span class="number">16994</span>  <span class="keyword">SQL</span>*Net roundtrips <span class="keyword">to</span>/<span class="keyword">from</span> client</span><br><span class="line">          <span class="number">0</span>  sorts (memory)</span><br><span class="line">          <span class="number">0</span>  sorts (disk)</span><br><span class="line">    <span class="number">1699260</span>  <span class="keyword">rows</span> processed</span><br></pre></td></tr></table></figure>
+
+<p>其花费了约 1m 35s 的时间，将 169 MB 的数据从数据库发送到客户端（平均每行大约 100 个字节）。根据数据字典统计数据粗略估算的行长度表明，平均行大小应为 119 bytes（116 再加上 3 bytes 的行头部，其中包括 lock byte 和列数）： </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SQL</span><span class="operator">&gt;</span> <span class="keyword">SELECT</span> <span class="built_in">COUNT</span>(<span class="operator">*</span>),<span class="built_in">SUM</span>(avg_col_len) <span class="keyword">FROM</span> dba_tab_columns </span><br><span class="line">     <span class="keyword">WHERE</span> owner <span class="operator">=</span> <span class="string">&#x27;SOE_SMALL&#x27;</span> <span class="keyword">AND</span> table_name <span class="operator">=</span> <span class="string">&#x27;CUSTOMERS&#x27;</span>;</span><br><span class="line"></span><br><span class="line">  <span class="built_in">COUNT</span>(<span class="operator">*</span>) <span class="built_in">SUM</span>(AVG_COL_LEN)</span><br><span class="line"><span class="comment">---------- ----------------</span></span><br><span class="line">        <span class="number">16</span>              <span class="number">116</span></span><br></pre></td></tr></table></figure>
+
+<p>上表只有 16 列，如果仅选择应用程序所需的 3 列：</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SQL</span>&gt; <span class="keyword">SELECT</span> customer_id, credit_limit, customer_since <span class="keyword">FROM</span> soe_small.customers;</span><br><span class="line"></span><br><span class="line"><span class="number">1699260</span> <span class="keyword">rows</span> selected.</span><br><span class="line"></span><br><span class="line">Elapsed: <span class="number">00</span>:<span class="number">00</span>:<span class="number">43.20</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">Statistics</span></span><br><span class="line"><span class="comment">----------------------------------------------------------</span></span><br><span class="line">          <span class="number">0</span>  <span class="keyword">recursive</span> calls</span><br><span class="line">          <span class="number">0</span>  db block gets</span><br><span class="line">      <span class="number">45201</span>  consistent gets</span><br><span class="line">          <span class="number">0</span>  physical reads</span><br><span class="line">          <span class="number">0</span>  redo size</span><br><span class="line">   <span class="number">31883155</span>  bytes sent via <span class="keyword">SQL</span>*Net <span class="keyword">to</span> client</span><br><span class="line">     <span class="number">187307</span>  bytes received via <span class="keyword">SQL</span>*Net <span class="keyword">from</span> client</span><br><span class="line">      <span class="number">16994</span>  <span class="keyword">SQL</span>*Net roundtrips <span class="keyword">to</span>/<span class="keyword">from</span> client</span><br><span class="line">          <span class="number">0</span>  sorts (memory)</span><br><span class="line">          <span class="number">0</span>  sorts (disk)</span><br><span class="line">    <span class="number">1699260</span>  <span class="keyword">rows</span> processed</span><br></pre></td></tr></table></figure>
+
+<p>从 16 列中仅选择 3 列可使查询响应时间缩短为一半以下（1m 35s vs 43 sec）。 sqlplus 的度量标准包括在数据库服务器上执行查询的时间，以及从客户端获取所有记录所花费的时间。因此网络延迟，吞吐量和 TCP 发送缓冲区配置将对其产生影响。</p>
+<p>Oracle 可以删除每个访存调用结果集中的重复字段值，因此如果需要访存大量行和列，为了节省网络带宽（例如将数据从纽约复制到新加坡），则可以通过利用同样宽的、最重复（即最多不相同的值）列对查询结果集进行排序，来最大化实现这种“压缩”。 </p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SQL</span>&gt; <span class="keyword">SELECT</span> * <span class="keyword">FROM</span> soe_small.customers </span><br><span class="line">     <span class="keyword">ORDER</span> <span class="keyword">BY</span> customer_class,nls_territory,nls_language,cust_first_name;</span><br><span class="line"></span><br><span class="line"><span class="number">1699260</span> <span class="keyword">rows</span> selected.</span><br><span class="line"></span><br><span class="line">Elapsed: <span class="number">00</span>:<span class="number">01</span>:<span class="number">09.23</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">Statistics</span></span><br><span class="line"><span class="comment">----------------------------------------------------------</span></span><br><span class="line">          <span class="number">0</span>  <span class="keyword">recursive</span> calls</span><br><span class="line">          <span class="number">0</span>  db block gets</span><br><span class="line">      <span class="number">28478</span>  consistent gets</span><br><span class="line">          <span class="number">0</span>  physical reads</span><br><span class="line">          <span class="number">0</span>  redo size</span><br><span class="line">   <span class="number">65960489</span>  bytes sent via <span class="keyword">SQL</span>*Net <span class="keyword">to</span> client</span><br><span class="line">     <span class="number">187334</span>  bytes received via <span class="keyword">SQL</span>*Net <span class="keyword">from</span> client</span><br><span class="line">      <span class="number">16994</span>  <span class="keyword">SQL</span>*Net roundtrips <span class="keyword">to</span>/<span class="keyword">from</span> client</span><br><span class="line">          <span class="number">1</span>  sorts (memory)</span><br><span class="line">          <span class="number">0</span>  sorts (disk)</span><br><span class="line">    <span class="number">1699260</span>  <span class="keyword">rows</span> processed</span><br></pre></td></tr></table></figure>
+
+<p>上面的测试再次使用 SELECT *，并根据几个 VARCHAR2 类型的列进行排序，这些列的大小为 10-40 字节，并且具有很多重复的值。</p>
+<p>在服务器进行 SQL * Net 协议级重复数据删除后，仅发送了约 65 MB。 需要注意的是上述所有测试运行的，往返于客户端的 SQL * Net 值都是相同的。这是因为在应用程序中，访存 arraysize 参数被设置为 100。arraysize 参数控制最终通过网络发送、以进行数据检索的 fetch 调用的数量。无论列的宽度如何，第一个请求之后的每次 fetch 都会请求返回 arraysize-ful 的行：</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">1699260 </span>行 / <span class="number">100</span> 将需要 <span class="number">16993</span> 次访存 + <span class="number">1</span> 次初始单行访存 = <span class="number">16994</span> 次的 SQL * Net 往返 </span><br></pre></td></tr></table></figure>
+
+<p>因此 SQL * net 往返度量标准取决于通过网络发送的数据库调用次数（fetch），而每个往返衍生度量发送的字节数，取决于获取单个数据库调用中请求的行数以及这些行的宽度。 实际情况稍微有点复杂，取决于应用程序客户端库的行为（略）。 </p>
+<p>需要注意的是，如果进一步增加 arraysize（例如增加到 1000），不仅会减少 SQL * Net 往返次数（1700 -&gt; 16994，而不是 SQL * Net往返次数），还会略微减少传输的字节数（可能是由于更好压缩和稍低的 SQL * Net 数据包开销）。在 Oracle 数据库链接传输数据时，无需在客户端会话中增加 arraysize，因为 Oracle 自动为链接使用最大的 arraysize（〜32767）。 </p>
+<h2 id="增大客户端-CPU-使用率"><a href="#增大客户端-CPU-使用率" class="headerlink" title="增大客户端 CPU 使用率"></a>增大客户端 CPU 使用率</h2><p>在客户端上处理的行越多，所拥有的列越多/ 越宽，处理所花费的 CPU 时间就越多。在应用程序中，花费的时间与提取、格式化记录并将它们写入文件这些操作有关。</p>
+<p>直接登录 Linux 服务器，并通过本地管道运行 sqlplus，以排除任何网络/ TCP 开销。 </p>
+<p>两个脚本</p>
+<p>selectstar.sql：选取 16 个列。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SET</span> ARRAYSIZE <span class="number">100</span> TERMOUT OFF</span><br><span class="line">SPOOL customers.txt</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> soe_small.customers;</span><br><span class="line">SPOOL OFF</span><br><span class="line">EXIT</span><br></pre></td></tr></table></figure>
+
+<p>selectsome.sql：选取 3 个列。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SET</span> ARRAYSIZE <span class="number">100</span> TERMOUT OFF</span><br><span class="line">SPOOL customers.txt</span><br><span class="line"><span class="keyword">SELECT</span> customer_id, credit_limit, customer_since <span class="keyword">FROM</span> soe_small.customers;</span><br><span class="line">SPOOL OFF</span><br><span class="line">EXIT</span><br></pre></td></tr></table></figure>
+
+<p>在本地运行 selectstar：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="type">time</span> sqlplus <span class="operator">-</span>s <span class="keyword">system</span><span class="operator">/</span>oracle <span class="variable">@selectstar</span></span><br><span class="line"></span><br><span class="line"><span class="type">real</span>   <span class="number">1</span>m21<span class="number">.056</span>s</span><br><span class="line"><span class="keyword">user</span>   <span class="number">1</span>m3<span class="number">.053</span>s</span><br><span class="line">sys    <span class="number">0</span>m15<span class="number">.736</span>s</span><br></pre></td></tr></table></figure>
+
+<p>在总的墙钟时间 1m 21s 中，大约 1m 19s 的 CPU 时间（包括用户态和内核态的 CPU 时间），这意味着 sqlplus 花费很少的时间在休眠上，等待从管道中获得更多结果。 因此应用程序将其运行时的 99％ 花费在了客户端的应用程序执行时间上，从而在处理检索到的数据时消耗了 CPU。 使用 <a target="_blank" rel="noopener" href="https://tanelpoder.com/psnapper/">Linux Process Snapper | Tanel Poder Consulting</a> 工具可确认这一点：</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ sudo psn -G syscall,wchan -p sqlplus</span><br><span class="line"></span><br><span class="line">Linux Process Snapper v0<span class="number">.18</span> <span class="built_in">by</span> Tanel Poder [https://<span class="number">0</span>x.tools]</span><br><span class="line">Sampling /proc/syscall, stat, wchan <span class="keyword">for</span> <span class="number">5</span> seconds... finished.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">=== Active Threads ===========================================================</span><br><span class="line"></span><br><span class="line"> samples | <span class="type">avg_threads</span> | <span class="type">comm</span>      | <span class="type">state</span>            | <span class="type">syscall</span>   | <span class="type">wchan</span>     </span><br><span class="line">------------------------------------------------------------------------------</span><br><span class="line">      <span class="number">95</span> |        <span class="type">0</span><span class="number">.95</span> | <span class="type">(sqlplus</span>) | <span class="type">Running</span> (ON CPU) | <span class="type">[running</span>] | <span class="type">0</span>         </span><br><span class="line">       <span class="number">2</span> |        <span class="type">0</span><span class="number">.02</span> | <span class="type">(sqlplus</span>) | <span class="type">Running</span> (ON CPU) | <span class="type">[running</span>] | <span class="type">pipe_wait</span> </span><br><span class="line">       <span class="number">2</span> |        <span class="type">0</span><span class="number">.02</span> | <span class="type">(sqlplus</span>) | <span class="type">Running</span> (ON CPU) | <span class="type">read</span>      | <span class="type">0</span>         </span><br></pre></td></tr></table></figure>
+
+<p>由于几乎所有时间都花在客户端应用程序上，对数据库就没有什么可调整的了，添加索引或增加各种数据库缓冲区都无济于事，因为数据库时间仅占总运行时的 1％。但随着应用程序代码变革，通过仅获取所需要的列，可以大大减少客户端应用程序处理时间：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="type">time</span> sqlplus <span class="operator">-</span>s <span class="keyword">system</span><span class="operator">/</span>oracle <span class="variable">@selectsome</span></span><br><span class="line"></span><br><span class="line"><span class="type">real</span>   <span class="number">0</span>m4<span class="number">.047</span>s</span><br><span class="line"><span class="keyword">user</span>   <span class="number">0</span>m2<span class="number">.752</span>s</span><br><span class="line">sys    <span class="number">0</span>m0<span class="number">.349</span>s</span><br></pre></td></tr></table></figure>
+
+<p> 总运行时间仅为 4s，其中约 3.1s 花费在CPU上，因此实现了更好的性能以及更低的 CPU 使用率。</p>
+<p>实际情况具体取决于正在运行的应用程序类型以及所使用的数据库客户端库。但当表有 500 多列时（比如数据仓库的表），SELECT * 和 SELECT 10 列之间的差异可能会很大。</p>
+<p>顺便说一下，从 Oracle 12.2 开始可以使用 <a target="_blank" rel="noopener" href="https://blogs.oracle.com/opal/sqlplus-12201-adds-new-performance-features">sqlplus -fast 选项</a> 使 sqlplus 启用一些性能选项（数组大小，增大输出页大小等）： </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="type">time</span> sqlplus <span class="operator">-</span>fast <span class="operator">-</span>s <span class="keyword">system</span><span class="operator">/</span>oracle <span class="variable">@selectstar</span></span><br><span class="line"></span><br><span class="line"><span class="type">real</span>	<span class="number">0</span>m16<span class="number">.046</span>s</span><br><span class="line"><span class="keyword">user</span>	<span class="number">0</span>m11<span class="number">.851</span>s</span><br><span class="line">sys	<span class="number">0</span>m1<span class="number">.718</span>s</span><br></pre></td></tr></table></figure>
+
+<p>这样 SELECT * 脚本也仅需 16s 即可完成。通过将输出直接打印到 CSV，sqlplus 可以使用更少的 CPU、并避免某些（列对齐）代码路径格式化： </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="type">time</span> sqlplus <span class="operator">-</span>m &quot;csv on&quot; <span class="operator">-</span>fast <span class="operator">-</span>s <span class="keyword">system</span><span class="operator">/</span>oracle <span class="variable">@selectstar</span></span><br><span class="line"></span><br><span class="line"><span class="type">real</span>	<span class="number">0</span>m12<span class="number">.048</span>s</span><br><span class="line"><span class="keyword">user</span>	<span class="number">0</span>m10<span class="number">.144</span>s</span><br><span class="line">sys	<span class="number">0</span>m0<span class="number">.447</span>s</span><br></pre></td></tr></table></figure>
+
+<p>最终基于 Oracle 实现了 CSV 快速卸载程序。</p>
+<h2 id="某些查询计划优化无法执行"><a href="#某些查询计划优化无法执行" class="headerlink" title="某些查询计划优化无法执行"></a>某些查询计划优化无法执行</h2><p>Oracle 的查询优化器可以将查询结构转换为其他结构以提高性能，其结果在逻辑上是等效的。 有些转换带来了更多的优化机会（更有效的数据访问路径），有些甚至允许跳过部分查询的执行。</p>
+<p>例如有一个索引覆盖了待查询的所有列，则 Oracle 可以仅对体积较小的索引（而不是大表）进行扫描。 这种快速完整扫描不使用索引树遍历，而更像是对所有索引块按其存储顺序进行的全表扫描（忽略根块和分支块）。 </p>
+<p>这是 SELECT * 与 SELECT col1, col2 的比较，其中 col1，col2 恰好在索引中：</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; <span class="meta">@xi</span> f2czqvfz3pj5w 0</span><br><span class="line"></span><br><span class="line">SELECT <span class="symbol">*</span> FROM soe_small.customers</span><br><span class="line"></span><br><span class="line">---------------------------------------------------------------------------</span><br><span class="line">|<span class="string"> Id </span>|<span class="string"> Operation         </span>|<span class="string"> Name      </span>|<span class="string"> Starts </span>|<span class="string"> A-Rows </span>|<span class="string"> A-Time   </span>|<span class="string"> Reads </span>|</span><br><span class="line">---------------------------------------------------------------------------</span><br><span class="line">|<span class="string">  0 </span>|<span class="string"> SELECT STATEMENT  </span>|<span class="string">           </span>|<span class="string">      1 </span>|<span class="string">   1699K</span>|<span class="string"> 00:00.57 </span>|<span class="string"> 28475 </span>|</span><br><span class="line">|<span class="string">  1 </span>|<span class="string">  TABLE ACCESS FULL</span>|<span class="string"> CUSTOMERS </span>|<span class="string">      1 </span>|<span class="string">   1699K</span>|<span class="string"> 00:00.57 </span>|<span class="string"> 28475 </span>|</span><br><span class="line">---------------------------------------------------------------------------</span><br></pre></td></tr></table></figure>
+
+<p>SELECT * 必须扫描表以获取所有列，总运行时间为 0.57s，读取了 28475 个块。</p>
+<p>选择恰好由单个多列索引覆盖的几列： </p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">SQL&gt; <span class="meta">@xi</span> 9gwxhcvwngh96 0</span><br><span class="line"></span><br><span class="line">SELECT customer_id, dob FROM soe_small.customers</span><br><span class="line"></span><br><span class="line">---------------------------------------------------------------------------------------</span><br><span class="line">|<span class="string"> Id  </span>|<span class="string"> Operation            </span>|<span class="string"> Name              </span>|<span class="string"> Starts </span>|<span class="string"> A-Rows </span>|<span class="string"> A-Time   </span>|<span class="string"> Reads </span>|</span><br><span class="line">---------------------------------------------------------------------------------------</span><br><span class="line">|<span class="string">   0 </span>|<span class="string"> SELECT STATEMENT     </span>|<span class="string">                   </span>|<span class="string">      1 </span>|<span class="string">   1699K</span>|<span class="string"> 00:00.21 </span>|<span class="string">  5915 </span>|</span><br><span class="line">|<span class="string">   1 </span>|<span class="string">  INDEX FAST FULL SCAN</span>|<span class="string"> IDX_CUSTOMER_DOB2 </span>|<span class="string">      1 </span>|<span class="string">   1699K</span>|<span class="string"> 00:00.21 </span>|<span class="string">  5915 </span>|</span><br><span class="line">---------------------------------------------------------------------------------------</span><br></pre></td></tr></table></figure>
+
+<p>从表访问完全扫描切换为索引快速完全扫描，结果只读取 5915 个索引块，并且运行时间为0.21s。</p>
+<p>另一个更复杂的示例是 Oracle 的连接消除转换，它可以帮助复杂的大型查询访问在后台使用多个联接的视图，在此使用一个微测试用例来展示。 U（用户）和 O（对象）测试表之间定义了外键约束 o.owner -&gt; u.username，外键约束强制要求对于 O 表中的每个对象记录，都必须有一个对应的用户记录在 U 表中。 因此在 SQL 中运行两张表的连接： </p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">SELECT o.owner FROM u, o WHERE u.username = o.owner</span><br><span class="line"></span><br><span class="line">--------------------------------------------------------------</span><br><span class="line">|<span class="string"> Id  </span>|<span class="string"> Operation         </span>|<span class="string"> Name </span>|<span class="string"> Starts </span>|<span class="string"> A-Rows </span>|<span class="string"> Buffers </span>|</span><br><span class="line">--------------------------------------------------------------</span><br><span class="line">|<span class="string">   0 </span>|<span class="string"> SELECT STATEMENT  </span>|<span class="string">      </span>|<span class="string">      1 </span>|<span class="string">  61477 </span>|<span class="string">    1346 </span>|</span><br><span class="line">|<span class="string">   1 </span>|<span class="string">  TABLE ACCESS FULL</span>|<span class="string"> O    </span>|<span class="string">      1 </span>|<span class="string">  61477 </span>|<span class="string">    1346 </span>|</span><br><span class="line">--------------------------------------------------------------</span><br></pre></td></tr></table></figure>
+
+<p>根据上面的执行计划，连接查询实际上只访问一个表，这就是 Oracle 的连接消除转换。可通过仅访问父子关系中的子表来满足此查询，因为希望 O 中的记录在 U 中具有相应的记录，而外键约束可保证该记录的正确性。</p>
+<p>甚至可以做得更好：上一个查询仅从子表 O 中选择了列，而将 U.username 添加到选择列表中： </p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">SELECT o.owner,u.username FROM u, o WHERE u.username = o.owner</span><br><span class="line"></span><br><span class="line">Plan hash value: 3411128970</span><br><span class="line"></span><br><span class="line">--------------------------------------------------------------</span><br><span class="line">|<span class="string"> Id  </span>|<span class="string"> Operation         </span>|<span class="string"> Name </span>|<span class="string"> Starts </span>|<span class="string"> A-Rows </span>|<span class="string"> Buffers </span>|</span><br><span class="line">--------------------------------------------------------------</span><br><span class="line">|<span class="string">   0 </span>|<span class="string"> SELECT STATEMENT  </span>|<span class="string">      </span>|<span class="string">      1 </span>|<span class="string">  61477 </span>|<span class="string">    1346 </span>|</span><br><span class="line">|<span class="string">   1 </span>|<span class="string">  TABLE ACCESS FULL</span>|<span class="string"> O    </span>|<span class="string">      1 </span>|<span class="string">  61477 </span>|<span class="string">    1346 </span>|</span><br><span class="line">--------------------------------------------------------------</span><br></pre></td></tr></table></figure>
+
+<p>尽管从表 U 中选取了一个列，但却不必访问表 U，这是因为由于 WHERE u.username = o.owner 条件保证该列与 o.owner 完全相同，Oracle 可以聪明地避免连接。</p>
+<h2 id="增大服务端内存使用率"><a href="#增大服务端内存使用率" class="headerlink" title="增大服务端内存使用率"></a>增大服务端内存使用率</h2><h2 id="增大服务端-CPU-使用率"><a href="#增大服务端-CPU-使用率" class="headerlink" title="增大服务端 CPU 使用率"></a>增大服务端 CPU 使用率</h2><h2 id="硬解析或优化因此需要更多时间"><a href="#硬解析或优化因此需要更多时间" class="headerlink" title="硬解析或优化因此需要更多时间"></a>硬解析或优化因此需要更多时间</h2><h2 id="共享池中缓存的-cursor-占用更多内存"><a href="#共享池中缓存的-cursor-占用更多内存" class="headerlink" title="共享池中缓存的 cursor 占用更多内存"></a>共享池中缓存的 cursor 占用更多内存</h2><h2 id="LOB-提取"><a href="#LOB-提取" class="headerlink" title="LOB 提取"></a>LOB 提取</h2><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+        </li>
+        <li class="previous">
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODYzMi8yNTEyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:yipwinghong@outlook.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yipwinghong" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/WeChat.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 58
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span><a class="archive-post-title" href= "/2021/06/13/Go_cheat-sheet/" >Go Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/06</span><a class="archive-post-title" href= "/2021/06/06/2021-06-06_diary/" >Weekly Summary (2021-05-31_2021-06-06)</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/31</span><a class="archive-post-title" href= "/2021/05/31/2021-05-31_diary/" >2021 下半年工作学习安排</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/16</span><a class="archive-post-title" href= "/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/" >如何用图论解决 Secret Santa 问题？</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" >把 PostgreSQL 用作数据仓库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/" >SELECT * 对 SQL 性能不利的原因</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2021/02/24/DDIA_note-13/" >《DDIA》阅读笔记（九）：一致性与共识（共识问题）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/21</span><a class="archive-post-title" href= "/2021/02/21/2021-02-21_diary/" >近期工作学习规划</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/19</span><a class="archive-post-title" href= "/2021/02/19/DDIA_note-12/" >《DDIA》阅读笔记（九）：一致性与共识（顺序保证）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/13</span><a class="archive-post-title" href= "/2021/02/13/DDIA_note-11/" >《DDIA》阅读笔记（九）：一致性与共识（可线性化）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/06</span><a class="archive-post-title" href= "/2021/02/06/DDIA_note-10/" >《DDIA》阅读笔记（八）：分布式系统的挑战</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/27</span><a class="archive-post-title" href= "/2021/01/27/DDIA_note-9/" >《DDIA》阅读笔记（七）：事务</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/22</span><a class="archive-post-title" href= "/2021/01/22/DDIA_note-8/" >《DDIA》阅读笔记（六）：数据分区</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span><a class="archive-post-title" href= "/2021/01/21/DDIA_note-7/" >《DDIA》阅读笔记（五）：数据复制（无主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/20</span><a class="archive-post-title" href= "/2021/01/20/DDIA_note-6/" >《DDIA》阅读笔记（五）：数据复制（多主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/09</span><a class="archive-post-title" href= "/2021/01/09/DDIA_note-5/" >《DDIA》阅读笔记（五）：数据复制（单主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/01</span><a class="archive-post-title" href= "/2021/01/01/DB_tree-table-design-summary/" >树形表结构设计总结</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/19</span><a class="archive-post-title" href= "/2020/12/19/DDIA_note-4/" >《DDIA》阅读笔记（四）：数据编码与演化</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/13</span><a class="archive-post-title" href= "/2020/12/13/DDIA_note-3/" >《DDIA》阅读笔记（三）：数据存储与检索</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/04</span><a class="archive-post-title" href= "/2020/12/04/DDIA_note-2/" >《DDIA》阅读笔记（二）：数据模型与查询语言</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/02</span><a class="archive-post-title" href= "/2020/12/02/DDIA_note-1/" >《DDIA》阅读笔记（一）：可靠、可扩展与可维护的应用系统</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span><a class="archive-post-title" href= "/2020/10/08/Maven_external_dependencies_management/" >Maven 打包依赖外置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2020/10/04/JVM_prod-analysis-cmd/" >Java 应用常用调试分析方法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/30</span><a class="archive-post-title" href= "/2020/06/30/JVM_java-memory-area/" >Java 内存区域</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/28</span><a class="archive-post-title" href= "/2020/05/28/DB_data-warehouse-design-basic/" >数据仓库设计基础</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/08</span><a class="archive-post-title" href= "/2020/04/08/2020-04-08_diary/" >关于使用思维导图做笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/28</span><a class="archive-post-title" href= "/2020/03/28/Algorithm_leetcode-high-frequency-problems/" >LeetCode 高频面试题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2020/03/06/InfoSecty_personal-infomation-security-guide/" >個人信息安全保護指南</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/22</span><a class="archive-post-title" href= "/2020/02/22/2020-02-22_diary/" >免费 JetBrains 全家桶</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/16</span><a class="archive-post-title" href= "/2020/02/16/Nginx_cheat-sheet/" >Nginx Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Git_Cheat-Sheet/" >Git Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker&K8S_Cheat-Sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker_cheat-sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/03</span><a class="archive-post-title" href= "/2020/02/03/JVM_jstat-monitor-analysis/" >JVM jstat 监控分析</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/01</span><a class="archive-post-title" href= "/2020/02/01/JVM_GC-log-analysis/" >JVM GC 日志分析</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/01</span><a class="archive-post-title" href= "/2019/11/01/Design_design-patterns/" >设计模式与设计原则</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/30</span><a class="archive-post-title" href= "/2019/10/30/JVM_mindmap/" >Java 虚拟机与并发编程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_offset-reset/" >Kafka 位移重置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_dynamic-config/" >Kafka 动态配置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/20</span><a class="archive-post-title" href= "/2019/05/20/Kafka_common-scripts/" >Kafka 常用脚本</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/06</span><a class="archive-post-title" href= "/2019/05/06/Kafka_basic-conceptions/" >Kafka 基本概念</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2018/10/04/Python_async-programming/" >Python 异步编程总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/19</span><a class="archive-post-title" href= "/2018/09/19/Python_data-structure/" >Python 数据结构应用</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/13</span><a class="archive-post-title" href= "/2018/09/13/Python_decorator-basic-usage/" >Python 装饰器基本用法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/02</span><a class="archive-post-title" href= "/2018/09/02/JavaScript_ES6-grammar/" >ES6 语法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/30</span><a class="archive-post-title" href= "/2018/08/30/Vue_user-guide-4/" >Vue 学习笔记：前端路由、请求发送和状态管理</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/28</span><a class="archive-post-title" href= "/2018/08/28/JavaScript_cheat-sheet/" >JavaScript Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/24</span><a class="archive-post-title" href= "/2018/08/24/Vue_user-guide-3/" >Vue 学习笔记：组件</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/23</span><a class="archive-post-title" href= "/2018/08/23/Vue_user-guide-2/" >Vue 学习笔记（2）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/22</span><a class="archive-post-title" href= "/2018/08/22/Python_OOP-summary/" >Python 类与对象总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/20</span><a class="archive-post-title" href= "/2018/08/20/Vue_user-guide-1/" >Vue 学习笔记（1）</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="杂事"><span class="iconfont-archer">&#xe606;</span>杂事</span>
+    
+        <span class="sidebar-tag-name" data-tags="技术"><span class="iconfont-archer">&#xe606;</span>技术</span>
+    
+        <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
+    
+        <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
+    
+        <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
+    
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
+        <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
+    
+        <span class="sidebar-tag-name" data-tags="Maven"><span class="iconfont-archer">&#xe606;</span>Maven</span>
+    
+        <span class="sidebar-tag-name" data-tags="Nginx"><span class="iconfont-archer">&#xe606;</span>Nginx</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Vue"><span class="iconfont-archer">&#xe606;</span>Vue</span>
+    
+        <span class="sidebar-tag-name" data-tags="前端"><span class="iconfont-archer">&#xe606;</span>前端</span>
+    
+        <span class="sidebar-tag-name" data-tags="Git"><span class="iconfont-archer">&#xe606;</span>Git</span>
+    
+        <span class="sidebar-tag-name" data-tags="JavaScript"><span class="iconfont-archer">&#xe606;</span>JavaScript</span>
+    
+        <span class="sidebar-tag-name" data-tags="Go"><span class="iconfont-archer">&#xe606;</span>Go</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="《数据密集型应用系统设计》阅读笔记"><span class="iconfont-archer">&#xe60a;</span>《数据密集型应用系统设计》阅读笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Kylo Yip"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+     
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"live2d-widget-model-nietzsche"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>
+
+
