@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://yipwinghong.github.io/"/>
-  <updated>2021-06-19T15:09:02.085Z</updated>
+  <updated>2021-06-19T15:32:05.579Z</updated>
   <id>https://yipwinghong.github.io/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="https://yipwinghong.github.io/2021/06/19/Java_override-and-bridge-method/"/>
     <id>https://yipwinghong.github.io/2021/06/19/Java_override-and-bridge-method/</id>
     <published>2021-06-19T14:48:17.000Z</published>
-    <updated>2021-06-19T15:09:02.085Z</updated>
+    <updated>2021-06-19T15:32:05.579Z</updated>
     
     <summary type="html">
     
@@ -200,15 +200,15 @@
   </entry>
   
   <entry>
-    <title>选择合适的数据库</title>
-    <link href="https://yipwinghong.github.io/2021/03/12/DB_right-database/"/>
-    <id>https://yipwinghong.github.io/2021/03/12/DB_right-database/</id>
+    <title>SELECT * 对 SQL 性能不利的原因</title>
+    <link href="https://yipwinghong.github.io/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/"/>
+    <id>https://yipwinghong.github.io/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/</id>
     <published>2021-03-12T08:41:00.000Z</published>
     <updated>2021-06-15T01:47:54.316Z</updated>
     
     <summary type="html">
     
-      原文链接：https://blog.andyet.com/2014/10/01/right-database
+      原文链接：https://tanelpoder.com/posts/reasons-why-select-star-is-bad-for-sql-performance
     
     </summary>
     
@@ -221,15 +221,15 @@
   </entry>
   
   <entry>
-    <title>SELECT * 对 SQL 性能不利的原因</title>
-    <link href="https://yipwinghong.github.io/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/"/>
-    <id>https://yipwinghong.github.io/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/</id>
+    <title>选择合适的数据库</title>
+    <link href="https://yipwinghong.github.io/2021/03/12/DB_right-database/"/>
+    <id>https://yipwinghong.github.io/2021/03/12/DB_right-database/</id>
     <published>2021-03-12T08:41:00.000Z</published>
     <updated>2021-06-15T01:47:54.316Z</updated>
     
     <summary type="html">
     
-      原文链接：https://tanelpoder.com/posts/reasons-why-select-star-is-bad-for-sql-performance
+      原文链接：https://blog.andyet.com/2014/10/01/right-database
     
     </summary>
     
