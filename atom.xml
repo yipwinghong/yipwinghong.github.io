@@ -143,7 +143,7 @@
     <link href="https://yipwinghong.github.io/2021/05/12/DB_using-postgresql-as-a-data-warehouse/"/>
     <id>https://yipwinghong.github.io/2021/05/12/DB_using-postgresql-as-a-data-warehouse/</id>
     <published>2021-05-12T10:59:41.000Z</published>
-    <updated>2021-06-15T01:47:54.316Z</updated>
+    <updated>2021-06-20T05:39:35.847Z</updated>
     
     <summary type="html">
     
@@ -164,7 +164,7 @@
     <link href="https://yipwinghong.github.io/2021/04/12/Algorithm_consistent-hashing/"/>
     <id>https://yipwinghong.github.io/2021/04/12/Algorithm_consistent-hashing/</id>
     <published>2021-04-12T15:37:00.000Z</published>
-    <updated>2021-06-15T01:47:54.306Z</updated>
+    <updated>2021-06-20T05:23:45.923Z</updated>
     
     <summary type="html">
     
@@ -196,27 +196,6 @@
     
     
       <category term="杂事" scheme="https://yipwinghong.github.io/tags/%E6%9D%82%E4%BA%8B/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>SELECT * 对 SQL 性能不利的原因</title>
-    <link href="https://yipwinghong.github.io/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/"/>
-    <id>https://yipwinghong.github.io/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/</id>
-    <published>2021-03-12T08:41:00.000Z</published>
-    <updated>2021-06-15T01:47:54.316Z</updated>
-    
-    <summary type="html">
-    
-      原文链接：https://tanelpoder.com/posts/reasons-why-select-star-is-bad-for-sql-performance
-    
-    </summary>
-    
-    
-    
-      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
-    
-      <category term="数据库" scheme="https://yipwinghong.github.io/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
     
   </entry>
   
@@ -429,6 +408,29 @@
     <summary type="html">
     
       《DDIA》阅读笔记（五）：数据复制（无主节点）
+    
+    </summary>
+    
+    
+      <category term="《数据密集型应用系统设计》阅读笔记" scheme="https://yipwinghong.github.io/categories/%E3%80%8A%E6%95%B0%E6%8D%AE%E5%AF%86%E9%9B%86%E5%9E%8B%E5%BA%94%E7%94%A8%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E3%80%8B%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="设计" scheme="https://yipwinghong.github.io/tags/%E8%AE%BE%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《DDIA》阅读笔记（五）：数据复制（多主节点）</title>
+    <link href="https://yipwinghong.github.io/2021/01/20/DDIA_note-6/"/>
+    <id>https://yipwinghong.github.io/2021/01/20/DDIA_note-6/</id>
+    <published>2021-01-20T15:11:27.000Z</published>
+    <updated>2021-06-15T01:47:54.316Z</updated>
+    
+    <summary type="html">
+    
+      《DDIA》阅读笔记（五）：数据复制（多主节点）
     
     </summary>
     

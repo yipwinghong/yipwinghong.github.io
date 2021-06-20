@@ -407,29 +407,32 @@ height:100vh;
         <blockquote>
 <p>原文链接：<a target="_blank" rel="noopener" href="http://tom-e-white.com/2007/11/consistent-hashing.html">Consistent Hashing</a></p>
 </blockquote>
-<h1 id="一致性哈希"><a href="#一致性哈希" class="headerlink" title="一致性哈希"></a>一致性哈希</h1><p>一致性哈希的需求源自于缓存服务器集群，比如 Web 缓存。</p>
-<p>如果您有一套由 <code>n</code> 台缓存服务器组成的集群，实现负载均衡最常用的做法是把对象 o 存放在序号为 <code>hash(o) mod n</code> 的服务器上。</p>
-<p>这种策略效果良好，但当您出于某种原因从集群中增加或删除服务器，<code>n</code> 的改变会导致所有的对象 hash 值都被重新计算到新的地址上，其结果可能是灾难性的：表现得就像缓存瞬间消失了一样，曾被缓存原始内容的服务器将会被请求“淹没”。</p>
-<p>因此您需要注意使用一致性哈希来规避由于缓存失效、服务器承接大量请求的问题！</p>
-<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>让我们着眼于更多细节，实际上哈希函数是把对象及其缓存映射到一个数字范围上。</p>
-<p>每位 Java 程序员都应该非常熟悉对象的 <code>hashCode</code> 方法会返回一个整型数（范围 [-2^32, 2^32-1]）。试想一下将此范围映射到一个圆圈中，使得这些值可以被包含在内。</p>
+<h1 id="一致性哈希"><a href="#一致性哈希" class="headerlink" title="一致性哈希"></a>一致性哈希</h1><p>一致性哈希的需求源自于缓存服务器集群，比如 Web 缓存，一套由 <code>n</code> 台缓存服务器组成的集群，实现负载均衡最常用的做法是把对象 o 存放在序号为 <code>hash(o) mod n</code> 的服务器上。</p>
+<p>这种策略效果良好，但如果出于某种原因需要从集群中增加或删除服务器，会导致所有的对象 hash 值都被重新计算到新的地址上，其结果可能会很严重：就像缓存瞬间消失了，原本有缓存的服务器瞬间就被请求淹没。</p>
+<p>因此需要使用一致性哈希来规避由于缓存失效、服务器承接大量请求的问题。</p>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>从细节上来看，哈希函数是把对象及其缓存映射到一个数字范围上。每位 Java 程序员都应该非常熟悉对象的 <code>hashCode</code> 方法会返回一个整型数（范围 [-2^32, 2^32-1]）。就可以试想一下将此范围映射到一个圆圈中，使得这些值可以被包含在内。</p>
 <p>下图的圆圈中包含了对象 (1, 2, 3, 4)，以及缓存 (A, B, C) 经过哈希计算得出的标记点（<a target="_blank" rel="noopener" href="http://www8.org/w8-papers/2a-webserver/caching/paper2.html">Web Caching with Consistent Hashing</a> by David Karger et al）。</p>
 <p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C-1.png" alt="一致性哈希-1"></p>
-<p>为了找到一个对象在哪个缓存中，我们顺时针转动圆圈直到找到一个缓存点。因此在上图中我们看到对象 1 和 4 属于缓存 A，对象 2 属于缓存 B，对象 3 属于缓存 C。</p>
-<p>请思考一下如果缓存 C 被删除了将会发生什么：对象 3 属于缓存 A，且其他所有的对象映射关系都不会被改变。如果此时另一个缓存 D 被添加到标记的位置，对象 3 和 4 将会被划走，只剩下对象 1 还属于缓存 A。</p>
+<p>为了找到一个对象在哪个缓存中，顺时针转动圆圈直到找到一个缓存点。</p>
+<p>因此在上图中可见对象 1 和 4 属于缓存 A，对象 2 属于缓存 B，对象 3 属于缓存 C。</p>
+<p>如果缓存 C 被删除了将会发生什么：对象 3 属于缓存 A，且其他所有的对象映射关系都不会被改变。</p>
+<p>如果此时另一个缓存 D 被添加到标记的位置，对象 3 和 4 将会被划走，只剩下对象 1 还属于缓存 A。</p>
 <p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C-2.png" alt="一致性哈希-2"></p>
-<p>这种策略效果很好，只是存在一些问题：每个分配给缓存的间隔很难以命中。由于这种分配本质上是随机的，很可能导致缓存之间的对象分布很不均匀。解决方法是 <strong>引入“虚拟节点”</strong>：即在圆圈中缓存点的副本。因此无论何时添加缓存，我们都会在圆圈中为其创建多个点。</p>
-<p>您在下面的图表（通过代码模拟将 10,000 个对象存储在 10 个缓存中）可以看到效果：x 轴是缓存点的副本数（对数刻度），当它的值很小时我们可以看到对象在整个缓存中的分布是很不平衡的，因为 <strong>标准偏差</strong> 占 <strong>每个缓存中平均对象数</strong> 的百分比很高。随着副本数量增加，对象的分布会变得更平衡。这个实验表明，一个包含 100 或 200 个副本的图即可达到可接受的平衡状态（标准偏差大约为平均值的 5% 至 10%）。</p>
+<p>这种策略效果很好，只是存在一些问题：每个分配给缓存的间隔很难以命中。由于这种分配本质上是随机的，很可能导致缓存之间的对象分布很不均匀。</p>
+<p>解决方法是 <strong>引入“虚拟节点”</strong>：即在圆圈中缓存点的副本。因此无论何时添加缓存，都会在圆圈中为其创建多个点。</p>
+<p>在下面的图表（通过代码模拟将 10,000 个对象存储在 10 个缓存中）可以看到效果：x 轴是缓存点的副本数（对数刻度），当它的值很小时可见对象在整个缓存中的分布是很不平衡的，因为 <strong>标准偏差</strong> 占 <strong>每个缓存中平均对象数</strong> 的百分比很高。随着副本数量增加，对象的分布会变得更平衡。</p>
+<p>这个实验表明，一个包含 100 或 200 个副本的图即可达到可接受的平衡状态（标准偏差大约为平均值的 5% 至 10%）。</p>
 <p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C-3.png" alt="一致性哈希-3"></p>
-<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>为了完整呈现这种策略，以下是基于 Java 的简单实现。</p>
-<p>为了使一致性哈希更高效，选用一个混淆效果好的 hash 函数是很重要的。<code>Object</code> 的 <code>hashCode</code> 方法的多数实现都不能起到良好的混淆效果，例如它们通常会产生数量有限的小整型值。</p>
-<p>因此我们使用一个允许自定义 hash 函数的 <code>HashFunction</code> 接口（此处建议使用 MD5 散列）。</p>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>以下是基于 Java 的简单实现，用于完整呈现这种策略。</p>
+<p>为了使一致性哈希更高效，选用一个混淆效果好的 hash 函数是很重要的。</p>
+<p><code>Object</code> 的 <code>hashCode</code> 方法的多数实现都不能起到良好的混淆效果，比如它们通常会产生数量有限的小整型值。</p>
+<p>因此使用一个允许自定义 hash 函数的 <code>HashFunction</code> 接口（此处建议使用 MD5 散列）。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConsistentHash</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> HashFunction hashFunction;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> numberOfReplicas;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> SortedMap&lt;Integer, T&gt; circle = <span class="keyword">new</span> TreeMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ConsistentHash</span><span class="params">(HashFunction hashFunction, <span class="keyword">int</span> numberOfReplicas, Collection&lt;T&gt; nodes)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.hashFunction = hashFunction;</span><br><span class="line">        <span class="keyword">this</span>.numberOfReplicas = numberOfReplicas;</span><br><span class="line">        <span class="keyword">for</span> (T node : nodes) &#123;</span><br><span class="line">            add(node);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(T node)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; numberOfReplicas; i++) &#123;</span><br><span class="line">            circle.put(hashFunction.hash(node.toString() + i), node);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">remove</span><span class="params">(T node)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; numberOfReplicas; i++) &#123;</span><br><span class="line">            circle.remove(hashFunction.hash(node.toString() + i));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">(Object key)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (circle.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> hash = hashFunction.hash(key.toString());</span><br><span class="line">        <span class="keyword">if</span> (!circle.containsKey(hash)) &#123;</span><br><span class="line">            SortedMap&lt;Integer, T&gt; tailMap = circle.tailMap(hash);</span><br><span class="line">            hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> circle.get(hash);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>圆圈用一个有序的整型 Map 表示（TreeMap，红黑树实现），代表了缓存的哈希值（此处为泛型 T）。</p>
-<p>创建 ConsistentHash 时，每个节点都会多次添加到表示圆圈的 Map 中（次数由 <code>numberOfReplicas</code> 字段控制）。每个副本的位置由对节点名称和数字后缀的 hash 值决定，并将该节点存储在 Map 中。</p>
-<p>要找到对象的节点（<code>get</code> 方法），应使用该对象的 hash 值在 Map 中查找。在大多数情况下都不会有节点存储在此 hash 值上（因为即使包括副本，hash 值范围通常比节点数大得多），因此在 Map 的尾部查找第一个 key 即可找到下一个节点。如果 Map 的尾部为空，则我们可以获取第一个 key 来环绕圆圈。</p>
-<h2 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h2><p>那么如何使用一致性哈希呢？您往往会在库中用到它，而不需要自己编写代码来实现。</p>
+<p>创建 <code>ConsistentHash</code> 时，每个节点都会多次添加到表示圆圈的 Map 中（次数由 <code>numberOfReplicas</code> 字段控制）。每个副本的位置由对节点名称和数字后缀的 hash 值决定，并将该节点存储在 Map 中。</p>
+<p>要找到对象的节点（<code>get</code> 方法），应使用该对象的 hash 值在 Map 中查找。在大多数情况下都不会有节点存储在此 hash 值上（因为即使包括副本，hash 值范围通常比节点数大得多），因此在 Map 的尾部查找第一个 key 即可找到下一个节点。如果 Map 的尾部为空，则可以获取第一个 key 来环绕圆圈。</p>
+<h2 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h2><p>如何使用一致性哈希呢？很多库都有提供这样的功能，因此不需要自己编码来实现它。</p>
 <p>例如现在 memcached（一种分布式内存对象缓存系统）就具有支持一致性哈希的客户端。第一个是 Richard Jones 的 Last.fm’s ketama ，Dustin Sallings 也有基于 Java 的实现（这也启发了我完成上面的简化演示实现）。</p>
 <p>有趣的是只有客户端需要实现一致性哈希算法，memcached 服务器不用改变。</p>
 <p>其他采用一致性哈希的系统：包括 Chord（分布式哈希表实现）和 Amazon 的 Dynamo（键值存储，不对 Amazon 外部开放使用）。</p>
@@ -1005,16 +1008,9 @@ top:100vh;
     
     
     
-    
-    
-    
-    
-    
-    
-    
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 58
+        Total : 57
         </div>
         <!-- search  -->
         
@@ -1071,11 +1067,6 @@ top:100vh;
     
         <li class="archive-post-item">
             <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/" >SELECT * 对 SQL 性能不利的原因</a>
         </li>
     
     

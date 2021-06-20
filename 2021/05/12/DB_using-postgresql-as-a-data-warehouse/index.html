@@ -446,16 +446,14 @@ height:100vh;
 </li>
 </ul>
 <p>因此专用的数据仓库（像 Redshift，BigQuery 和 Snowflake）使用列式存储实现，而且没有索引。</p>
-<img src="https://narrator.ghost.io/content/images/2021/05/image.png" alt="Credit: James Cheng" style="zoom: 80%;" />
+<figure class="highlight gcode"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">            row-store </span><br><span class="line">    date  store  product Cutsomer price</span><br><span class="line">&#123;</span><br><span class="line">    [<span class="comment">(...)</span>, <span class="comment">(...)</span>, <span class="comment">(...)</span>, <span class="comment">(...)</span>, <span class="comment">(...)</span>],</span><br><span class="line">    [<span class="comment">(...)</span>, <span class="comment">(...)</span>, <span class="comment">(...)</span>, <span class="comment">(...)</span>, <span class="comment">(...)</span>]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">            col-store </span><br><span class="line">     date   store  product Cutsomer price</span><br><span class="line">&#123;</span><br><span class="line">    [<span class="comment">(...)</span>, [<span class="comment">(...)</span>, [<span class="comment">(...)</span>, [<span class="comment">(...)</span>, [<span class="comment">(...)</span>,</span><br><span class="line">     <span class="comment">(...)</span>,  <span class="comment">(...)</span>,  <span class="comment">(...)</span>,  <span class="comment">(...)</span>,  <span class="comment">(...)</span>,</span><br><span class="line">     <span class="comment">(...)</span>], <span class="comment">(...)</span>], <span class="comment">(...)</span>]  <span class="comment">(...)</span>]  <span class="comment">(...)</span>] </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <blockquote>
 <p>  Holistics.io 有一份不错的指南详细介绍了这一点。</p>
 </blockquote>
 <h3 id="这对于-Postgres-来说意味着什么？"><a href="#这对于-Postgres-来说意味着什么？" class="headerlink" title="这对于 Postgres 来说意味着什么？"></a>这对于 Postgres 来说意味着什么？</h3><p>Postgres 是行式存储，但它也可以轻松支持分析查询，而这只需要做出一些调整和估量。</p>
 <p>不过尽管 Postgres 是很好的选择，但从长远来说像 Snowflake 这样基于云的数据库更易于管理和维护。</p>
-<h2 id="把-Postgres-配置为数据仓库"><a href="#把-Postgres-配置为数据仓库" class="headerlink" title="把 Postgres 配置为数据仓库"></a>把 Postgres 配置为数据仓库</h2><img src="https://narrator.ghost.io/content/images/2021/05/postgres-logo-2.png" style="zoom: 80%;" />
-
-<blockquote>
+<h2 id="把-Postgres-配置为数据仓库"><a href="#把-Postgres-配置为数据仓库" class="headerlink" title="把 Postgres 配置为数据仓库"></a>把 Postgres 配置为数据仓库</h2><blockquote>
 <p>  温馨提示：请不要将 Postgres 生产库用作数据报表或指标采集。可以进行一些查询，但分析请求的工作负载和生产请求的工作负载差距甚远，以至于它们会对生产系统产生巨大的性能影响。</p>
 </blockquote>
 <h3 id="避免使用通用表表达式"><a href="#避免使用通用表表达式" class="headerlink" title="避免使用通用表表达式"></a>避免使用通用表表达式</h3><p>通用表表达式（common table expressions, CTEs）又称为 “WITH” 查询，可避免嵌套子查询。</p>
@@ -1105,16 +1103,9 @@ top:100vh;
     
     
     
-    
-    
-    
-    
-    
-    
-    
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 58
+        Total : 57
         </div>
         <!-- search  -->
         
@@ -1171,11 +1162,6 @@ top:100vh;
     
         <li class="archive-post-item">
             <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_reasons-why-select-star-is-bad-for-sql-performance/" >SELECT * 对 SQL 性能不利的原因</a>
         </li>
     
     
