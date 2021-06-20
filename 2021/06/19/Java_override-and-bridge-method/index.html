@@ -406,7 +406,7 @@ height:100vh;
     <article class="article-entry">
         <h1 id="Java-多态、重写与桥接方法"><a href="#Java-多态、重写与桥接方法" class="headerlink" title="Java 多态、重写与桥接方法"></a>Java 多态、重写与桥接方法</h1><blockquote>
 <p>  “面向对象三大特性：封装、继承、多态”、“重写是多态最重要的体现方式”…</p>
-<p>  相信这些概念对于很多 Java 程序员而言早已是烂熟于心，那么在 JVM 层面具体表现又是如何呢？</p>
+<p>  相信这些概念对于很多 Java 程序员而言早已是烂熟于心，而在 JVM 层面具体表现又是如何呢？</p>
 </blockquote>
 <h2 id="方法重写（Override）"><a href="#方法重写（Override）" class="headerlink" title="方法重写（Override）"></a>方法重写（Override）</h2><p>相信平时写惯 Java 代码必然不会对 <code>@Override</code> 感到陌生了，其含义就是当前类的这个方法是对父类同名方法的 <strong>重写</strong>。</p>
 <p>Java 作为面向对象语言，其中最典型的特点就是 <strong>多态性</strong>。</p>
@@ -423,7 +423,7 @@ height:100vh;
 
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Test0</span>.java:<span class="number">12</span>: error: helloWorld() in <span class="type">SubClass</span> cannot <span class="keyword">override</span> helloWorld() in <span class="type">SuperClass</span></span><br><span class="line">        public int helloWorld() &#123;</span><br><span class="line">                   ^</span><br><span class="line">  <span class="keyword">return</span> <span class="class"><span class="keyword">type</span> <span class="title">int</span> <span class="title">is</span> <span class="title">not</span> <span class="title">compatible</span> <span class="keyword">with</span> <span class="title">void</span></span></span><br><span class="line"><span class="number">1</span> error</span><br></pre></td></tr></table></figure>
 
-<p>这要求子类方法的返回类型，至少是要与父类方法的返回类型 <strong>兼容</strong>（比如子类方法的返回类型是父类方法的返回类型的子类），才能实现重写：</p>
+<p>这要求子类方法的返回类型，至少是要与父类方法的返回类型 <strong>兼容</strong>（比如子类方法的返回类型是父类方法的返回类型的子类）的，才能实现重写：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test1</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SuperClass</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> Number <span class="title">helloWorld</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;Parent: &#x27;Hello, World!&#x27;&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SubClass</span> <span class="keyword">extends</span> <span class="title">SuperClass</span> </span>&#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Integer <span class="title">helloWorld</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;Child: &#x27;Hello, World!&#x27;&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>这样就没问题了。</p>
@@ -446,7 +446,13 @@ height:100vh;
 <p>可见在第 16 行中有提示：</p>
 <figure class="highlight tp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">flags: (<span class="number">0x1041</span>) <span class="keyword">ACC</span>_PUBLIC, <span class="keyword">ACC</span>_BRIDGE, <span class="keyword">ACC</span>_SYNTHETIC</span><br></pre></td></tr></table></figure>
 
-<p>该方法是桥接方法（ACC_BRIDGE），而且由编译器自动生成（ACC_SYNTHETIC）。这是编译器为了保持 Java 重写的语义，在编译时自动生成的方法，使之在 JVM 层面也实现了重写。</p>
+<p>参考 JVM 规范可知该方法是桥接方法（ACC_BRIDGE），而且由编译器自动生成（ACC_SYNTHETIC）。这是编译器为了保持 Java 重写的语义，在编译时自动生成的方法，使之在 JVM 层面也实现了重写。</p>
+<blockquote>
+<p>  The <code>ACC_BRIDGE</code> flag is used to indicate a bridge method generated by a compiler for the Java programming language.</p>
+</blockquote>
+<blockquote>
+<p>  The <code>ACC_SYNTHETIC</code> flag indicates that this class or interface was generated by a compiler and does not appear in source code.</p>
+</blockquote>
 <p>由于桥接方法的描述符与原子类方法（第 2 行）不同，JVM 可据此定位到具体方法。</p>
 <h3 id="泛型方法"><a href="#泛型方法" class="headerlink" title="泛型方法"></a>泛型方法</h3><p>在 <code>Test2</code> 中子类重写了父类的一个泛型方法，编译器也会在子类生成桥接方法。</p>
 <p>编译 <code>Test2</code> 的代码：</p>
@@ -491,17 +497,19 @@ height:100vh;
 
 <p>这是指向 <code>helloWorld</code> 的非接口符号引用（Methodref，如果某个方法是由实现接口而来的，则为接口符号引用 InterfaceMethodref）。要执行符号引用的字节码，需要先根据方法名称和描述符查找到具体的类、转换为实际引用。</p>
 <p>其查找的顺序是：子类（即本类） -&gt; 父类（直到 <code>Object</code> 类） -&gt; 子类实现的接口（直接或间接）。</p>
-<p>如果再最后一步中有多个符合条件的目标方法，则取其中一个。</p>
+<p>如果在最后一步中有多个符合条件的目标方法，则取其中一个。</p>
 <blockquote>
-<p>  接口符号引用也是同理，只是如果在接口的实现类中找不到，则会在 Object 类的公有示例方法中查找。然后就是查找子类实现的接口的超接口，以此类推。</p>
+<p>  接口符号引用也是同理，只是如果在接口的实现类中找不到，则会在 Object 类的公有实例方法中查找。然后就是查找子类实现的超接口，以此类推。</p>
 </blockquote>
 <p>在示例的 <code>SubClass</code> 中已经有 <code>helloWorld</code> 方法，因此可以直接取用。</p>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/11539">JVM是如何执行方法调用的？（上）</a></p>
+<li><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/11539">JVM 是如何执行方法调用的？（上）</a></p>
 </li>
-<li><p><a target="_blank" rel="noopener" href="https://wiki.openjdk.java.net/display/HotSpot/VirtualCalls">https://wiki.openjdk.java.net/display/HotSpot/VirtualCalls</a></p>
+<li><p><a target="_blank" rel="noopener" href="https://docs.oracle.com/javase/specs/jvms/se13/html/jvms-4.html">Chapter 4. The class File Format (oracle.com)</a></p>
 </li>
-<li><p><a target="_blank" rel="noopener" href="https://wiki.openjdk.java.net/display/HotSpot/InterfaceCalls">https://wiki.openjdk.java.net/display/HotSpot/InterfaceCalls</a></p>
+<li><p><a target="_blank" rel="noopener" href="https://wiki.openjdk.java.net/display/HotSpot/VirtualCalls">VirtualCalls - VirtualCalls - OpenJDK Wiki (java.net)</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://wiki.openjdk.java.net/display/HotSpot/InterfaceCalls">InterfaceCalls - InterfaceCalls - OpenJDK Wiki (java.net)</a></p>
 </li>
 </ul>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
@@ -1434,11 +1442,11 @@ top:100vh;
     
         <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
     
-        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
-    
         <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
     
         <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
+    
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
     
         <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
     
