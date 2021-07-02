@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://yipwinghong.github.io/"/>
-  <updated>2021-07-02T06:09:14.803Z</updated>
+  <updated>2021-07-02T09:48:49.358Z</updated>
   <id>https://yipwinghong.github.io/</id>
   
   <author>
@@ -21,11 +21,32 @@
     <link href="https://yipwinghong.github.io/2021/07/01/DistributedSystem_gossip-dissemination/"/>
     <id>https://yipwinghong.github.io/2021/07/01/DistributedSystem_gossip-dissemination/</id>
     <published>2021-07-01T15:05:19.000Z</published>
-    <updated>2021-07-02T06:09:14.803Z</updated>
+    <updated>2021-07-02T09:48:49.358Z</updated>
     
     <summary type="html">
     
       原文链接：https://martinfowler.com/articles/patterns-of-distributed-systems/gossip-dissemination.html
+    
+    </summary>
+    
+    
+    
+      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
+    
+      <category term="分布式系统" scheme="https://yipwinghong.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>分布式系统模式：版本化值</title>
+    <link href="https://yipwinghong.github.io/2021/06/23/DistributedSystem_versioned-value/"/>
+    <id>https://yipwinghong.github.io/2021/06/23/DistributedSystem_versioned-value/</id>
+    <published>2021-06-23T15:05:19.000Z</published>
+    <updated>2021-07-02T09:52:26.352Z</updated>
+    
+    <summary type="html">
+    
+      原文链接：https://martinfowler.com/articles/patterns-of-distributed-systems/versioned-value.html
     
     </summary>
     
@@ -406,29 +427,6 @@
     <summary type="html">
     
       《DDIA》阅读笔记（六）：数据分区
-    
-    </summary>
-    
-    
-      <category term="《数据密集型应用系统设计》阅读笔记" scheme="https://yipwinghong.github.io/categories/%E3%80%8A%E6%95%B0%E6%8D%AE%E5%AF%86%E9%9B%86%E5%9E%8B%E5%BA%94%E7%94%A8%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E3%80%8B%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/"/>
-    
-    
-      <category term="技术" scheme="https://yipwinghong.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
-    
-      <category term="设计" scheme="https://yipwinghong.github.io/tags/%E8%AE%BE%E8%AE%A1/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>《DDIA》阅读笔记（五）：数据复制（无主节点）</title>
-    <link href="https://yipwinghong.github.io/2021/01/21/DDIA_note-7/"/>
-    <id>https://yipwinghong.github.io/2021/01/21/DDIA_note-7/</id>
-    <published>2021-01-21T11:37:00.000Z</published>
-    <updated>2021-06-15T01:47:54.316Z</updated>
-    
-    <summary type="html">
-    
-      《DDIA》阅读笔记（五）：数据复制（无主节点）
     
     </summary>
     
