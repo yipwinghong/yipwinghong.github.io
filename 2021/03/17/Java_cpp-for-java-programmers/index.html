@@ -22,7 +22,7 @@
     <meta name="description" content="">
     <meta http-equiv="Cache-control" content="no-cache">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-    <title>Java 程序员的 C++：不再恐惧 · Kylo&#39;s Notebook</title>
+    <title>Java 程序员的 C++ · Kylo&#39;s Notebook</title>
     <style type="text/css">
     @font-face {
         font-family: 'Oswald-Regular';
@@ -218,7 +218,7 @@
                 <a href="/" >Kylo&#39;s Notebook</a>
             </div>
             <div class="post-title">
-                <a href="#" class="post-name">Java 程序员的 C++：不再恐惧</a>
+                <a href="#" class="post-name">Java 程序员的 C++</a>
             </div>
     </div>
     
@@ -248,7 +248,7 @@ height:100vh;
         <h1 class="intro-title">
             <!-- 主页  -->
             
-            Java 程序员的 C++：不再恐惧
+            Java 程序员的 C++
             <!-- 404 -->
             
         </h1>
@@ -269,7 +269,7 @@ height:100vh;
     
         <a class="post-tag" href="javascript:void(0);" data-tags = "技术">技术</a>
     
-        <a class="post-tag" href="javascript:void(0);" data-tags = "C++">C++</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Java">Java</a>
     
 </div>
                 
@@ -280,7 +280,7 @@ height:100vh;
                 
                 <div class="post-intro-meta">
                     <span class="post-intro-calander iconfont-archer">&#xe676;</span>
-                    <span class="post-intro-time">2021/06/05</span>
+                    <span class="post-intro-time">2021/03/17</span>
                     
                     <span id="busuanzi_container_page_pv" class="busuanzi-pv">
                         <span class="iconfont-archer">&#xe602;</span>
@@ -407,7 +407,7 @@ height:100vh;
         <blockquote>
 <p>原文链接：<a target="_blank" rel="noopener" href="https://blog.scottlogic.com/2021/04/22/losing-the-fear.html">C++ for Java Programmers - Losing the Fear (scottlogic.com)</a></p>
 </blockquote>
-<h1 id="Java-程序员的-C-：不再恐惧"><a href="#Java-程序员的-C-：不再恐惧" class="headerlink" title="Java 程序员的 C++：不再恐惧"></a>Java 程序员的 C++：不再恐惧</h1><p>本文试图介绍一些 C++ 基本的特征、区别，还有一些在首次使用这门语言时将会遇到的陷阱。</p>
+<h1 id="Java-程序员的-C"><a href="#Java-程序员的-C" class="headerlink" title="Java 程序员的 C++"></a>Java 程序员的 C++</h1><p>本文试图介绍一些 C++ 基本的特征、区别，还有一些在首次使用这门语言时将会遇到的陷阱。</p>
 <p>C++ 这门语言非常复杂，这里讲述的都是基础，也许是 Java 程序员在早期遇到的主要障碍。</p>
 <h2 id="创建对象"><a href="#创建对象" class="headerlink" title="创建对象"></a>创建对象</h2><p>Java 程序员最初编写 C++ 代码时的经典例子：</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Thing</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:   <span class="comment">// Defines everything until the next accessor </span></span><br><span class="line">    <span class="built_in">Thing</span>(<span class="keyword">int</span> val) : <span class="built_in">m_val</span>(val) &#123;    <span class="comment">// Uses the initialiser list, which runs before the constructor body</span></span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;Create Thing &quot;</span> &lt;&lt; m_val &lt;&lt; <span class="string">&quot;\n&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">doStuff</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;Doing Stuff &quot;</span> &lt;&lt; m_val &lt;&lt; <span class="string">&quot;\n&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">int</span> m_val;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Thing* thing = <span class="keyword">new</span> <span class="built_in">Thing</span>(<span class="number">5</span>); <span class="comment">// &quot;Why do I have a pointer?&quot;  </span></span><br><span class="line">    (*thing).<span class="built_in">doStuff</span>();          <span class="comment">// Go away, pointer</span></span><br><span class="line">    <span class="keyword">delete</span> thing;                <span class="comment">// I know I&#x27;m supposed to delete this, I hope I did it right</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">// 0 = EXIT_SUCCESS</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -506,16 +506,16 @@ height:100vh;
         <li class="next">
             
                 <div class="nextSlogan">Next Post</div>
-                <a href= "/2021/06/06/2021-06-06_diary/" title= "Weekly Summary (2021-05-31_2021-06-06)">
-                    <div class="nextTitle">Weekly Summary (2021-05-31_2021-06-06)</div>
+                <a href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" title= "把 PostgreSQL 用作数据仓库">
+                    <div class="nextTitle">把 PostgreSQL 用作数据仓库</div>
                 </a>
             
         </li>
         <li class="previous">
             
                 <div class="prevSlogan">Previous Post</div>
-                <a href= "/2021/05/31/2021-05-31_diary/" title= "2021 下半年工作学习安排">
-                    <div class="prevTitle">2021 下半年工作学习安排</div>
+                <a href= "/2021/02/24/DDIA_note-13/" title= "《DDIA》阅读笔记（九）：一致性与共识（共识问题）">
+                    <div class="prevTitle">《DDIA》阅读笔记（九）：一致性与共识（共识问题）</div>
                 </a>
             
         </li>
@@ -653,7 +653,7 @@ top:100vh;
         <div class="toc-catalog">
             <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
         </div>
-        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Java-%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84-C-%EF%BC%9A%E4%B8%8D%E5%86%8D%E6%81%90%E6%83%A7"><span class="toc-number">1.</span> <span class="toc-text">Java 程序员的 C++：不再恐惧</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E5%AF%B9%E8%B1%A1"><span class="toc-number">1.1.</span> <span class="toc-text">创建对象</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9%E8%B1%A1%E6%9E%90%E6%9E%84"><span class="toc-number">1.2.</span> <span class="toc-text">对象析构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%95%E7%94%A8"><span class="toc-number">1.3.</span> <span class="toc-text">引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E9%87%8F"><span class="toc-number">1.4.</span> <span class="toc-text">常量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%91%E9%87%8F"><span class="toc-number">1.5.</span> <span class="toc-text">向量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%8D%E8%BD%BD%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="toc-number">1.6.</span> <span class="toc-text">重载运算符</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%82%E5%B8%B8"><span class="toc-number">1.7.</span> <span class="toc-text">异常</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%A7%E6%89%BF"><span class="toc-number">1.8.</span> <span class="toc-text">继承</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%86%E6%98%AF%EF%BC%9F"><span class="toc-number">1.9.</span> <span class="toc-text">但是？</span></a></li></ol></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Java-%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84-C"><span class="toc-number">1.</span> <span class="toc-text">Java 程序员的 C++</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E5%AF%B9%E8%B1%A1"><span class="toc-number">1.1.</span> <span class="toc-text">创建对象</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9%E8%B1%A1%E6%9E%90%E6%9E%84"><span class="toc-number">1.2.</span> <span class="toc-text">对象析构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%95%E7%94%A8"><span class="toc-number">1.3.</span> <span class="toc-text">引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E9%87%8F"><span class="toc-number">1.4.</span> <span class="toc-text">常量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%91%E9%87%8F"><span class="toc-number">1.5.</span> <span class="toc-text">向量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%8D%E8%BD%BD%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="toc-number">1.6.</span> <span class="toc-text">重载运算符</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%82%E5%B8%B8"><span class="toc-number">1.7.</span> <span class="toc-text">异常</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%A7%E6%89%BF"><span class="toc-number">1.8.</span> <span class="toc-text">继承</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%86%E6%98%AF%EF%BC%9F"><span class="toc-number">1.9.</span> <span class="toc-text">但是？</span></a></li></ol></li></ol>
     </div>
     
     <div class="back-top iconfont-archer">&#xe639;</div>
@@ -1083,9 +1083,23 @@ top:100vh;
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 59
+        Total : 61
         </div>
         <!-- search  -->
         
@@ -1101,6 +1115,21 @@ top:100vh;
     
     
         <li class="archive-post-item">
+            <span class="archive-post-date">07/09</span><a class="archive-post-title" href= "/2021/07/09/Algorithm_max-flow-problem/" >最大流问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/08</span><a class="archive-post-title" href= "/2021/07/08/Algorithm_minimum_spanning_tree_problem/" >最小生成树问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/08</span><a class="archive-post-title" href= "/2021/07/08/Algorithm_shortest-path-problem/" >最短路径问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
             <span class="archive-post-date">07/01</span><a class="archive-post-title" href= "/2021/07/01/DistributedSystem_gossip-dissemination/" >分布式系统模式：Gossip 传播</a>
         </li>
     
@@ -1111,7 +1140,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">06/19</span><a class="archive-post-title" href= "/2021/06/19/Java_override-and-bridge-method/" >Java 多态、重写与桥接方法</a>
+            <span class="archive-post-date">06/19</span><a class="archive-post-title" href= "/2021/06/19/Algorithm_consistent-hashing/" >一致性哈希</a>
         </li>
     
     
@@ -1126,7 +1155,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/2021-06-05_diary/" >基于记忆规律的学习方法</a>
         </li>
     
     
@@ -1146,22 +1175,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/Java_cpp-for-java-programmers/" >Java 程序员的 C++</a>
         </li>
     
     
@@ -1211,7 +1225,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/DB_right-database/" >选择合适的数据库</a>
         </li>
     
     
@@ -1266,6 +1280,16 @@ top:100vh;
     
         <li class="archive-post-item">
             <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/09</span><a class="archive-post-title" href= "/2020/08/09/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/12</span><a class="archive-post-title" href= "/2020/07/12/Java_override-and-bridge-method/" >Java 多态、重写与桥接方法</a>
         </li>
     
     
@@ -1432,11 +1456,11 @@ top:100vh;
     
         <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
     
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
         <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
     
         <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
-    
-        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
     
         <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
     
@@ -1447,8 +1471,6 @@ top:100vh;
         <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
     
         <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
-    
-        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
     
         <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
     

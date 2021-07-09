@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Kylo Yip">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Kylo Yip">
+    
+    <meta name="keywords" content="Kylo's Notebook,Kylo Yip">
+    
+    <meta name="description" content="">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>最小生成树问题 · Kylo&#39;s Notebook</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Kylo's Notebook" type="application/atom+xml">
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >Kylo&#39;s Notebook</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">最小生成树问题</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>Kylo's Notebook</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:100vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(https://api.ixiaowai.cn/mcapi/mcapi.php)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            最小生成树问题
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "技术">技术</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "算法">算法</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">2.9k</span>Reading time: <span class="post-count reading-time">11 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2021/07/08</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="最小生成树问题相关算法"><a href="#最小生成树问题相关算法" class="headerlink" title="最小生成树问题相关算法"></a>最小生成树问题相关算法</h1><blockquote>
+<p>  接上回，本次介绍另一类问题的相关算法。</p>
+</blockquote>
+<p>在图论领域，有权图（Weight Graph）最经典的问题是最小生成树问题（Minimum Spanning Tree）：对于一个 n 个节点的 <strong>连通图</strong>，求出包含原图 n 个节点、且确保所有边权值之和最小的连通子图，则为最小生成树（MST）。</p>
+<p>先给出有权图的 Java 实现（省略细节），有权边 <code>WeightedEdge</code>（兼容有向、无向）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WeightedEdge</span> <span class="keyword">implements</span> <span class="title">Comparable</span>&lt;<span class="title">WeightedEdge</span>&gt; </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 起点，终点，权值</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> v, w, weight;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">WeightedEdge</span><span class="params">(<span class="keyword">int</span> v, <span class="keyword">int</span> w, <span class="keyword">int</span> weight)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.v = v;</span><br><span class="line">        <span class="keyword">this</span>.w = w;</span><br><span class="line">        <span class="keyword">this</span>.weight = weight;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有权图 <code>WeightedGraph</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WeightedGraph</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 顶点数，边数</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> V, E;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 邻接表：使用红黑树描述</span></span><br><span class="line"><span class="comment">     * [</span></span><br><span class="line"><span class="comment">     *      0: &#123;1: 3, 2: 2, 3: -2&#125;,</span></span><br><span class="line"><span class="comment">     *      1: (2: 2, 3: 2, 4: 1)</span></span><br><span class="line"><span class="comment">     * ]</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> TreeMap&lt;Integer, Integer&gt;[] adj;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 获取权值</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getWeight</span><span class="params">(<span class="keyword">int</span> v, <span class="keyword">int</span> w)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (hasEdge(v, w)) &#123;</span><br><span class="line">            <span class="keyword">return</span> adj[v].get(w);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(String.format(<span class="string">&quot;No edge %d-%d&quot;</span>, v, w));</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">     <span class="comment">// 边是否存在</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">hasEdge</span><span class="params">(<span class="keyword">int</span> v, <span class="keyword">int</span> w)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> adj[v].containsKey(w);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="连通性判断"><a href="#连通性判断" class="headerlink" title="连通性判断"></a>连通性判断</h2><p>对于一个图，可求解出最小生成树的前提是该图为 <strong>连通图</strong>，即图中任意两个节点之间都能找到至少一条路径相连。</p>
+<p>对于非连通图，每个连通子图都称为一个 <strong>连通分量</strong>。</p>
+<p>因此判断图是否连通可使用以下深度优先遍历（DFS）算法：</p>
+<ul>
+<li><p>使用变量 <code>int left</code> 记录待访问节点数（初始化为图节点总数 <code>V</code>），数组 <code>boolean[] visited</code> 记录节点访问状态（避免重复访问）。</p>
+</li>
+<li><p>从任意一个节点 <code>v</code> 出发深度优先遍历图，每经过一个未被访问的邻接节点 <code>w</code> 即标记为已访问 <code>visited[w] = true;</code>，并把待访问节点数 -1 <code>left--</code>，否则跳过。</p>
+</li>
+<li><p>当从 <code>v</code> 出发的深度优先遍历结束，表示已找到一个连通分量。此时判断待访问节点数 <code>left</code> 是否为 0，是则表示刚才已完成整图遍历，该图为连通图，否则为非连通图。</p>
+</li>
+</ul>
+<p>基本实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">Stack&lt;Integer&gt; stack = <span class="keyword">new</span> Stack&lt;&gt;();</span><br><span class="line"><span class="keyword">boolean</span>[] visited = <span class="keyword">new</span> <span class="keyword">boolean</span>[V];</span><br><span class="line"></span><br><span class="line"><span class="comment">// 从 0 出发遍历图，判断图是否联通。</span></span><br><span class="line">stack.push(<span class="number">0</span>);</span><br><span class="line"><span class="keyword">int</span> left = V - <span class="number">1</span>;</span><br><span class="line">visited[<span class="number">0</span>] = <span class="keyword">true</span>;</span><br><span class="line"><span class="keyword">while</span> (!stack.empty()) &#123;</span><br><span class="line">    <span class="keyword">int</span> v = stack.pop();</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> w : adj(v)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (visited[w]) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 每遇到一个未访问的邻接顶点，则 left--。</span></span><br><span class="line">        left--;</span><br><span class="line">        visited[w] = <span class="keyword">true</span>;</span><br><span class="line">        stack.push(w);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> left == <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="切分定理（Bipartite）"><a href="#切分定理（Bipartite）" class="headerlink" title="切分定理（Bipartite）"></a>切分定理（Bipartite）</h2><p>将一个图中的顶点分为两部分，称为一个 <strong>切分</strong>。其中一条边的两个端点属于切分不同的两边，则该边称为 <strong>横切边</strong>。</p>
+<p>如果考虑边的权值，横切边的最短边就属于最小生成树（<strong>切分定理</strong>）。</p>
+<blockquote>
+<h3 id="二分图"><a href="#二分图" class="headerlink" title="二分图"></a>二分图</h3><p>  基于切分的定义引入二分图的概念：在图中能找到一个切分，其所有的边都是横切边，则该图为 <strong>二分图（Bipartite Graph）</strong>：所有顶点可以分成边不相交的两部分（A 部分的点只于 B 部分相连，不与内部的点相连），所有的边的两个端点隶属于不同的部分。</p>
+<p>  二分图的概念常见于无权图的匹配问题（Matching）、最大流问题（Max Flow），经典的算法有 Hungarian 算法。</p>
+</blockquote>
+<p>介绍切分的概念，是为了引入在遍历图的过程中，把节点划归到不同子集的技巧，这种做法在介绍 Prim 算法时再做具体说明。</p>
+<h2 id="并查集（Union-Find）"><a href="#并查集（Union-Find）" class="headerlink" title="并查集（Union Find）"></a>并查集（Union Find）</h2><p>并查集是一种多叉树，其包含两种基本操作：合并和查询。假设待加入并查集的节点共 n 个。</p>
+<ul>
+<li><p>初始化：对于所有的 n 个点 [0, n-1]，代表每个点的集合都初始化为自身，比如 0 =&gt; {0}, 1 =&gt; {1}, …, n-1 =&gt; {n-1}。</p>
+</li>
+<li><p>合并：将两个节点所表示的集合（表示为树）合并为一个集合，即将代表其中一个节点的树的根，嫁接到另一个节点表示的树的孩子上。</p>
+</li>
+<li><p>查找：查找节点所在的集合，即根节点。</p>
+</li>
+</ul>
+<p>由于本文旨在总结最小生成树相关算法，并查集不是重点，只做简要说明并直接给出实现代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UnionFind</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 父节点：parent[p] 即 p 的父节点。</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span>[] parent;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 集合大小（优化树结构）</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span>[] size;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 初始化：[0, n) 所有节点的父节点都是它自身，集合大小都为 1。</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">UnionFind</span><span class="params">(<span class="keyword">int</span> n)</span> </span>&#123;</span><br><span class="line">        parent = <span class="keyword">new</span> <span class="keyword">int</span>[n];</span><br><span class="line">        size = <span class="keyword">new</span> <span class="keyword">int</span>[n];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">            parent[i] = i;</span><br><span class="line">            size[i] = <span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 查询：从给定节点迭代向其父节点查询，直到根节点。并更新沿途访问节点的根节点。</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">find</span><span class="params">(<span class="keyword">int</span> p)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (p != parent[p]) &#123;</span><br><span class="line">            parent[p] = find(parent[p]);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> parent[p];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 判断两个点是否相连。</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isConnected</span><span class="params">(<span class="keyword">int</span> p, <span class="keyword">int</span> q)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> find(p) == find(q);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 合并：两个给定的节点迭代查询到根节点，如果它们有共同根节点则直接返回，否则把其中的一个的根节点接到另一个根节点上（节点数更多的作为根节点）。</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">union</span><span class="params">(<span class="keyword">int</span> p, <span class="keyword">int</span> q)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 不去重（根的值相同也合并）。</span></span><br><span class="line">        <span class="comment">// parent[find(parent, p)] = find(parent, q);</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 去重（根的值相同不合并）。</span></span><br><span class="line">        <span class="keyword">int</span> pRoot = find(p), qRoot = find(q);</span><br><span class="line">        <span class="keyword">if</span> (pRoot == qRoot) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (size[p] &gt; size [q]) &#123;</span><br><span class="line">            parent[qRoot] = pRoot;</span><br><span class="line">            size[pRoot] += size[qRoot];</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            parent[pRoot] = qRoot;</span><br><span class="line">            size[qRoot] += size[pRoot];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 求大小：某个节点的大小等于其根节点的节点数。</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">size</span><span class="params">(<span class="keyword">int</span> p)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> size[find(p)];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 联通分量个数：父节点为其自身的点的数量。</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">cc</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> cnt = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; parent.length; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (parent[i] == i) &#123;</span><br><span class="line">                cnt++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> cnt;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有了以上基础，就可以开始进入最小生成树的求解了。</p>
+<h2 id="Kruskal-算法"><a href="#Kruskal-算法" class="headerlink" title="Kruskal 算法"></a>Kruskal 算法</h2><p>Kruskal 算法本质是贪心算法：每次尽量使用短边。</p>
+<p>每次按权值从小到大选取图上不会构成环的短边，直到覆盖所有顶点。</p>
+<ul>
+<li><p>每次选择一个最短边，如果这个边没有形成环，则相当于对一个切分选择了最短横切边。</p>
+</li>
+<li><p>判断是否成环：可以使用 <strong>DFS</strong>（O(V+E)）或 <strong>并查集</strong>（接近 O(E)）。</p>
+</li>
+</ul>
+<p>并查集用于存放图的节点，并判断节点是否直接或间接相连。</p>
+<p>比如 <strong>1-2</strong>、<strong>2-3</strong> 被添加到 <code>uf</code>，当 <strong>1-3</strong> 被尝试添加到 <code>uf</code> 时，会被判断为 1 和 3 已通过 2 相连，因此不再处理。</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">   <span class="selector-attr">[3]</span></span><br><span class="line"> X    \ ✔</span><br><span class="line"><span class="selector-attr">[1]</span>---<span class="selector-attr">[2]</span></span><br><span class="line">    ✔</span><br></pre></td></tr></table></figure>
+
+<p>在这里直接给出使用并查集可在判断路径是成环时，优化节点查找效率的结论（接近 O(E)），感兴趣的话可以自己探究一下。</p>
+<p>基本实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WeightedGraph</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Iterable&lt;WeightedEdge&gt; <span class="title">mstKruskal</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 省略环的判断，以下代码仅在连通图中有效。</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 把所有边添加到 edges。</span></span><br><span class="line">        List&lt;WeightedEdge&gt; edges = <span class="keyword">new</span> ArrayList&lt;&gt;(E);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> v = <span class="number">0</span>; v &lt; V; v++) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> w : adj(v)) &#123;</span><br><span class="line">                <span class="comment">// 不重复添加。</span></span><br><span class="line">                <span class="keyword">if</span> (v &lt; w) &#123;</span><br><span class="line">                    edges.add(<span class="keyword">new</span> WeightedEdge(v, w, getWeight(v, w)));</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 按权值从小到大排序。</span></span><br><span class="line">        Collections.sort(edges);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 使用并查集判断每次取出的边是否与先前已取出的边形成环，不成环则收集。</span></span><br><span class="line">        </span><br><span class="line">        List&lt;WeightedEdge&gt; mst = <span class="keyword">new</span> ArrayList&lt;&gt;(V - <span class="number">1</span>);</span><br><span class="line">        UnionFind uf = <span class="keyword">new</span> UnionFind(V);</span><br><span class="line">        <span class="keyword">for</span> (WeightedEdge edge : edges) &#123;</span><br><span class="line">            </span><br><span class="line">            <span class="comment">// 比如 1-2 与 2-3 都已添加到 uf 中，则下次通过 uf 可判断 1 和 3 已相连，不需要再添加到 mst。</span></span><br><span class="line">            <span class="keyword">if</span> (uf.isConnected(edge.getV(), edge.getW())) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            mst.add(edge);</span><br><span class="line">            uf.union(edge.getV(), edge.getW());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> mst;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实现细节：</p>
+<ul>
+<li><p>使用一个数组 <code>edges</code> 记录所有的边，并按权值从小到大排列。</p>
+</li>
+<li><p>初始化一个大小为 <code>V</code> 的并查集 <code>uf</code>，默认所有的边都不成环（表示为并查集中的点都不相连）。</p>
+</li>
+<li><p>遍历集合 <code>edges</code>，如果该边的两个顶点（<code>v</code> 和 <code>w</code>）在 <code>uf</code> 中没有相连，则添加到 <code>mst</code> 集合中，并在 <code>uf</code> 中连接 <code>v</code> 和 <code>w</code>。</p>
+</li>
+</ul>
+<p>时间复杂度：O(E*log(E))</p>
+<h2 id="Prim-算法"><a href="#Prim-算法" class="headerlink" title="Prim 算法"></a>Prim 算法</h2><p>Prim 算法将图中的顶点分为两部分，其核心是不断操作更新切分：</p>
+<ul>
+<li><p>从边数之比为 1: V-1 开始，选取两个顶点（切分 from）、与其他点（切分 to）分别组成两个切分。</p>
+</li>
+<li><p>选取这两个切分的最短横切边，添加到 MST 集合，并把顶点更新到切分 from（由于切分更新，此时横切边可能发生改变）。</p>
+</li>
+<li><p>循环执行，直到切分 to 的所有节点都被转移到切分 from（不存在切分），即得到 MST。</p>
+</li>
+</ul>
+<p>先直接给出基本实现，再进一步分析实现的细节：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WeightedGraph</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Iterable&lt;WeightedEdge&gt; <span class="title">mstPrim</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 省略环的判断，以下代码仅在连通图中有效。</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 标记节点当前归属的切分。</span></span><br><span class="line">        <span class="keyword">boolean</span>[] visited = <span class="keyword">new</span> <span class="keyword">boolean</span>[V];</span><br><span class="line">        visited[<span class="number">0</span>] = <span class="keyword">true</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 使用最小堆（堆顶元素必然是最短边），初始化添加顶点 0 的所有邻接边。</span></span><br><span class="line">        Queue&lt;WeightedEdge&gt; pq = <span class="keyword">new</span> PriorityQueue&lt;&gt;();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> w : adj(<span class="number">0</span>)) &#123;</span><br><span class="line">            pq.add(<span class="keyword">new</span> WeightedEdge(<span class="number">0</span>, w, getWeight(<span class="number">0</span>, w)));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        List&lt;WeightedEdge&gt; mst = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        <span class="keyword">while</span> (!pq.isEmpty()) &#123;</span><br><span class="line">            <span class="comment">// 每轮循环取出最短边，如果边的两点已归属于 true 切分，表示该边非横切边，跳过。</span></span><br><span class="line">            WeightedEdge minEdge = pq.remove();</span><br><span class="line">            <span class="keyword">if</span> (visited[minEdge.getV()] &amp;&amp; visited[minEdge.getW()]) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 收集最短横切边，并把该边当前归属于 false 切分的点划归 true。</span></span><br><span class="line">            mst.add(minEdge);</span><br><span class="line">            <span class="keyword">int</span> newV = visited[minEdge.getV()] ? minEdge.getW() : minEdge.getV();</span><br><span class="line">            visited[newV] = <span class="keyword">true</span>;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 遍历新加入的 true 切分的点的邻接顶点，把未访问（即归属于 false 切分）的顶点添加到最小堆。</span></span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> w : adj(newV)) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!visited[w]) &#123;</span><br><span class="line">                    pq.add(<span class="keyword">new</span> WeightedEdge(newV, w, getWeight(newV, w)));</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> mst;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>与其他 DFS、BFS 算法的实现类似，Prim 算法的实现也是基于 <code>boolean[] visited</code> 数组，只是数组的值有了另一层面的意义：用于表示节点划归到不同的切分。对于初始节点 0，划归到 <code>true</code> 切分，其余节点为 <code>false</code> 切分。</p>
+<p>使用最小堆存放节点 0 的所有邻边，判断条件为权值的大小，使得随时可以 O(log(E)) 的代价取出最短边。</p>
+<p>循环执行以下步骤直到最小堆为空，其间使用 <code>mst</code> 集合收集最小生成树的边，最终返回即可：</p>
+<ul>
+<li><p>遍历最小堆，每轮循环取出堆顶的最短边，如果该边的两点已归属于 <code>true</code> 切分，表示该边非横切边，因此跳过。</p>
+</li>
+<li><p>否则收集最短边到 <code>mst</code> 集，并把改横切边上，当前归属于 <code>false</code> 切分的端点 v 划归到 <code>true</code> 切分。</p>
+</li>
+<li><p>遍历新加入 <code>true</code> 的节点 <code>v</code> 的所有邻接节点 <code>w</code>，把其中未访问（即还属于 <code>false</code> 切分）的节点添加到最小堆。</p>
+</li>
+</ul>
+<p>时间复杂度：由于使用了最小堆，可快速找到最短横切边，时间复杂度从 O(V*E) 优化到 O(E*log(E))，如改用索引堆（Index Heap）则可以进一步优化到 O(E*log(V))。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文介绍了最小生成树问题两种最经典的算法，实际上除此之外还有 Fredman-Tarjan 算法（Time: O(E+V*log(V))）、Chazelle 算法（Time: O(E*)），限于篇幅就不再一一介绍了，感兴趣的话可以自行查阅相关资料。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Kruskal's_algorithm">Kruskal’s algorithm - Wikipedia</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Prim's_algorithm">Prim’s algorithm - Wikipedia</a></p>
+</li>
+</ul>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2021/07/09/Algorithm_max-flow-problem/" title= "最大流问题">
+                    <div class="nextTitle">最大流问题</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2021/07/08/Algorithm_shortest-path-problem/" title= "最短路径问题">
+                    <div class="prevTitle">最短路径问题</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODYzMi8yNTEyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:yipwinghong@outlook.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/yipwinghong" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/WeChat.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:100vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91%E9%97%AE%E9%A2%98%E7%9B%B8%E5%85%B3%E7%AE%97%E6%B3%95"><span class="toc-number">1.</span> <span class="toc-text">最小生成树问题相关算法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%9E%E9%80%9A%E6%80%A7%E5%88%A4%E6%96%AD"><span class="toc-number">1.1.</span> <span class="toc-text">连通性判断</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%87%E5%88%86%E5%AE%9A%E7%90%86%EF%BC%88Bipartite%EF%BC%89"><span class="toc-number">1.2.</span> <span class="toc-text">切分定理（Bipartite）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%8C%E5%88%86%E5%9B%BE"><span class="toc-number">1.2.1.</span> <span class="toc-text">二分图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B9%B6%E6%9F%A5%E9%9B%86%EF%BC%88Union-Find%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">并查集（Union Find）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Kruskal-%E7%AE%97%E6%B3%95"><span class="toc-number">1.4.</span> <span class="toc-text">Kruskal 算法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Prim-%E7%AE%97%E6%B3%95"><span class="toc-number">1.5.</span> <span class="toc-text">Prim 算法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">1.6.</span> <span class="toc-text">总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number">1.7.</span> <span class="toc-text">参考</span></a></li></ol></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 61
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/09</span><a class="archive-post-title" href= "/2021/07/09/Algorithm_max-flow-problem/" >最大流问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/08</span><a class="archive-post-title" href= "/2021/07/08/Algorithm_minimum_spanning_tree_problem/" >最小生成树问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/08</span><a class="archive-post-title" href= "/2021/07/08/Algorithm_shortest-path-problem/" >最短路径问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/01</span><a class="archive-post-title" href= "/2021/07/01/DistributedSystem_gossip-dissemination/" >分布式系统模式：Gossip 传播</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/23</span><a class="archive-post-title" href= "/2021/06/23/DistributedSystem_versioned-value/" >分布式系统模式：版本化值</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/19</span><a class="archive-post-title" href= "/2021/06/19/Algorithm_consistent-hashing/" >一致性哈希</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/13</span><a class="archive-post-title" href= "/2021/06/13/Go_cheat-sheet/" >Go Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/06</span><a class="archive-post-title" href= "/2021/06/06/2021-06-06_diary/" >Weekly Summary (2021-05-31_2021-06-06)</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/2021-06-05_diary/" >基于记忆规律的学习方法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/31</span><a class="archive-post-title" href= "/2021/05/31/2021-05-31_diary/" >2021 下半年工作学习安排</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/16</span><a class="archive-post-title" href= "/2021/05/16/Algorithm_how-to-solve-the-secret-santa-problem-using-graph-theory/" >如何用图论解决 Secret Santa 问题？</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" >把 PostgreSQL 用作数据仓库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/Java_cpp-for-java-programmers/" >Java 程序员的 C++</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2021/02/24/DDIA_note-13/" >《DDIA》阅读笔记（九）：一致性与共识（共识问题）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/21</span><a class="archive-post-title" href= "/2021/02/21/2021-02-21_diary/" >近期工作学习规划</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/19</span><a class="archive-post-title" href= "/2021/02/19/DDIA_note-12/" >《DDIA》阅读笔记（九）：一致性与共识（顺序保证）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/13</span><a class="archive-post-title" href= "/2021/02/13/DDIA_note-11/" >《DDIA》阅读笔记（九）：一致性与共识（可线性化）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/06</span><a class="archive-post-title" href= "/2021/02/06/DDIA_note-10/" >《DDIA》阅读笔记（八）：分布式系统的挑战</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/27</span><a class="archive-post-title" href= "/2021/01/27/DDIA_note-9/" >《DDIA》阅读笔记（七）：事务</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/22</span><a class="archive-post-title" href= "/2021/01/22/DDIA_note-8/" >《DDIA》阅读笔记（六）：数据分区</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/21</span><a class="archive-post-title" href= "/2021/01/21/DDIA_note-7/" >《DDIA》阅读笔记（五）：数据复制（无主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/20</span><a class="archive-post-title" href= "/2021/01/20/DDIA_note-6/" >《DDIA》阅读笔记（五）：数据复制（多主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/DB_right-database/" >选择合适的数据库</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/09</span><a class="archive-post-title" href= "/2021/01/09/DDIA_note-5/" >《DDIA》阅读笔记（五）：数据复制（单主节点）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/01</span><a class="archive-post-title" href= "/2021/01/01/DB_tree-table-design-summary/" >树形表结构设计总结</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/19</span><a class="archive-post-title" href= "/2020/12/19/DDIA_note-4/" >《DDIA》阅读笔记（四）：数据编码与演化</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/13</span><a class="archive-post-title" href= "/2020/12/13/DDIA_note-3/" >《DDIA》阅读笔记（三）：数据存储与检索</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/04</span><a class="archive-post-title" href= "/2020/12/04/DDIA_note-2/" >《DDIA》阅读笔记（二）：数据模型与查询语言</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">12/02</span><a class="archive-post-title" href= "/2020/12/02/DDIA_note-1/" >《DDIA》阅读笔记（一）：可靠、可扩展与可维护的应用系统</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/08</span><a class="archive-post-title" href= "/2020/10/08/Maven_external_dependencies_management/" >Maven 打包依赖外置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2020/10/04/JVM_prod-analysis-cmd/" >Java 应用常用调试分析方法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/09</span><a class="archive-post-title" href= "/2020/08/09/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/12</span><a class="archive-post-title" href= "/2020/07/12/Java_override-and-bridge-method/" >Java 多态、重写与桥接方法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/30</span><a class="archive-post-title" href= "/2020/06/30/JVM_java-memory-area/" >Java 内存区域</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/28</span><a class="archive-post-title" href= "/2020/05/28/DB_data-warehouse-design-basic/" >数据仓库设计基础</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/08</span><a class="archive-post-title" href= "/2020/04/08/2020-04-08_diary/" >关于使用思维导图做笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/28</span><a class="archive-post-title" href= "/2020/03/28/Algorithm_leetcode-high-frequency-problems/" >LeetCode 高频面试题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2020/03/06/InfoSecty_personal-infomation-security-guide/" >個人信息安全保護指南</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/22</span><a class="archive-post-title" href= "/2020/02/22/2020-02-22_diary/" >免费 JetBrains 全家桶</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/16</span><a class="archive-post-title" href= "/2020/02/16/Nginx_cheat-sheet/" >Nginx Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Git_Cheat-Sheet/" >Git Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/15</span><a class="archive-post-title" href= "/2020/02/15/Docker&K8S_Cheat-Sheet/" >Docker & K8S Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/03</span><a class="archive-post-title" href= "/2020/02/03/JVM_jstat-monitor-analysis/" >JVM jstat 监控分析</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/01</span><a class="archive-post-title" href= "/2020/02/01/JVM_GC-log-analysis/" >JVM GC 日志分析</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2019 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/01</span><a class="archive-post-title" href= "/2019/11/01/Design_design-patterns/" >设计模式与设计原则</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/30</span><a class="archive-post-title" href= "/2019/10/30/JVM_mindmap/" >Java 虚拟机与并发编程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_offset-reset/" >Kafka 位移重置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/21</span><a class="archive-post-title" href= "/2019/05/21/Kafka_dynamic-config/" >Kafka 动态配置</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/20</span><a class="archive-post-title" href= "/2019/05/20/Kafka_common-scripts/" >Kafka 常用脚本</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/06</span><a class="archive-post-title" href= "/2019/05/06/Kafka_basic-conceptions/" >Kafka 基本概念</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2018 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/04</span><a class="archive-post-title" href= "/2018/10/04/Python_async-programming/" >Python 异步编程总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/19</span><a class="archive-post-title" href= "/2018/09/19/Python_data-structure/" >Python 数据结构应用</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/13</span><a class="archive-post-title" href= "/2018/09/13/Python_decorator-basic-usage/" >Python 装饰器基本用法</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/02</span><a class="archive-post-title" href= "/2018/09/02/JavaScript_ES6-grammar/" >ES6 语法总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/30</span><a class="archive-post-title" href= "/2018/08/30/Vue_user-guide-4/" >Vue 学习笔记：前端路由、请求发送和状态管理</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/28</span><a class="archive-post-title" href= "/2018/08/28/JavaScript_cheat-sheet/" >JavaScript Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/24</span><a class="archive-post-title" href= "/2018/08/24/Vue_user-guide-3/" >Vue 学习笔记：组件</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/23</span><a class="archive-post-title" href= "/2018/08/23/Vue_user-guide-2/" >Vue 学习笔记（2）</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/22</span><a class="archive-post-title" href= "/2018/08/22/Python_OOP-summary/" >Python 类与对象总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/20</span><a class="archive-post-title" href= "/2018/08/20/Vue_user-guide-1/" >Vue 学习笔记（1）</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="杂事"><span class="iconfont-archer">&#xe606;</span>杂事</span>
+    
+        <span class="sidebar-tag-name" data-tags="技术"><span class="iconfont-archer">&#xe606;</span>技术</span>
+    
+        <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
+    
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
+        <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
+    
+        <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
+    
+        <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
+    
+        <span class="sidebar-tag-name" data-tags="分布式系统"><span class="iconfont-archer">&#xe606;</span>分布式系统</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
+    
+        <span class="sidebar-tag-name" data-tags="Maven"><span class="iconfont-archer">&#xe606;</span>Maven</span>
+    
+        <span class="sidebar-tag-name" data-tags="Nginx"><span class="iconfont-archer">&#xe606;</span>Nginx</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Vue"><span class="iconfont-archer">&#xe606;</span>Vue</span>
+    
+        <span class="sidebar-tag-name" data-tags="前端"><span class="iconfont-archer">&#xe606;</span>前端</span>
+    
+        <span class="sidebar-tag-name" data-tags="Git"><span class="iconfont-archer">&#xe606;</span>Git</span>
+    
+        <span class="sidebar-tag-name" data-tags="JavaScript"><span class="iconfont-archer">&#xe606;</span>JavaScript</span>
+    
+        <span class="sidebar-tag-name" data-tags="Go"><span class="iconfont-archer">&#xe606;</span>Go</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="《数据密集型应用系统设计》阅读笔记"><span class="iconfont-archer">&#xe60a;</span>《数据密集型应用系统设计》阅读笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Kylo Yip"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"live2d-widget-model-nietzsche"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>
+
+

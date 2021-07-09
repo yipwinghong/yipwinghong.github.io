@@ -502,7 +502,7 @@ height:100vh;
 <p>这个查询语句对于查看其他可能阻塞的内容（例如锁）也非常有用。 </p>
 <h3 id="在每个批量插入后执行-Vacuum"><a href="#在每个批量插入后执行-Vacuum" class="headerlink" title="在每个批量插入后执行 Vacuum"></a>在每个批量插入后执行 Vacuum</h3><p>Vacuuming 表对于保持 Postgres 平稳运行很重要 —— 可节省空间。在进行 vacuum 分析时将计算统计信息以确保查询计划可以正确估算。</p>
 <p>在默认情况下 Postgres 运行自动 vacuum 进程来解决以上问题，所以通常最好不要管它。 </p>
-<p>这意味着最好在插入或删除数据后再运行 vacuum 分析。 如果您要定期插入数据，则在完成所有插入后立即运行 vacuum 分析就很有意义了：可确保新数据将立即具有统计信息以便进行有效的查询。 而且一旦执行完毕，自动 vacuum 进程将不会再次对该表进行 vacuum 操作。 </p>
+<p>这意味着最好在插入或删除数据后再运行 vacuum 分析。 如果要定期插入数据，则在完成所有插入后立即运行 vacuum 分析就很有意义了：可确保新数据将立即具有统计信息以便进行有效的查询。 而且一旦执行完毕，自动 vacuum 进程将不会再次对该表进行 vacuum 操作。 </p>
 <h3 id="并行查询"><a href="#并行查询" class="headerlink" title="并行查询"></a>并行查询</h3><p>Postgres 可并行执行部分查询，这对于数据仓库应用而言是很理想的执行方式。并行查询会增加一些延迟（派生 workers 线程，然后其执行结果进行聚合），但通常来说对于分析型查询而言这并不重要，因为查询就需要花上几秒。</p>
 <p>并行查询在很大程度上加快了表或索引扫描（花费大量时间的地方）的速度。查看程序是否按预期运行的最好方法是使用 explain。可见看到一个 Gather，以及随后进行的并行操作（连接，排序，索引扫描，seq 扫描等） 。</p>
 <figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-&gt;  Gather Merge  (<span class="attribute">cost</span>=2512346.78..2518277.16 <span class="attribute">rows</span>=40206 <span class="attribute">width</span>=60)</span><br><span class="line">    Workers Planned: 2</span><br><span class="line">    Workers Launched: 2</span><br><span class="line">        <span class="built_in">..</span>.</span><br><span class="line">      -&gt;  Parallel Seq Scan on activity_stream s_1 </span><br></pre></td></tr></table></figure>
@@ -527,9 +527,9 @@ height:100vh;
 <p>  注意：请不要将单个宽表替换为需要对每个查询进行联接的多个表。这可能会比较慢（尽管始终会测量）。</p>
 </blockquote>
 <p>经验法则 —— 更倾向于希望使用较少的列，而实践中这样做性能提升通常不会很明显。 </p>
-<h2 id="考虑数据数据仓库的规模"><a href="#考虑数据数据仓库的规模" class="headerlink" title="考虑数据数据仓库的规模"></a>考虑数据数据仓库的规模</h2><p>Postgres 和基于云的数据仓库最后一个主要区别是极大规模。与 Postgres 不同，基于云的数据仓库是从一开始就被设计为分布式系统，使之可以随着数据大小的增长而线性地提高处理能力。</p>
-<p>我对于数据库太大而应该移至分布式系统的情况没有很好的经验法则， 但当您面临这种情况时，您可能已具备处理迁移和权衡因素的专业知识。在一次简单的测试中，表行数在 50 到 100M 之间时 Postgres 的表现非常好 —— 通常与 Redshift 等数据仓库表现结果一致。</p>
-<p>但是性能取决于很多因素 —— 磁盘与固态硬盘，CPU，数据结构，查询类型等，因此不进行直接的测试很难一概而论。</p>
+<h2 id="考虑数据数据仓库的规模"><a href="#考虑数据数据仓库的规模" class="headerlink" title="考虑数据数据仓库的规模"></a>考虑数据数据仓库的规模</h2><p>与 Postgres 不同，基于云的数据仓库是从一开始就被设计为分布式系统，使之可以随着数据大小的增长而线性地提高处理能力。</p>
+<p>一般来说，当数据库规模太大需要迁移为分布式系统的情况没有很好的经验法则， 但当面临这种情况时，开发者很可能已具备处理迁移和权衡因素的专业知识。在一次简单的测试中，表行数在 50 到 100M 之间时 Postgres 的表现非常好（通常与 Redshift 等数据仓库表现结果一致）。</p>
+<p>但是性能取决于很多因素：磁盘与固态硬盘，CPU，数据结构，查询类型等，因此不进行直接的测试很难一概而论。</p>
 <p>如果要将 Postgres 扩展到数十亿行，可以考虑使用 Citus。</p>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
     </article>
@@ -548,8 +548,8 @@ height:100vh;
         <li class="previous">
             
                 <div class="prevSlogan">Previous Post</div>
-                <a href= "/2021/04/12/Algorithm_consistent-hashing/" title= "一致性哈希">
-                    <div class="prevTitle">一致性哈希</div>
+                <a href= "/2021/03/17/Java_cpp-for-java-programmers/" title= "Java 程序员的 C++">
+                    <div class="prevTitle">Java 程序员的 C++</div>
                 </a>
             
         </li>
@@ -1117,9 +1117,23 @@ top:100vh;
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 59
+        Total : 61
         </div>
         <!-- search  -->
         
@@ -1135,6 +1149,21 @@ top:100vh;
     
     
         <li class="archive-post-item">
+            <span class="archive-post-date">07/09</span><a class="archive-post-title" href= "/2021/07/09/Algorithm_max-flow-problem/" >最大流问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/08</span><a class="archive-post-title" href= "/2021/07/08/Algorithm_minimum_spanning_tree_problem/" >最小生成树问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/08</span><a class="archive-post-title" href= "/2021/07/08/Algorithm_shortest-path-problem/" >最短路径问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
             <span class="archive-post-date">07/01</span><a class="archive-post-title" href= "/2021/07/01/DistributedSystem_gossip-dissemination/" >分布式系统模式：Gossip 传播</a>
         </li>
     
@@ -1145,7 +1174,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">06/19</span><a class="archive-post-title" href= "/2021/06/19/Java_override-and-bridge-method/" >Java 多态、重写与桥接方法</a>
+            <span class="archive-post-date">06/19</span><a class="archive-post-title" href= "/2021/06/19/Algorithm_consistent-hashing/" >一致性哈希</a>
         </li>
     
     
@@ -1160,7 +1189,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/2021-06-05_diary/" >基于记忆规律的学习方法</a>
         </li>
     
     
@@ -1180,22 +1209,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/Java_cpp-for-java-programmers/" >Java 程序员的 C++</a>
         </li>
     
     
@@ -1245,7 +1259,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/DB_right-database/" >选择合适的数据库</a>
         </li>
     
     
@@ -1300,6 +1314,16 @@ top:100vh;
     
         <li class="archive-post-item">
             <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/09</span><a class="archive-post-title" href= "/2020/08/09/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/12</span><a class="archive-post-title" href= "/2020/07/12/Java_override-and-bridge-method/" >Java 多态、重写与桥接方法</a>
         </li>
     
     
@@ -1466,11 +1490,11 @@ top:100vh;
     
         <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
     
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
         <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
     
         <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
-    
-        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
     
         <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
     
@@ -1481,8 +1505,6 @@ top:100vh;
         <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
     
         <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
-    
-        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
     
         <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
     

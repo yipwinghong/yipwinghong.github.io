@@ -22,7 +22,7 @@
     <meta name="description" content="">
     <meta http-equiv="Cache-control" content="no-cache">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-    <title>一致性哈希 · Kylo&#39;s Notebook</title>
+    <title>Arthas Cheat Sheet · Kylo&#39;s Notebook</title>
     <style type="text/css">
     @font-face {
         font-family: 'Oswald-Regular';
@@ -218,7 +218,7 @@
                 <a href="/" >Kylo&#39;s Notebook</a>
             </div>
             <div class="post-title">
-                <a href="#" class="post-name">一致性哈希</a>
+                <a href="#" class="post-name">Arthas Cheat Sheet</a>
             </div>
     </div>
     
@@ -248,7 +248,7 @@ height:100vh;
         <h1 class="intro-title">
             <!-- 主页  -->
             
-            一致性哈希
+            Arthas Cheat Sheet
             <!-- 404 -->
             
         </h1>
@@ -269,18 +269,18 @@ height:100vh;
     
         <a class="post-tag" href="javascript:void(0);" data-tags = "技术">技术</a>
     
-        <a class="post-tag" href="javascript:void(0);" data-tags = "算法">算法</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Java">Java</a>
     
 </div>
                 
                 
                     <div class="post-intro-read">
-                        <span>Word count: <span class="post-count word-count">1.4k</span>Reading time: <span class="post-count reading-time">5 min</span></span>
+                        <span>Word count: <span class="post-count word-count">1.2k</span>Reading time: <span class="post-count reading-time">5 min</span></span>
                     </div>
                 
                 <div class="post-intro-meta">
                     <span class="post-intro-calander iconfont-archer">&#xe676;</span>
-                    <span class="post-intro-time">2021/04/12</span>
+                    <span class="post-intro-time">2020/08/09</span>
                     
                     <span id="busuanzi_container_page_pv" class="busuanzi-pv">
                         <span class="iconfont-archer">&#xe602;</span>
@@ -405,37 +405,117 @@ height:100vh;
             <main class="main post-page">
     <article class="article-entry">
         <blockquote>
-<p>原文链接：<a target="_blank" rel="noopener" href="http://tom-e-white.com/2007/11/consistent-hashing.html">Consistent Hashing</a></p>
+<p>Arthas 是 Alibaba 开源的 Java 诊断工具，可用于在线诊断、动态跟踪 Java 程序，实时监控 JVM 状态（详情参考 <a target="_blank" rel="noopener" href="https://arthas.aliyun.com/doc">官方用户文档</a> 介绍）。</p>
+<p>阿里云知行动手实验室提供了 <a target="_blank" rel="noopener" href="https://start.aliyun.com/handson-lab?category=arthas">在线教程</a>，本文将基于该教程整理了基本用法，可为日常使用提供更方便的参考。</p>
 </blockquote>
-<h1 id="一致性哈希"><a href="#一致性哈希" class="headerlink" title="一致性哈希"></a>一致性哈希</h1><p>一致性哈希的需求源自于缓存服务器集群，比如 Web 缓存，一套由 <code>n</code> 台缓存服务器组成的集群，实现负载均衡最常用的做法是把对象 o 存放在序号为 <code>hash(o) mod n</code> 的服务器上。</p>
-<p>这种策略效果良好，但如果出于某种原因需要从集群中增加或删除服务器，会导致所有的对象 hash 值都被重新计算到新的地址上，其结果可能会很严重：就像缓存瞬间消失了，原本有缓存的服务器瞬间就被请求淹没。</p>
-<p>因此需要使用一致性哈希来规避由于缓存失效、服务器承接大量请求的问题。</p>
-<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>从细节上来看，哈希函数是把对象及其缓存映射到一个数字范围上。每位 Java 程序员都应该非常熟悉对象的 <code>hashCode</code> 方法会返回一个整型数（范围 [-2^32, 2^32-1]）。就可以试想一下将此范围映射到一个圆圈中，使得这些值可以被包含在内。</p>
-<p>下图的圆圈中包含了对象 (1, 2, 3, 4)，以及缓存 (A, B, C) 经过哈希计算得出的标记点（<a target="_blank" rel="noopener" href="http://www8.org/w8-papers/2a-webserver/caching/paper2.html">Web Caching with Consistent Hashing</a> by David Karger et al）。</p>
-<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C-1.png" alt="一致性哈希-1"></p>
-<p>为了找到一个对象在哪个缓存中，顺时针转动圆圈直到找到一个缓存点。</p>
-<p>因此在上图中可见对象 1 和 4 属于缓存 A，对象 2 属于缓存 B，对象 3 属于缓存 C。</p>
-<p>如果缓存 C 被删除了将会发生什么：对象 3 属于缓存 A，且其他所有的对象映射关系都不会被改变。</p>
-<p>如果此时另一个缓存 D 被添加到标记的位置，对象 3 和 4 将会被划走，只剩下对象 1 还属于缓存 A。</p>
-<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C-2.png" alt="一致性哈希-2"></p>
-<p>这种策略效果很好，只是存在一些问题：每个分配给缓存的间隔很难以命中。由于这种分配本质上是随机的，很可能导致缓存之间的对象分布很不均匀。</p>
-<p>解决方法是 <strong>引入“虚拟节点”</strong>：即在圆圈中缓存点的副本。因此无论何时添加缓存，都会在圆圈中为其创建多个点。</p>
-<p>在下面的图表（通过代码模拟将 10,000 个对象存储在 10 个缓存中）可以看到效果：x 轴是缓存点的副本数（对数刻度），当它的值很小时可见对象在整个缓存中的分布是很不平衡的，因为 <strong>标准偏差</strong> 占 <strong>每个缓存中平均对象数</strong> 的百分比很高。随着副本数量增加，对象的分布会变得更平衡。</p>
-<p>这个实验表明，一个包含 100 或 200 个副本的图即可达到可接受的平衡状态（标准偏差大约为平均值的 5% 至 10%）。</p>
-<p><img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C-3.png" alt="一致性哈希-3"></p>
-<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>以下是基于 Java 的简单实现，用于完整呈现这种策略。</p>
-<p>为了使一致性哈希更高效，选用一个混淆效果好的 hash 函数是很重要的。</p>
-<p><code>Object</code> 的 <code>hashCode</code> 方法的多数实现都不能起到良好的混淆效果，比如它们通常会产生数量有限的小整型值。</p>
-<p>因此使用一个允许自定义 hash 函数的 <code>HashFunction</code> 接口（此处建议使用 MD5 散列）。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConsistentHash</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> HashFunction hashFunction;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> numberOfReplicas;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> SortedMap&lt;Integer, T&gt; circle = <span class="keyword">new</span> TreeMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ConsistentHash</span><span class="params">(HashFunction hashFunction, <span class="keyword">int</span> numberOfReplicas, Collection&lt;T&gt; nodes)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.hashFunction = hashFunction;</span><br><span class="line">        <span class="keyword">this</span>.numberOfReplicas = numberOfReplicas;</span><br><span class="line">        <span class="keyword">for</span> (T node : nodes) &#123;</span><br><span class="line">            add(node);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(T node)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; numberOfReplicas; i++) &#123;</span><br><span class="line">            circle.put(hashFunction.hash(node.toString() + i), node);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">remove</span><span class="params">(T node)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; numberOfReplicas; i++) &#123;</span><br><span class="line">            circle.remove(hashFunction.hash(node.toString() + i));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">(Object key)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (circle.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> hash = hashFunction.hash(key.toString());</span><br><span class="line">        <span class="keyword">if</span> (!circle.containsKey(hash)) &#123;</span><br><span class="line">            SortedMap&lt;Integer, T&gt; tailMap = circle.tailMap(hash);</span><br><span class="line">            hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> circle.get(hash);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="Arthas-Cheat-Sheet"><a href="#Arthas-Cheat-Sheet" class="headerlink" title="Arthas Cheat Sheet"></a>Arthas Cheat Sheet</h1><h2 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h2><p>下载 Arthas 启动程序，选择监控的 Java 进程：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">wget https://arthas.aliyun.com/arthas-boot.jar</span><br><span class="line">java -jar arthas-boot.jar</span><br><span class="line">1</span><br></pre></td></tr></table></figure>
 
-<p>圆圈用一个有序的整型 Map 表示（TreeMap，红黑树实现），代表了缓存的哈希值（此处为泛型 T）。</p>
-<p>创建 <code>ConsistentHash</code> 时，每个节点都会多次添加到表示圆圈的 Map 中（次数由 <code>numberOfReplicas</code> 字段控制）。每个副本的位置由对节点名称和数字后缀的 hash 值决定，并将该节点存储在 Map 中。</p>
-<p>要找到对象的节点（<code>get</code> 方法），应使用该对象的 hash 值在 Map 中查找。在大多数情况下都不会有节点存储在此 hash 值上（因为即使包括副本，hash 值范围通常比节点数大得多），因此在 Map 的尾部查找第一个 key 即可找到下一个节点。如果 Map 的尾部为空，则可以获取第一个 key 来环绕圆圈。</p>
-<h2 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h2><p>如何使用一致性哈希呢？很多库都有提供这样的功能，因此不需要自己编码来实现它。</p>
-<p>例如现在 memcached（一种分布式内存对象缓存系统）就具有支持一致性哈希的客户端。第一个是 Richard Jones 的 Last.fm’s ketama ，Dustin Sallings 也有基于 Java 的实现（这也启发了我完成上面的简化演示实现）。</p>
-<p>有趣的是只有客户端需要实现一致性哈希算法，memcached 服务器不用改变。</p>
-<p>其他采用一致性哈希的系统：包括 Chord（分布式哈希表实现）和 Amazon 的 Dynamo（键值存储，不对 Amazon 外部开放使用）。</p>
+<p>基本命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">help                # 帮助信息</span><br><span class="line"><span class="meta">#</span><span class="bash"> cmd -h</span></span><br><span class="line"></span><br><span class="line">keymap              # 快捷键</span><br><span class="line"></span><br><span class="line">dashboard           # 监控面板（q/Ctrl+C 退出）</span><br><span class="line"></span><br><span class="line">jvm                 # JVM 详细信息</span><br><span class="line"></span><br><span class="line">thread 1            # 线程 1 的栈信息</span><br><span class="line"><span class="meta">#</span><span class="bash"> thread 1 | grep <span class="string">&#x27;main(&#x27;</span>    线程 1 的 main class</span></span><br><span class="line"></span><br><span class="line">sc -d * MathGame    # 已加载的类</span><br><span class="line"></span><br><span class="line">jad demo.MathGame   # 反编译（包名.类名）</span><br><span class="line"></span><br><span class="line">watch demo.MathGame primeFactors returnObj    # 函数的参数/返回值/异常信息。</span><br><span class="line"></span><br><span class="line">history             # 历史命令</span><br><span class="line"></span><br><span class="line">exot/stop           # 退出当前 Session / Arthas</span><br></pre></td></tr></table></figure>
+
+<p>要监控 Spring Boot 程序，可指定目标 ip、Java 进程。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">java -jar arthas-boot.jar --target-ip 0.0.0.0</span><br><span class="line">1</span><br></pre></td></tr></table></figure>
+
+<p>各种变量</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">sysprop             # System Properties</span><br><span class="line"><span class="meta">#</span><span class="bash"> sysprop java.version</span>    </span><br><span class="line"><span class="meta">#</span><span class="bash"> sysprop | grep java.version    指定单个 key</span></span><br><span class="line">sysprop key value   # 设置新的值</span><br><span class="line"></span><br><span class="line">sysenv              # 环境变量</span><br></pre></td></tr></table></figure>
+
+<p>类和方法</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">sc javax.servlet.Filter    # 已加载的类（如果是接口，则查看所有实现类）</span><br><span class="line"><span class="meta">#</span><span class="bash"> sc -d *Filter    类的详细信息</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> </span></span><br><span class="line"></span><br><span class="line">sm java.math.RoundingMode  # 类的方法、属性等</span><br><span class="line"><span class="meta">#</span><span class="bash"> sm -d java.math.RoundingMode</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> sm java.math.RoundingMode &lt;init&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>反编译</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">jad com.example.demo.arthas.user.UserController    </span><br><span class="line"><span class="meta">#</span><span class="bash"> --source-only    只打印源码</span> </span><br></pre></td></tr></table></figure>
+
+<p>动态执行：</p>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://commons.apache.org/proper/commons-ognl/language-guide.html">OGNL 表达式</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://github.com/alibaba/arthas/issues/71">特殊用法</a></p>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">ognl &#x27;@java.lang.System@out.println(&quot;hello ognl&quot;)&#x27;    # 在被监控进程中执行代码</span><br><span class="line"></span><br><span class="line">sc -d com.example.demo.arthas.user.UserController | grep classLoaderHash    # 查找 UserController 的 ClassLoader（查找其 hashcode）</span><br><span class="line">ognl -c 1be6f5c3 @com.example.demo.arthas.user.UserController@logger</span><br><span class="line">ognl --classLoaderClass org.springframework.boot.loader.LaunchedURLClassLoader  @org.springframework.boot.SpringApplication@logger</span><br><span class="line"></span><br><span class="line">ognl --classLoaderClass org.springframework.boot.loader.LaunchedURLClassLoader [-x 2] @com.example.demo.arthas.user.UserController@logger    # 查看静态字段</span><br><span class="line"></span><br><span class="line">ognl &#x27;#value1=@System@getProperty(&quot;java.home&quot;), #value2=@System@getProperty(&quot;java.runtime.name&quot;), &#123;#value1, #value2&#125;&#x27;    # 执行多行表达式，赋值给临时变量，返回一个 List</span><br></pre></td></tr></table></figure>
+
+<h2 id="问题排查"><a href="#问题排查" class="headerlink" title="问题排查"></a>问题排查</h2><h3 id="排查函数调用异常"><a href="#排查函数调用异常" class="headerlink" title="排查函数调用异常"></a>排查函数调用异常</h3><p>调用接口返回 500 错误：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://localhost:61000/user/0</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">&quot;timestamp&quot;</span>:<span class="number">1550223186170</span>,<span class="attr">&quot;status&quot;</span>:<span class="number">500</span>,<span class="attr">&quot;error&quot;</span>:<span class="string">&quot;Internal Server Error&quot;</span>,<span class="attr">&quot;exception&quot;</span>:<span class="string">&quot;java.lang.IllegalArgumentException&quot;</span>,<span class="attr">&quot;message&quot;</span>:<span class="string">&quot;id &lt; 1&quot;</span>,<span class="attr">&quot;path&quot;</span>:<span class="string">&quot;/user/0&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>该接口相关的 <code>Controller</code> 是 <code>UserController</code>，使用 Arthas 启动监控（参考 <a target="_blank" rel="noopener" href="https://arthas.aliyun.com/doc/advice-class.html">返回值表达式</a>）：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">watch com.example.demo.arthas.user.UserController * &#x27;&#123;params, throwExp&#125;&#x27;    </span><br><span class="line"><span class="meta">#</span><span class="bash"> 类名 方法名 返回值表达式（OGNL，支持 loader, clazz, method, target, params, returnObj, throwExp, isBefore, isThrow, isReturn）</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 只捕获抛出异常时的请求</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> watch com.example.demo.arthas.user.UserController * <span class="string">&quot;&#123;params[0],throwExp&#125;&quot;</span> -e</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 按照耗时进行过滤</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> watch com.example.demo.arthas.user.UserController * <span class="string">&#x27;&#123;params, returnObj&#125;&#x27;</span> <span class="string">&#x27;#cost&gt;200&#x27;</span></span></span><br></pre></td></tr></table></figure>
+
+<p>再次请求接口，在 Arthas 窗口有异常信息打印：</p>
+<figure class="highlight oxygene"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Affect(<span class="keyword">class</span> count: <span class="number">1</span> , <span class="function"><span class="keyword">method</span> <span class="title">count</span>:</span> <span class="number">2</span>) cost <span class="keyword">in</span> <span class="number">53</span> ms, listenerId: <span class="number">3</span></span><br><span class="line"><span class="function"><span class="keyword">method</span>=<span class="title">com</span>.<span class="title">example</span>.<span class="title">demo</span>.<span class="title">arthas</span>.<span class="title">user</span>.<span class="title">UserController</span>.<span class="title">findUserById</span> <span class="title">location</span>=<span class="title">AtExceptionExit</span></span></span><br><span class="line"><span class="function"><span class="title">ts</span>=2021-03-06 20:</span><span class="number">41</span>:<span class="number">43</span>; [cost=<span class="number">0.402354</span>ms] <span class="keyword">result</span>=@ArrayList[</span><br><span class="line">    @Integer[<span class="number">0</span>],</span><br><span class="line">    @IllegalArgumentException[java.lang.IllegalArgumentException: id &lt; <span class="number">1</span>],</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<h3 id="热更新代码"><a href="#热更新代码" class="headerlink" title="热更新代码"></a>热更新代码</h3><p>接上，对于上述报错的 <code>UserController</code>，使用 Arthas 反编译，输出到 <code>/tmp/UserController.java</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jad --source-only com.example.demo.arthas.user.UserController &gt; /tmp/UserController.java</span><br></pre></td></tr></table></figure>
+
+<p>查找 <code>UserController</code> 的 ClassLoader：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sc -d *UserController | grep classLoaderHash</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">classLoaderHash   19469ea2</span><br><span class="line"><span class="meta">#</span><span class="bash"> 可见是 LaunchedURLClassLoader@1be6f5c3 加载 UserController</span></span><br></pre></td></tr></table></figure>
+
+<p>修改 <code>/tmp/UserController.java</code> 使之满足条件不再抛出 <code>IllegalArgumentException</code>。</p>
+<p>编译修改好的 <code>UserController</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mc --classLoaderClass org.springframework.boot.loader.LaunchedURLClassLoader /tmp/UserController.java -d /tmp</span><br><span class="line"><span class="meta">#</span><span class="bash"> 或 mc -c 19469ea2 /tmp/UserController.java -d /tmp</span></span><br></pre></td></tr></table></figure>
+
+<p>重新加载编译好的 <code>UserController.class</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redefine /tmp/com/example/demo/arthas/user/UserController.class</span><br></pre></td></tr></table></figure>
+
+<p>再次请求接口，可见已正常返回：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://localhost:61000/user/0</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;&quot;id&quot;:0,&quot;name&quot;:&quot;name0&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="设置日志级别"><a href="#设置日志级别" class="headerlink" title="设置日志级别"></a>设置日志级别</h3><p>查找 ClassLoader：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sc -d com.example.demo.arthas.user.UserController | grep classLoaderHash</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">classLoaderHash</span>   <span class="number">1</span>be<span class="number">6</span>f<span class="number">5</span>c<span class="number">3</span></span><br></pre></td></tr></table></figure>
+
+<p>获取 logger：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ognl --classLoaderClass org.springframework.boot.loader.LaunchedURLClassLoader &#x27;@com.example.demo.arthas.user.UserController@logger&#x27;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">@Logger</span>[</span><br><span class="line">    serialVersionUID=<span class="variable">@Long</span>[<span class="number">5454405123156820674</span>],</span><br><span class="line">    FQCN=<span class="variable">@String</span>[ch.qos.logback.classic.Logger],</span><br><span class="line">    name=<span class="variable">@String</span>[com.example.demo.arthas.user.UserController],</span><br><span class="line">    level=null,</span><br><span class="line">    effectiveLevelInt=<span class="variable">@Integer</span>[<span class="number">20000</span>],</span><br><span class="line">    parent=<span class="variable">@Logger</span>[Logger[com.example.demo.arthas.user]],</span><br><span class="line">    childrenList=null,</span><br><span class="line">    aai=null,</span><br><span class="line">    additive=<span class="variable">@Boolean</span>[true],</span><br><span class="line">    loggerContext=<span class="variable">@LoggerContext</span>[ch.qos.logback.classic.LoggerContext[default]],</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p>可见实际使用的日志模块是 logback，level 为 null（最终 level 是从root logger里来的）。单独设置 UserController 的 logger level 为 DEBUG：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ognl --classLoaderClass org.springframework.boot.loader.LaunchedURLClassLoader &#x27;@com.example.demo.arthas.user.UserController@logger.setLevel(@ch.qos.logback.classic.Level@DEBUG)&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>修改全局 logger lever：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ognl --classLoaderClass org.springframework.boot.loader.LaunchedURLClassLoader &#x27;@org.slf4j.LoggerFactory@getLogger(&quot;root&quot;).setLevel(@ch.qos.logback.classic.Level@DEBUG)&#x27;</span><br></pre></td></tr></table></figure>
+
+<h2 id="应用案例"><a href="#应用案例" class="headerlink" title="应用案例"></a>应用案例</h2><ul>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-ognl-update-logger-level-cn">动态更新应用 Logger Level</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-web-console-cn">Web Console</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-watch-method-exception-cn">排查函数调用异常</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-thread-cn">查找 Top N 线程</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-save-log-cn">执行结果存日志</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-logger-config-problem-cn">排查 logger 冲突问题</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-jad-mc-redefine-cn">热更新代码</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-http-api-cn">Http API 案例</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-http-404-cn">排查 HTTP 请求返回 404</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-http-401-cn">排查 HTTP 请求返回 401</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-get-spring-context-cn">获取 Spring 上下文</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-classloader-cn">ClassLoader 相关</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-async-jobs-cn">后台异步任务</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://start.aliyun.com/handson/arthas/case-boot-details-cn">arthas-boot 支持的参数</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://github.com/alibaba/arthas/issues?q=label%3Auser-case">用户案例</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MzU2MTY2MjE4OQ==&action=getalbum&album_id=1430941903897460741&scene=173&from_msgid=2247483693&from_itemidx=1&count=3#wechat_redirect">…</a></p>
+</li>
+</ul>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
     </article>
     <!-- license  -->
@@ -445,16 +525,16 @@ height:100vh;
         <li class="next">
             
                 <div class="nextSlogan">Next Post</div>
-                <a href= "/2021/05/12/DB_using-postgresql-as-a-data-warehouse/" title= "把 PostgreSQL 用作数据仓库">
-                    <div class="nextTitle">把 PostgreSQL 用作数据仓库</div>
+                <a href= "/2020/09/24/Kafka_prod-env-assess/" title= "Kafka 生产环境资源评估">
+                    <div class="nextTitle">Kafka 生产环境资源评估</div>
                 </a>
             
         </li>
         <li class="previous">
             
                 <div class="prevSlogan">Previous Post</div>
-                <a href= "/2021/03/17/2021-03-17_diary/" title= "基于记忆规律的学习方法">
-                    <div class="prevTitle">基于记忆规律的学习方法</div>
+                <a href= "/2020/07/12/Java_override-and-bridge-method/" title= "Java 多态、重写与桥接方法">
+                    <div class="prevTitle">Java 多态、重写与桥接方法</div>
                 </a>
             
         </li>
@@ -592,7 +672,7 @@ top:100vh;
         <div class="toc-catalog">
             <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
         </div>
-        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C"><span class="toc-number">1.</span> <span class="toc-text">一致性哈希</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B"><span class="toc-number">1.1.</span> <span class="toc-text">示例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.2.</span> <span class="toc-text">实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BA%94%E7%94%A8"><span class="toc-number">1.3.</span> <span class="toc-text">应用</span></a></li></ol></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Arthas-Cheat-Sheet"><span class="toc-number">1.</span> <span class="toc-text">Arthas Cheat Sheet</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8"><span class="toc-number">1.1.</span> <span class="toc-text">基本使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5"><span class="toc-number">1.2.</span> <span class="toc-text">问题排查</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%92%E6%9F%A5%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E5%BC%82%E5%B8%B8"><span class="toc-number">1.2.1.</span> <span class="toc-text">排查函数调用异常</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%83%AD%E6%9B%B4%E6%96%B0%E4%BB%A3%E7%A0%81"><span class="toc-number">1.2.2.</span> <span class="toc-text">热更新代码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E7%BD%AE%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB"><span class="toc-number">1.2.3.</span> <span class="toc-text">设置日志级别</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BA%94%E7%94%A8%E6%A1%88%E4%BE%8B"><span class="toc-number">1.3.</span> <span class="toc-text">应用案例</span></a></li></ol></li></ol>
     </div>
     
     <div class="back-top iconfont-archer">&#xe639;</div>
@@ -1022,9 +1102,23 @@ top:100vh;
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 59
+        Total : 61
         </div>
         <!-- search  -->
         
@@ -1040,6 +1134,21 @@ top:100vh;
     
     
         <li class="archive-post-item">
+            <span class="archive-post-date">07/09</span><a class="archive-post-title" href= "/2021/07/09/Algorithm_max-flow-problem/" >最大流问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/08</span><a class="archive-post-title" href= "/2021/07/08/Algorithm_minimum_spanning_tree_problem/" >最小生成树问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/08</span><a class="archive-post-title" href= "/2021/07/08/Algorithm_shortest-path-problem/" >最短路径问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
             <span class="archive-post-date">07/01</span><a class="archive-post-title" href= "/2021/07/01/DistributedSystem_gossip-dissemination/" >分布式系统模式：Gossip 传播</a>
         </li>
     
@@ -1050,7 +1159,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">06/19</span><a class="archive-post-title" href= "/2021/06/19/Java_override-and-bridge-method/" >Java 多态、重写与桥接方法</a>
+            <span class="archive-post-date">06/19</span><a class="archive-post-title" href= "/2021/06/19/Algorithm_consistent-hashing/" >一致性哈希</a>
         </li>
     
     
@@ -1065,7 +1174,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/2021-06-05_diary/" >基于记忆规律的学习方法</a>
         </li>
     
     
@@ -1085,22 +1194,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/Java_cpp-for-java-programmers/" >Java 程序员的 C++</a>
         </li>
     
     
@@ -1150,7 +1244,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/DB_right-database/" >选择合适的数据库</a>
         </li>
     
     
@@ -1205,6 +1299,16 @@ top:100vh;
     
         <li class="archive-post-item">
             <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/09</span><a class="archive-post-title" href= "/2020/08/09/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/12</span><a class="archive-post-title" href= "/2020/07/12/Java_override-and-bridge-method/" >Java 多态、重写与桥接方法</a>
         </li>
     
     
@@ -1371,11 +1475,11 @@ top:100vh;
     
         <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
     
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
         <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
     
         <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
-    
-        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
     
         <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
     
@@ -1386,8 +1490,6 @@ top:100vh;
         <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
     
         <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
-    
-        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
     
         <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
     

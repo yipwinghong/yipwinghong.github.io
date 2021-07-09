@@ -22,7 +22,7 @@
     <meta name="description" content="">
     <meta http-equiv="Cache-control" content="no-cache">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-    <title>选择合适的数据库 · Kylo&#39;s Notebook</title>
+    <title>Kylo&#39;s Notebook</title>
     <style type="text/css">
     @font-face {
         font-family: 'Oswald-Regular';
@@ -204,23 +204,12 @@
 </head>
 
     
-        <body class="post-body">
-    
     
 <header class="header">
 
     <div class="read-progress"></div>
     <div class="header-sidebar-menu">&#xe775;</div>
     <!-- post页的toggle banner  -->
-    
-    <div class="banner">
-            <div class="blog-title">
-                <a href="/" >Kylo&#39;s Notebook</a>
-            </div>
-            <div class="post-title">
-                <a href="#" class="post-name">选择合适的数据库</a>
-            </div>
-    </div>
     
     <a class="home-link" href=/>Kylo's Notebook</a>
 </header>
@@ -232,76 +221,24 @@
 
 
 
-
-height:100vh;
 ">
     
     <!-- 主页  -->
-    
-    
-    <!-- 404页  -->
             
     <div class="site-intro-placeholder"></div>
-    <div class="site-intro-img" style="background-image: url(https://api.ixiaowai.cn/mcapi/mcapi.php)"></div>
+    <div class="site-intro-img" style="background-image: url(/)"></div>
     <div class="site-intro-meta">
         <!-- 标题  -->
         <h1 class="intro-title">
             <!-- 主页  -->
-            
-            选择合适的数据库
-            <!-- 404 -->
             
         </h1>
         <!-- 副标题 -->
         <p class="intro-subtitle">
             <!-- 主页副标题  -->
             
-            
-            <!-- 404 -->
-            
         </p>
         <!-- 文章页meta -->
-        
-            <div class="post-intros">
-                <!-- 文章页标签  -->
-                
-                    <div class= post-intro-tags >
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "技术">技术</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "数据库">数据库</a>
-    
-</div>
-                
-                
-                    <div class="post-intro-read">
-                        <span>Word count: <span class="post-count word-count">1.5k</span>Reading time: <span class="post-count reading-time">5 min</span></span>
-                    </div>
-                
-                <div class="post-intro-meta">
-                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
-                    <span class="post-intro-time">2021/03/12</span>
-                    
-                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
-                        <span class="iconfont-archer">&#xe602;</span>
-                        <span id="busuanzi_value_page_pv"></span>
-                    </span>
-                    
-                    <span class="shareWrapper">
-                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
-                        <span class="shareText">Share</span>
-                        <ul class="shareList">
-                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
-                                <div class="share-qrcode"></div>
-                            </li>
-                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
-                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
-                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
-                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
-                        </ul>
-                    </span>
-                </div>
-            </div>
         
     </div>
 </div>
@@ -402,101 +339,41 @@ height:100vh;
 </script>        
         <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
         <div class="container container-unloaded">
-            <main class="main post-page">
-    <article class="article-entry">
-        <blockquote>
-<p>原文链接：<a target="_blank" rel="noopener" href="https://blog.andyet.com/2014/10/01/right-database">Choosing the right database for the job</a></p>
-</blockquote>
-<h1 id="选择合适的数据库"><a href="#选择合适的数据库" class="headerlink" title="选择合适的数据库"></a>选择合适的数据库</h1><p>在数据库设计的领域中，NoSQL 由于具备很多有利因素（比如使用简单和可伸缩性）而被推动，因此在存储与检索的解决方案上有了更多的选择。您可以选择针对您的特定需求而作优化的数据库，而不是采用一刀切的解决方案。</p>
-<p>因此您有什么需求，又如何根据需求选择何时的数据库呢？</p>
-<p>如果您不需要数据库集群，而且可以使用单个节点和快照备份来工作，那么您几乎可以采用任何方案。</p>
-<h2 id="CAP-理论"><a href="#CAP-理论" class="headerlink" title="CAP 理论"></a>CAP 理论</h2><p>假设您需要集群来确保高可用性，那自然就要谈到 CAP 理论了。</p>
-<p>CAP 理论指出，在以下性质中，分布式数据库只能满足两条：</p>
-<ul>
-<li><p>一致性（写入操作是有序的，而且您可以按此顺序在多台服务器中请求到相同的答案）。</p>
-</li>
-<li><p>可用性（如果数据库节点正在允许，您总是可以执行写入操作）。</p>
-</li>
-<li><p>分区容忍性（即使数据库节点相互之间无法通信，你仍然可以读取到数据）。</p>
-</li>
-</ul>
-<p>您应该听说过“快速，优质，廉价：三者取其二”吧？本质上对于任何存储类型的数据，您必须选择两个。</p>
-<p>实际上对于任何类型的数据库都只有两种选择：即选择一致性和分区容忍性（“CP”）或选择可用性和分区容忍性（“AP”）。而 “CA” 这种方案是不存在的，因为如果没有分区容忍性您就无法实现可用性，至少这一点 Kelly Sommers 和 Aphyr 都是同意的。</p>
-<p>有一些数据库断言 CAP 理论不适用于它们。如果想知道数据库违反 CAP 理论的声明时会发生什么，可以去看看 Aphyr 的 “Call Me Maybe” 系列。并非所有违反 CAP 的数据库都是不好的实现，有时它们声称那是经过调优的 CP 数据库，比如 FoundationDB 或许是一种为您解决一致性问题的方案（但仍然需要谨慎和意识）。</p>
-<h2 id="CP-数据库的好处"><a href="#CP-数据库的好处" class="headerlink" title="CP 数据库的好处"></a>CP 数据库的好处</h2><p>大多数 SQL 数据库要求满足 CP，这就意味着它们是可以保证一致性的。您可以在分区损坏的情况下对其执行读操作，而且对于任意的表，也许还可以写进某一单点。但这种情况下数据库是不可用的，如果主节点宕机，而且其他节点未能选出新主节点，您就不能执行写操作。</p>
-<p>由于负载可以轻松地分配到多个节点，大多数 SQL 数据库的读取规模非常大，但是它们无法在确保一致性的前提下对写操作进行水平扩展。一个“主 - 主”集群必须解决时间同步或应用干预下的写冲突。在主节点高负载或主节点中断期间，数据库可能无法进行写操作。如果您的数据是以读为主的（产品数据库、用户数据库等），那么 SQL 数据库是一种不错的选择，并且对扩展有很好的支持。</p>
-<p>但如果您的使用场景是协作型的，使用 SQL 数据库就必须将用户数据和交互数据划分到不同的集群中以满足写入的速度。对于协作型场景，写操作与读操作是一样多的。</p>
-<h2 id="考虑使用-AP-数据库"><a href="#考虑使用-AP-数据库" class="headerlink" title="考虑使用 AP 数据库"></a>考虑使用 AP 数据库</h2><p>这时候可以考虑一下 AP 型数据库。</p>
-<p>一些 AP 数据库集群的最佳实践是基于 Amazon  Dynamo 的白皮书。</p>
-<p>具备可用性的数据库集群意味着在对某段数据失去读写能力之前，大量的节点都要下线。通常具备可用性的数据库在多数据中心的场景下表现最好。AP 数据库还具备分区容忍性：允许节点之间停止相互通信时仍接收读写请求。</p>
-<p>正如 CAP 理论中提到，AP 数据库集群最大的缺点是不一致。这就意味着您对于任何数据的请求，其结果因节点而异。通常来说这些数据库会收集结果，来保证最终每个节点的结果可达成一致。</p>
-<p>不一致的问题发生在一份数据被写入到两个不同的节点时（比如时间相近或因网络中断无法通信）。一些数据库具备 LWW（Last-Write-Wins）的配置项目（甚至是默认配置），但是需要注意，这可能会丢失一些已被确认写入的数据。</p>
-<p>不一致问题的最佳解决方案是在应用本身解决。比如在 API 服务中，您应该提供处理读取数据返回多个版本结果这种一致性问题的功能。合并数据，选择其一覆盖其他，或创建一个新的数据对象都是可行的方案，并且对于每种类型的数据，采取何种方式解决都是可以手动选择的。</p>
-<h2 id="混合式解决方案"><a href="#混合式解决方案" class="headerlink" title="混合式解决方案"></a>混合式解决方案</h2><p>您可能希望将单状态节点、CP 集群和 AP 集群合并在一起来支持不同类型的数据存储。</p>
-<p>如果因为 CAP 理论的限制您的需求变得复杂，那么混合式解决方案可以帮助您权衡取舍。</p>
-<p>这是我的解决方案：</p>
-<ul>
-<li><p>单节点，非集群存储，快照备份，从节点：Redis</p>
-</li>
-<li><p>数据一致，分区容忍，读多写少：PostgreSQL</p>
-</li>
-<li><p>高可用，分区容忍，水平扩展：Riak</p>
-</li>
-</ul>
-<p>我相信今后会有不同的解决方案。 :-)</p>
-<p>不要局限于某种特定的技术，而选择最佳的工具来完成需求。</p>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kity@2.0.4/dist/kity.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text/javascript" src="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/hexo-simple-mindmap@0.2.0/dist/mindmap.min.css">
+            <main class="main index-page">
+    
+    
+    
+    
+    
+    
+    <article class="index-post">
+        <a class="abstract-title" href = "/2020/07/12/Java_override-and-bridge-method/" >
+            
+                <span>Java 多态、重写与桥接方法</span>
+        </a>
+        <div class="abstract-content">
+            在 JVM 层面理解方法重写。
+        </div>
+        <div class="abstract-post-meta">
+            <!-- date  -->
+            <div class="abstract-date">
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/07/12</span>
+            </div>
+            <!-- tags  -->
+            
+            <div class= abstract-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "技术">技术</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Java">Java</a>
+    
+</div>
+            
+        </div>
     </article>
-    <!-- license  -->
     
     <!-- paginator  -->
-    <ul class="post-paginator">
-        <li class="next">
-            
-                <div class="nextSlogan">Next Post</div>
-                <a href= "/2021/03/17/2021-03-17_diary/" title= "基于记忆规律的学习方法">
-                    <div class="nextTitle">基于记忆规律的学习方法</div>
-                </a>
-            
-        </li>
-        <li class="previous">
-            
-                <div class="prevSlogan">Previous Post</div>
-                <a href= "/2021/03/06/Arthas_Cheat-Sheet/" title= "Arthas Cheat Sheet">
-                    <div class="prevTitle">Arthas Cheat Sheet</div>
-                </a>
-            
-        </li>
-    </ul>
-    <!-- 评论插件 -->
-    <!-- 来必力City版安装代码 -->
-
-    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODYzMi8yNTEyNg==>
-        <script type="text/javascript">
-            (function (d, s) {
-                var j, e = d.getElementsByTagName(s)[0];
-                if (typeof LivereTower === 'function') { return; }
-                j = d.createElement(s);
-                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
-                j.async = true;
-
-                e.parentNode.insertBefore(j, e);
-            })(document, 'script');
-        </script>
-        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
-    </div>
-
-<!-- City版安装代码已完成 -->
     
-    
-    <!-- partial('_partial/comment/changyan') -->
-    <!--PC版-->
-
-
-    
-    
-
-    <!-- 评论 -->
 </main>
             <!-- profile -->
             
@@ -585,24 +462,6 @@ height:100vh;
 </footer>
     </div>
     <!-- toc -->
-    
-    <div class="toc-wrapper" style=
-    
-
-
-
-
-
-
-
-top:100vh;
-
-    >
-        <div class="toc-catalog">
-            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
-        </div>
-        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%80%89%E6%8B%A9%E5%90%88%E9%80%82%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="toc-number">1.</span> <span class="toc-text">选择合适的数据库</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#CAP-%E7%90%86%E8%AE%BA"><span class="toc-number">1.1.</span> <span class="toc-text">CAP 理论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CP-%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E5%A5%BD%E5%A4%84"><span class="toc-number">1.2.</span> <span class="toc-text">CP 数据库的好处</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%80%83%E8%99%91%E4%BD%BF%E7%94%A8-AP-%E6%95%B0%E6%8D%AE%E5%BA%93"><span class="toc-number">1.3.</span> <span class="toc-text">考虑使用 AP 数据库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B7%B7%E5%90%88%E5%BC%8F%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-number">1.4.</span> <span class="toc-text">混合式解决方案</span></a></li></ol></li></ol>
-    </div>
     
     <div class="back-top iconfont-archer">&#xe639;</div>
     <div class="sidebar sidebar-hide">
@@ -1031,9 +890,23 @@ top:100vh;
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 59
+        Total : 61
         </div>
         <!-- search  -->
         
@@ -1049,6 +922,21 @@ top:100vh;
     
     
         <li class="archive-post-item">
+            <span class="archive-post-date">07/09</span><a class="archive-post-title" href= "/2021/07/09/Algorithm_max-flow-problem/" >最大流问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/08</span><a class="archive-post-title" href= "/2021/07/08/Algorithm_minimum_spanning_tree_problem/" >最小生成树问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/08</span><a class="archive-post-title" href= "/2021/07/08/Algorithm_shortest-path-problem/" >最短路径问题</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
             <span class="archive-post-date">07/01</span><a class="archive-post-title" href= "/2021/07/01/DistributedSystem_gossip-dissemination/" >分布式系统模式：Gossip 传播</a>
         </li>
     
@@ -1059,7 +947,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">06/19</span><a class="archive-post-title" href= "/2021/06/19/Java_override-and-bridge-method/" >Java 多态、重写与桥接方法</a>
+            <span class="archive-post-date">06/19</span><a class="archive-post-title" href= "/2021/06/19/Algorithm_consistent-hashing/" >一致性哈希</a>
         </li>
     
     
@@ -1074,7 +962,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/Java_cpp-for-java-programmers/" >Java 程序员的 C++：不再恐惧</a>
+            <span class="archive-post-date">06/05</span><a class="archive-post-title" href= "/2021/06/05/2021-06-05_diary/" >基于记忆规律的学习方法</a>
         </li>
     
     
@@ -1094,22 +982,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">04/12</span><a class="archive-post-title" href= "/2021/04/12/Algorithm_consistent-hashing/" >一致性哈希</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/2021-03-17_diary/" >基于记忆规律的学习方法</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/12</span><a class="archive-post-title" href= "/2021/03/12/DB_right-database/" >选择合适的数据库</a>
-        </li>
-    
-    
-        <li class="archive-post-item">
-            <span class="archive-post-date">03/06</span><a class="archive-post-title" href= "/2021/03/06/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+            <span class="archive-post-date">03/17</span><a class="archive-post-title" href= "/2021/03/17/Java_cpp-for-java-programmers/" >Java 程序员的 C++</a>
         </li>
     
     
@@ -1159,7 +1032,7 @@ top:100vh;
     
     
         <li class="archive-post-item">
-            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/Design_api-gw/" >什么是 API 网关？API 的简单性和稳定性</a>
+            <span class="archive-post-date">01/10</span><a class="archive-post-title" href= "/2021/01/10/DB_right-database/" >选择合适的数据库</a>
         </li>
     
     
@@ -1214,6 +1087,16 @@ top:100vh;
     
         <li class="archive-post-item">
             <span class="archive-post-date">09/24</span><a class="archive-post-title" href= "/2020/09/24/Kafka_prod-env-assess/" >Kafka 生产环境资源评估</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/09</span><a class="archive-post-title" href= "/2020/08/09/Arthas_Cheat-Sheet/" >Arthas Cheat Sheet</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/12</span><a class="archive-post-title" href= "/2020/07/12/Java_override-and-bridge-method/" >Java 多态、重写与桥接方法</a>
         </li>
     
     
@@ -1380,11 +1263,11 @@ top:100vh;
     
         <span class="sidebar-tag-name" data-tags="算法"><span class="iconfont-archer">&#xe606;</span>算法</span>
     
+        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
+    
         <span class="sidebar-tag-name" data-tags="Java"><span class="iconfont-archer">&#xe606;</span>Java</span>
     
         <span class="sidebar-tag-name" data-tags="大数据"><span class="iconfont-archer">&#xe606;</span>大数据</span>
-    
-        <span class="sidebar-tag-name" data-tags="数据库"><span class="iconfont-archer">&#xe606;</span>数据库</span>
     
         <span class="sidebar-tag-name" data-tags="设计"><span class="iconfont-archer">&#xe606;</span>设计</span>
     
@@ -1395,8 +1278,6 @@ top:100vh;
         <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
     
         <span class="sidebar-tag-name" data-tags="信息安全"><span class="iconfont-archer">&#xe606;</span>信息安全</span>
-    
-        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
     
         <span class="sidebar-tag-name" data-tags="Kafka"><span class="iconfont-archer">&#xe606;</span>Kafka</span>
     
@@ -1483,8 +1364,6 @@ jsonContent:
     
     </div>
     <!-- async load share.js -->
-    
-        <script src="/scripts/share.js" async></script>    
      
     <script type="text/x-mathjax-config">
     MathJax.Hub.Config({
