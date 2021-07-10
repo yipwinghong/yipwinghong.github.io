@@ -407,7 +407,12 @@ height:100vh;
         <h1 id="最小生成树问题"><a href="#最小生成树问题" class="headerlink" title="最小生成树问题"></a>最小生成树问题</h1><blockquote>
 <p>  接上回，本次介绍另一类问题的相关算法。</p>
 </blockquote>
-<p>在图论领域，有权图（Weight Graph）最经典的问题是最小生成树问题（Minimum Spanning Tree）：对于一个 n 个节点的 <strong>连通图</strong>，求出包含原图 n 个节点、且确保所有边权值之和最小的连通子图，则为最小生成树（MST）。</p>
+<p>在图论领域，有权图（Weight Graph）最经典的问题是最小生成树问题（Minimum Spanning Tree）：对于一个 n 个节点的 <strong>连通图</strong>，求出包含原图 n 个节点、且确保所有边权值之和最小的连通子图，则为 <strong>最小生成树（MST）</strong>。</p>
+<p>有权图与其最小生成树：</p>
+<img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/MST.png" alt="MST" style="zoom:80%;" />
+
+
+
 <p>先给出有权图的 Java 实现（省略细节），有权边 <code>WeightedEdge</code>（兼容有向、无向）：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WeightedEdge</span> <span class="keyword">implements</span> <span class="title">Comparable</span>&lt;<span class="title">WeightedEdge</span>&gt; </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 起点，终点，权值</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> v, w, weight;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">WeightedEdge</span><span class="params">(<span class="keyword">int</span> v, <span class="keyword">int</span> w, <span class="keyword">int</span> weight)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.v = v;</span><br><span class="line">        <span class="keyword">this</span>.w = w;</span><br><span class="line">        <span class="keyword">this</span>.weight = weight;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
