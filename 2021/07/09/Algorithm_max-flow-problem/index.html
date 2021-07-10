@@ -421,7 +421,7 @@ height:100vh;
 <li><p>源点的流出量等于汇点的流入量，对于图中的其他每个顶点，流入量等于流出量。</p>
 </li>
 </ul>
-<img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/Max%20Flow.png" alt="Max Flow" style="zoom: 50%;" />
+<img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/Max%20Flow.png" alt="Max Flow" style="zoom: 80%;" />
 
 <p>在此基础上要考虑网络流模型中可容纳的最大流量，即为 <strong>最大流问题（Max Flow）</strong>。</p>
 <p>先给出有权图的 Java 实现（省略细节），有权边 <code>WeightedEdge</code>：</p>
@@ -447,7 +447,7 @@ height:100vh;
 </li>
 </ul>
 <p>Ford-Fulkerson 思想可理解为在原图出发创建残量图，在残量图中不断寻找增广路径，每找到一条增广路径则图中流量增加，直到无法再找到增广路径为止，即求得最大流（上图为原图，下图为残量图与增广路径）。</p>
-<img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E6%AE%8B%E9%87%8F%E5%9B%BE%E4%B8%8E%E5%A2%9E%E5%B9%BF%E8%B7%AF%E5%BE%84.png" alt="残量图与增广路径" style="zoom:67%;" />
+<img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/%E6%AE%8B%E9%87%8F%E5%9B%BE%E4%B8%8E%E5%A2%9E%E5%B9%BF%E8%B7%AF%E5%BE%84.png" alt="残量图与增广路径" style="zoom:80%;" />
 
 <p>时间复杂度：O(maxflow * E)</p>
 <h2 id="Edmonds-Karp-算法"><a href="#Edmonds-Karp-算法" class="headerlink" title="Edmonds-Karp 算法"></a>Edmonds-Karp 算法</h2><p>基于 Ford-Fulkerson 思想，目的是寻找增广路径，其步骤是：</p>
