@@ -409,9 +409,12 @@ height:100vh;
 </blockquote>
 <p>最短路径问题（Shortest Path）：从图上的某一点到达另外一点，找到一条路径，使得权值之和最小（在下文中，路径的长短即权值之和的大小）。</p>
 <ul>
-<li>对于无权图的最短路径，只需要用广度优先遍历（BFS）方法求解，选取最少边的路径即可；而对于有权图，有时途经更多边的路径权值之和可能会更小。</li>
-<li>单源最短路径求解：起始点是固定点，求解从源点 src 到图中任一点的最短路径，常用的算法是 Dijkstra 算法和 Bellman-Ford 算法。</li>
-<li>如要求出图中所有点的最短路径，则需要适用于求所有点对的最短路径算法：Floyd 算法。</li>
+<li><p>对于无权图的最短路径，只需要用广度优先遍历（BFS）方法求解，选取最少边的路径即可；而对于有权图，有时途经更多边的路径权值之和可能会更小。</p>
+</li>
+<li><p>单源最短路径求解：起始点是固定点，求解从源点 src 到图中任一点的最短路径，常用的算法是 Dijkstra 算法和 Bellman-Ford 算法。</p>
+</li>
+<li><p>如要求出图中所有点的最短路径，则需要适用于求所有点对的最短路径算法：Floyd 算法。</p>
+</li>
 </ul>
 <img src="https://ywh-oss.oss-cn-shenzhen.aliyuncs.com/Shortest%20Path.png" alt="Shortest Path" style="zoom:80%;" />
 
